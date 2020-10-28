@@ -1,0 +1,29 @@
+﻿Current Structure-
+
+var ----www-----| 
+		|-templates
+		|--|[webpages here]
+		|  |-index.html
+		|
+		|-static
+		|--| [images and the like will go here]
+		|  |
+		|
+		|-app.py
+		|
+		|-venv
+		|--|[this is how you activate the virtual environment]
+		|  |
+
+Key things to note, when you connect in gcp, you will create a new user account under the hime directory with the same name as your email, this is also where files will go when you upload them directly. To return to your individual home just use ~
+Basic movement in linux revolves around using cd to change which directory you are in, this can be an absolute directory including the top level directories in it or can be a local directory such as one inside the folder you are currently in. Use .. to go up a directory and ls to display the contents of your current directory.
+If it doesn't work the first time, or says you don't have access use sudo at the beginning of the command.
+To move a file/rename a file use mv 	ex mv [path and filename start] [path and filename destination]
+To view a file's contents use cat [filename]
+
+To start the website and view it from external devices use the following commands:
+cd /var/www
+source venv/bin/activate
+sudo flask run --host=0.0.0.0 --port=80
+
+When finished use ctrl+c to stop the website. This is technically a test build and later on I should be able to set it up to turn on automatically without needing us to do anything but for now with this project it should be fine.
