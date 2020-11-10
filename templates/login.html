@@ -14,19 +14,20 @@
                 <h1 id="header-title">Accreditation Tracker and Analysis System</h1>
             </div>
             <div class="content-section">
-                <form class="form-section">
+                <form class="form-section" action="/home" method="POST">
                     <h1>ATAS Login</h1>
                     <!--Username and password form-->
                     <label for="username">Username</label><br>
-                    <input type="text" id="username" name="username"><br><br>
+                    <input type="text" id="username" name="username" required=true><br><br>
                 
                     <label for="password">Password</label><br>
-                    <input type="password" id="password" name="password"><br><br>
+                    <input type="password" id="password" name="password" required=true><br><br>
                 
-                    <input type="submit" value="Submit"><br><br>
+                    <button type="submit" id="loginBtn" value="Submit"><label for="loginBtn">Log In</label></button><br><br>
                 
-                    <a href="register.html">Need to Register?</a>
+                    <a href="/register">Need to Register?</a>
                 </form>
+               
             </div>
         </section>
     </div>
