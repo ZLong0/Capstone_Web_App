@@ -1,0 +1,158 @@
+* {
+	margin:0;
+	padding:0;
+	text-align: center;
+}
+
+.content {
+    width: match-parent;
+    display: grid; /*creates the grid layout*/
+    grid-template-columns: auto auto auto; /*creates three columns that are automatically sized*/
+}
+
+.header {
+    background-color: #6E2639;
+    padding: 10px;
+    grid-column: 1/4; /* display within lines 1 and 4 of grid layout (display across whole screen) */
+    
+    display: grid; /*nested grid layout for header children only*/
+    grid-template-columns: 3fr 2fr 3fr;
+}
+
+#header-logo {
+    grid-column: 1/2;
+    justify-self: end;
+    align-self: center;
+    margin: 10px;
+}
+
+#header-title {
+    color: white;
+    grid-column: 2/3;
+    grid-row: 1/2;
+    align-self: center;
+    justify-self: center;
+    margin: 10px;
+}
+
+#log-in-status {
+	grid-column: 3/4;
+	justify-self: end;
+	align-self:center;
+	color: white;
+}
+
+#log-in-status * {
+	display: inline-block;
+}
+
+#log-out {
+	color:white;
+}
+
+.content-section {
+    padding: 20px;
+    grid-column: 1/4;
+    display: grid;
+    grid-template-columns: auto 25% auto;
+}
+
+#welcome-title {
+	grid-column: 2/3;
+	justify-self: center;
+	margin: 0px;
+	text-align: center;
+}
+
+#welcome-desc {
+	grid-column: 2/3;
+	justify-self: center;
+	margin: 0px;
+	text-align: center;
+}
+
+.form-section {
+    padding: 10px;
+    text-align: center;
+    border-style: solid;
+    border-color: #6E2639;
+    grid-column: 2/3;
+}
+
+.form-section input[type=text], .form-section input[type=password]{
+	text-align: left;
+	width: 40%;
+}
+
+/* Nav Styling */
+.nav {
+	grid-column: 1/-1;
+	background-color: #6E2639;
+	width: 100%;
+	grid-template-columns: auto;
+}
+
+.nav-bar {
+	display:inline-block;
+	grid-column: 1/-1;
+}
+
+
+.nav .active {
+	text-decoration: underline;
+}
+
+.nav a {
+	float:left;
+	text-align: center;
+	text-decoration: none;
+	font-size: 16px;
+	color: white;
+	background-color: #6E2639;
+	padding: 8px;
+}
+
+.dropdown {
+	float:left;
+	overflow: hidden;
+}
+
+.dropdown .dropbtn {
+	border: none;
+	outline: none;
+	font-size: 16px;
+	margin: 0;
+	font-family: inherit;
+	background-color: #6E2639;
+	color: white;
+	padding: 8px;
+}
+
+.nav a:hover, .dropdown:hover .dropbtn {
+  	background-color: #A9A9A9;
+	color: black;
+}
+
+.nav .active:hover {
+	color: white;
+	background-color: #6E2639;
+}
+
+.dropdown-content {
+	display:none;
+	position:absolute;
+}
+
+.dropdown-content a {
+	float: none;
+	display:block;
+	text-align: center;
+}
+
+.dropdown-content a:hover {
+	
+}
+
+.dropdown:hover .dropdown-content {
+	display:block;
+}
