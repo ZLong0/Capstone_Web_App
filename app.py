@@ -1,8 +1,17 @@
-#!/usr/bin/python3
-from flask import Flask, render_template
+#!/usr/bin/python3  
+from flask import Flask, render_template, json, request
+from flaskext.mysql import MySQL
 
-
+mysql = MySQL()
 app = Flask(__name__)
+
+# MySQL configurations
+app.config['MYSQL_DATABASE_USER'] = '*'
+app.config['MYSQL_DATABASE_PASSWORD'] = '*'
+app.config['MYSQL_DATABASE_DB'] = '*'
+app.config['MYSQL_DATABASE_HOST'] = '*'
+mysql.init_app(app)
+
 
 @app.route('/')
 def index():
