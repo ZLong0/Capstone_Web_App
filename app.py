@@ -43,7 +43,6 @@ class Student(db.Model):
 
 
 class Course(db.Model):
-    course_id = db.Column("id", db.Integer, unique=True, autoincrement=True )
     course_name = db.Column(db.String(100))
     term = db.Column(db.String(11), primary_key=True)
     year = db.Column(db.String(4), primary_key=True)
@@ -56,7 +55,7 @@ class Course(db.Model):
         self.course_name = course_name
         self.term = term
         self.year = year
-        self.department = deparment()
+        self.department = deparment
         self.course_number = course_number
         self.section = section
         self.instructor = instructor
@@ -65,7 +64,7 @@ class Course(db.Model):
 class Outcomes(db.Model):
     so_id = db.Column("so_id",db.Integer, primary_key=True)
     so_name = db.Column(db.String(4))
-    so_desc = db.Column(db.String(256))
+    so_desc = db.Column(db.String(1000))
 
     def __init__(self, so_name, so_desc):
         self.so_name = so_name
@@ -82,10 +81,13 @@ class Assignments(db.Model):
         self.swp_name = swp_name
 
 
+
 class Attempts(db.Model):
     attempt_id = db.Column("id", db.Integer, primary_key=True)
     swp_id = db.Column(db.Integer, db.ForeignKey('assignments.swp_id'))
     so_id = db.Column(db.Integer, db.ForeignKey('outcomes.so_id'))
+
+
 
     def __init__(self, swp_id, so_id):
         self.swp_id = swp_id
@@ -130,6 +132,12 @@ def register():
 @app.route("/logout")
 def logout():
     return render_template("login.html")
+
+
+
+@app.route("/outcomes")
+def outcomes():
+    return {'so_name': 'SO1', 'so_desc': 'this is a test'}
 
 
 if __name__ == '__main__':
