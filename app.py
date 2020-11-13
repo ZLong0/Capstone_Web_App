@@ -7,14 +7,19 @@ app.secret_key = "capstonefall2020"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///atas.sqlite3'
 db = SQLAlchemy(app)
 
+
 class Users(db.Model):
     _id = db.Column("id", db.Integer, primary_key=True)
     username = db.Column("username", db.String(256))
     password = db.Column("password", db.String(256))
     is_Admin = db.Column("admin", db.Boolean(0))
+    is_active = db.Column(db.Boolean(0))
 
-    def __init__(self, username):
+    def __init__(self, username, password, is_admin, is_active):
         self.username = username
+        self.password = password
+        self.is_Admin = is_admin
+        self.is_active = is_active
 
 
 class Instructor(db.Model):
@@ -26,34 +31,32 @@ class Instructor(db.Model):
         self.fname=fname
         self.lname = lname
 
-
-
+ 
 class Student(db.Model):
     student_id = db.Column("id",db.Integer, primary_key=True)
     fname = db.Column(db.String(100))
     lname = db.Column(db.String(100))
 
     def __init__(self, fname, lname):
-        self.fname=fname
+        self.fname = fname
         self.lname = lname
 
 
-
 class Course(db.Model):
-    course_id = db.Column("id", db.Integer, primary_key=True)
+    course_id = db.Column("id", db.Integer, unique=True, autoincrement=True )
     course_name = db.Column(db.String(100))
-    term = db.Column(db.String(11))
-    year = db.Column(db.String(4))
-    department = db.Column(db.String(5))
-    course_number = db.Column(db.Integer)
-    section = db.Column(db.String(5))
+    term = db.Column(db.String(11), primary_key=True)
+    year = db.Column(db.String(4), primary_key=True)
+    department = db.Column(db.String(5), primary_key=True)
+    course_number = db.Column(db.String(10), primary_key=True)
+    section = db.Column(db.String(5), primary_key=True)
     instructor = db.Column(db.Integer, db.ForeignKey('instructor.id'))
 
     def __init__(self, course_name, term, year, deparment, course_number, section, instructor):
         self.course_name = course_name
         self.term = term
         self.year = year
-        self.department = deparment
+        self.department = deparment()
         self.course_number = course_number
         self.section = section
         self.instructor = instructor
@@ -67,7 +70,6 @@ class Outcomes(db.Model):
     def __init__(self, so_name, so_desc):
         self.so_name = so_name
         self.so_desc = so_desc
-
 
 
 class Assignments(db.Model):
