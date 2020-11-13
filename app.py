@@ -43,12 +43,13 @@ class Student(db.Model):
 
 
 class Course(db.Model):
+    _id = db.Column(db.Integer, primary_key=True)
     course_name = db.Column(db.String(100))
-    term = db.Column(db.String(11), primary_key=True)
-    year = db.Column(db.String(4), primary_key=True)
-    department = db.Column(db.String(5), primary_key=True)
-    course_number = db.Column(db.String(10), primary_key=True)
-    section = db.Column(db.String(5), primary_key=True)
+    term = db.Column(db.String(11))
+    year = db.Column(db.String(4))
+    department = db.Column(db.String(5))
+    course_number = db.Column(db.String(10))
+    section = db.Column(db.String(5))
     instructor = db.Column(db.Integer, db.ForeignKey('instructor.id'))
 
     def __init__(self, course_name, term, year, deparment, course_number, section, instructor):
