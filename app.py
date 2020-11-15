@@ -1,5 +1,5 @@
 #!/usr/bin/python3  
-from flask import Flask, render_template, jsonify, request, session
+from flask import Flask, render_template, jsonify, request, session, redirect
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 
@@ -280,6 +280,16 @@ def index():
     return render_template("login.html")  # this should be the name of your html file
 
 
+@app.route("/login", methods=["POST", "GET"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        print("username=" + username)
+        print("password=" + password)
+    return redirect("/home")
+
+
 @app.route("/home", methods=["POST", "GET"])
 def home():
     return render_template("home.html")
@@ -290,9 +300,38 @@ def register():
     return render_template("register.html")
 
 
+@app.route("/send_reg", methods=["POST", "GET"])
+def register_user():
+    if request.method == "POST":
+        username = request.form["username"]
+        email = request.form["email"]
+        password = request.form["password"]
+        employee_id = request.form["employee_id"]
+        access_level = request.form["access_level"]
+        question_1 = request.form["question_1"]
+        answer_1 = request.form["answer_1"]
+        question_2 = request.form["question_2"]
+        answer_2 = request.form["answer_2"]
+        question_3 = request.form["question_3"]
+        answer_3 = request.form["answer_3"]
+
+        print("username=" + username)
+        print("email=" + email)
+        print("password=" + password)
+        print("employee_id=" + employee_id)
+        print("access_level=" + access_level)
+        print("question_1=" + question_1)
+        print("answer_1=" + answer_1)
+        print("question_2=" + question_2)
+        print("answer_2=" + answer_2)
+        print("question_3=" + question_3)
+        print("answer_3=" + answer_3)
+    return redirect("/")
+
+
 @app.route("/logout")
 def logout():
-    return render_template("login.html")
+    return redirect("/")
 
 
 if __name__ == '__main__':
