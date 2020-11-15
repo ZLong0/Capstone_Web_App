@@ -69,7 +69,6 @@ class Student(db.Model):
 def get_all_students():
     students = Student.query.all()
     results = []
-
     for student in students:
         student_data = {}
         student_data['student_id'] = student.student_id
@@ -78,6 +77,7 @@ def get_all_students():
         results.append(student_data)
     
     return jsonify(results)
+
 
 #COURSE CLASS
 class Course(db.Model):
@@ -117,6 +117,7 @@ def get_all_courses():
 
     return jsonify(results)
 
+
 #OUTCOMES CLASS
 class Outcomes(db.Model):
     so_id = db.Column("so_id",db.Integer, primary_key=True)
@@ -129,8 +130,6 @@ class Outcomes(db.Model):
 
 
 @app.route("/outcomes", methods=["GET"])
-#this GET queries the db then returns a json object of information to the /outcomes endpoint.  this is a static list currently so not 'POST' method 
-
 def get_all_outcomes():
     outcomes = Outcomes.query.all()
 
@@ -210,6 +209,20 @@ class Enrolled(db.Model):
         self.course_id = course_id
 
 
+@app.route('/enrolled', methods=['GET'])
+def get_all_enrolled():
+    enrolled = Enrolled.query.all()
+    results = []
+
+    for enroll in enrolled:
+        enrollment_data = {}
+        enrollment_data['enrolled-id'] = enroll.enrolled_id
+        enrollment_data['student-id'] = enroll.student_id
+        enrollment_data['course_id'] = enroll.course_id
+        results.append(enrollment_data)
+
+    return jsonify(results)
+
 
 #RESULTS CLASS
 class Results(db.Model):
@@ -222,6 +235,19 @@ class Results(db.Model):
         self.attempt_id = attempt_id
 
 
+app.route('/results', methods=['GET'])
+def get_all_results():
+    results = Results.query.all()
+    output = []
+
+    for result in results:
+        result_data = {}
+        result_data['result id'] = result._id
+        results_data['student id'] = result.student_id
+        result_data['attempt id'] = results.attempt_id
+        output.append(result_data)
+
+    return jsonify(output)
 
 
 #BASE ROUTES (INDEX/HOME/REGISTER) -- THIS MAY BE MOVED LATER
