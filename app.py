@@ -1,9 +1,7 @@
 #!/usr/bin/python3  
 from flask import Flask, render_template, jsonify, request, session
 from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
 from sqlalchemy import create_engine
-from dataclasses import dataclass
 
 app = Flask(__name__)
 app.secret_key = "capstonefall2020"
@@ -14,6 +12,8 @@ db = SQLAlchemy(app)
 #DATABASE MODELS ARE FOLLOWED DIRECTLY BY THE METHODS THAT CORRESPOND TO THOSE OPJECTS
 #IF TIME ALLOWS - MOVE MODELS TO THEIR OWN MODELS.PY FILE
 
+
+#USERS CLASS
 class Users(db.Model):
     _id = db.Column("id", db.Integer, primary_key=True)
     username = db.Column("username", db.String(256))
@@ -28,6 +28,7 @@ class Users(db.Model):
         self.is_active = is_active
 
 
+#INSTRUCTORS CLASS
 class Instructor(db.Model):
     inst_id = db.Column("id", db.Integer, primary_key=True)
     fname = db.Column(db.String(100))
@@ -53,6 +54,7 @@ def get_all_instructors():
     return jsonify(results)
 
 
+#STUDENT CLASS
 class Student(db.Model):
     student_id = db.Column("id",db.Integer, primary_key=True)
     fname = db.Column(db.String(100))
@@ -77,7 +79,7 @@ def get_all_students():
     
     return jsonify(results)
 
-
+#COURSE CLASS
 class Course(db.Model):
     _id = db.Column(db.Integer, primary_key=True)
     course_name = db.Column(db.String(100))
@@ -115,7 +117,7 @@ def get_all_courses():
 
     return jsonify(results)
 
-
+#OUTCOMES CLASS
 class Outcomes(db.Model):
     so_id = db.Column("so_id",db.Integer, primary_key=True)
     so_name = db.Column(db.String(4))
@@ -143,6 +145,7 @@ def get_all_outcomes():
     return jsonify(results)
 
 
+#ASSIGNMENTS (SWP) CLASS
 class Assignments(db.Model):
     swp_id = db.Column("swp_id", db.Integer,primary_key=True)
     course_id  = db.Column(db.Integer, db.ForeignKey('course.id'))
@@ -169,6 +172,7 @@ def get_all_swp():
     return jsonify(results)
 
 
+#ATTEMPTS CLASS
 class Attempts(db.Model):
     attempt_id = db.Column("id", db.Integer, primary_key=True)
     swp_id = db.Column(db.Integer, db.ForeignKey('assignments.swp_id'))
@@ -195,6 +199,7 @@ def get_all_attempts():
     return jsonify(results)
 
 
+#ENROLLED CLASS
 class Enrolled(db.Model):
     enrolled_id = db.Column(db.Integer, primary_key=True)
     student_id= db.Column(db.Integer, db.ForeignKey('student.id'))
@@ -206,6 +211,7 @@ class Enrolled(db.Model):
 
 
 
+#RESULTS CLASS
 class Results(db.Model):
     _id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'))
@@ -217,6 +223,8 @@ class Results(db.Model):
 
 
 
+
+#BASE ROUTES (INDEX/HOME/REGISTER) -- THIS MAY BE MOVED LATER
 @app.route("/", methods=["POST", "GET"])
 def index():
     return render_template("login.html")  # this should be the name of your html file
