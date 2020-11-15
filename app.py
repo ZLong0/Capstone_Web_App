@@ -113,6 +113,30 @@ def get_all_courses():
         course_info['course_department'] = course.department
         course_info['course_number'] = course.course_number
         course_info['section'] = course.section
+        course_info['instructor_id'] = course.instructor
+        results.append(course_info)
+
+    return jsonify(results)
+
+
+#gets all courses for specific instructor id
+@app.route('/courses/<instructor_id>', methods=['GET'])
+def get_instructor_courses(instructor_id):
+    courses = Course.query.filter_by(instructor = instructor_id).all()
+    results = []
+    
+    if not courses:
+        return {"No courses assigned to this instructor"}
+    
+
+    for course in courses:
+        course_info = {}
+        course_info['course_name'] = course.course_name
+        course_info['term'] = course.term
+        course_info['year'] = course.year
+        course_info['course_department'] = course.department
+        course_info['course_number'] = course.course_number
+        course_info['section'] = course.section
         results.append(course_info)
 
     return jsonify(results)
