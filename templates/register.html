@@ -14,7 +14,14 @@
   </head>
  
   <body class="text-center">
-    <form class="form-register" action="/send_reg" method="post">
+	<div class='msg_flash'>
+		{% with messages = get_flashed_messages() %}
+  			{% if error %}
+         		<h6>Error: {{ error }} </h6>
+			{% endif %}
+		{% endwith %}
+	</div>
+    <form class="form-register" action="/register" method="post">
       	<img class="mb-4" src="../static/images/ualr_logo.png" alt="" height="70">
       	<h1 class="h3 mb-3 font-weight-normal">ATAS Registration</h1>
 		

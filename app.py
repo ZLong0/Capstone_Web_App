@@ -1,5 +1,5 @@
 #!/usr/bin/python3  
-from flask import Flask, render_template, jsonify, request, session, redirect
+from flask import Flask, render_template, jsonify, request, session, redirect, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 
@@ -11,7 +11,6 @@ db = SQLAlchemy(app)
 
 #DATABASE MODELS ARE FOLLOWED DIRECTLY BY THE METHODS THAT CORRESPOND TO THOSE OPJECTS
 #IF TIME ALLOWS - MOVE MODELS TO THEIR OWN MODELS.PY FILE
-
 
 #USERS CLASS
 class Users(db.Model):
@@ -27,6 +26,72 @@ class Users(db.Model):
         self.is_Admin = is_Admin
         self.is_active = is_active
 
+
+#this checks credientials before login
+@app.route("/login", methods=["POST", "GET"])
+def login():    
+    error = None
+    message = None
+    username_attempt = ''
+    password_attempt = ''
+
+    if request.method == "POST":
+        username_attempt = request.form["username"]
+        password__attempt = request.form["password"]
+
+        user = Users.query.filter_by(username = username_attempt).first()
+        if not user:
+            error = 'Invalid Username/Password!  Please try again.'
+            return render_template('login.html', error = error)
+        elif password__attempt == user.password:
+            return render_template('home.html')
+        
+    error = 'Invalid Username/Password!  Please try again.'
+    return render_template('login.html', error=error)
+  
+
+#this checks db for existing username before returning
+@app.route("/register", methods=["POST", "GET"])
+def register_user():
+    error = None
+    if request.method == "POST":
+        add_username = request.form["username"]
+        email = request.form["email"]
+        password = request.form["password"]
+        employee_id = request.form["employee_id"]
+        access_level = request.form["access_level"]
+        question_1 = request.form["question_1"]
+        answer_1 = request.form["answer_1"]
+        question_2 = request.form["question_2"]
+        answer_2 = request.form["answer_2"]
+        question_3 = request.form["question_3"]
+        answer_3 = request.form["answer_3"]
+
+        #output for debugging only
+        print("username=" + add_username)
+        print("email=" + email)
+        print("password=" + password)
+        print("employee_id=" + employee_id)
+        print("access_level=" + access_level)
+        print("question_1=" + question_1)
+        print("answer_1=" + answer_1)
+        print("question_2=" + question_2)
+        print("answer_2=" + answer_2)
+        print("question_3=" + question_3)
+        print("answer_3=" + answer_3)   
+
+        all_users = Users.query.all()
+
+        for user in all_users:
+            if add_username == user.username:
+                error = "Username already exists"
+                return render_template('register.html', error = error)
+            else:
+                message = 'Registration Sent!'
+                return render_template('login.html', message = message)
+    else:
+        return render_template('register.html')
+         
 
 #INSTRUCTORS CLASS
 class Instructor(db.Model):
@@ -102,10 +167,11 @@ class Course(db.Model):
 
 @app.route('/courses', methods =["GET"])
 def get_all_courses():
-    courses = Course.query.all()
+    
+    all_courses = Course.query.all()
     results = []
     
-    for course in courses:
+    for course in all_courses:
         course_info = {}
         course_info['course_name'] = course.course_name
         course_info['term'] = course.term
@@ -125,21 +191,24 @@ def get_instructor_courses(instructor_id):
     courses = Course.query.filter_by(instructor = instructor_id).all()
     results = []
     
-    if not courses:
-        return {"No courses assigned to this instructor"}
+    if request.method=="GET":
+        if not courses:
+            return {"No courses assigned to this instructor"}
     
+        for course in courses:
+          course_info = {}
+          course_info['course_name'] = course.course_name
+          course_info['term'] = course.term
+          course_info['year'] = course.year
+          course_info['course_department'] = course.department
+          course_info['course_number'] = course.course_number
+          course_info['section'] = course.section
+          results.append(course_info)
 
-    for course in courses:
-        course_info = {}
-        course_info['course_name'] = course.course_name
-        course_info['term'] = course.term
-        course_info['year'] = course.year
-        course_info['course_department'] = course.department
-        course_info['course_number'] = course.course_number
-        course_info['section'] = course.section
-        results.append(course_info)
+        return render_template("home.html", courses = results)
 
-    return jsonify(results)
+    else:
+        return render_template("home.html")
 
 
 #OUTCOMES CLASS
@@ -165,7 +234,7 @@ def get_all_outcomes():
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
     
-    return jsonify(results)
+    return render_template('outcomes.html', outcomes = results)
 
 
 #ASSIGNMENTS (SWP) CLASS
@@ -280,58 +349,18 @@ def index():
     return render_template("login.html")  # this should be the name of your html file
 
 
-@app.route("/login", methods=["POST", "GET"])
-def login():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        print("username=" + username)
-        print("password=" + password)
-    return redirect("/home")
 
 
 @app.route("/home", methods=["POST", "GET"])
 def home():
+    courses = None
     return render_template("home.html")
-
-
-@app.route("/register", methods=["POST", "GET"])
-def register():
-    return render_template("register.html")
-
-
-@app.route("/send_reg", methods=["POST", "GET"])
-def register_user():
-    if request.method == "POST":
-        username = request.form["username"]
-        email = request.form["email"]
-        password = request.form["password"]
-        employee_id = request.form["employee_id"]
-        access_level = request.form["access_level"]
-        question_1 = request.form["question_1"]
-        answer_1 = request.form["answer_1"]
-        question_2 = request.form["question_2"]
-        answer_2 = request.form["answer_2"]
-        question_3 = request.form["question_3"]
-        answer_3 = request.form["answer_3"]
-
-        print("username=" + username)
-        print("email=" + email)
-        print("password=" + password)
-        print("employee_id=" + employee_id)
-        print("access_level=" + access_level)
-        print("question_1=" + question_1)
-        print("answer_1=" + answer_1)
-        print("question_2=" + question_2)
-        print("answer_2=" + answer_2)
-        print("question_3=" + question_3)
-        print("answer_3=" + answer_3)
-    return redirect("/")
 
 
 @app.route("/logout")
 def logout():
-    return redirect("/")
+    message = "Logout Successful!"
+    return render_template("login.html", message = message)
 
 
 if __name__ == '__main__':
