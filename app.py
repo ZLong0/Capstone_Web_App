@@ -165,7 +165,7 @@ def get_all_outcomes():
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
     
-    return jsonify(results)
+    return render_template('outcomes.html', outcomes = results)
 
 
 #ASSIGNMENTS (SWP) CLASS
