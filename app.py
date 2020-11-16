@@ -31,6 +31,7 @@ class Users(db.Model):
 @app.route("/login", methods=["POST", "GET"])
 def login():    
     error = None
+    message = None
     username_attempt = ''
     password_attempt = ''
 
@@ -45,14 +46,14 @@ def login():
         elif password__attempt == user.password:
             return render_template('home.html')
         
-    #todo -- this needs a message flash and redirect ot login
     error = 'Invalie Username/Password!  Please try again.'
     return render_template('login.html', error=error)
   
 
 #this checks db for existing username before returning
-@app.route("/send_reg", methods=["POST", "GET"])
+@app.route("/register", methods=["POST", "GET"])
 def register_user():
+    error = None
     if request.method == "POST":
         add_username = request.form["username"]
         email = request.form["email"]
@@ -83,9 +84,13 @@ def register_user():
 
         for user in all_users:
             if add_username == user.username:
-                return "Sorry that username already exsits"
+                error = "Username already exists"
+                return render_template('register.html', error = error)
             else:
-                return redirect('/login')
+                message = 'Registration Sent!'
+                return render_template('login.html', message = message)
+    else:
+        return render_template('register.html')
          
 
 #INSTRUCTORS CLASS
@@ -345,12 +350,6 @@ def index():
 @app.route("/home", methods=["POST", "GET"])
 def home():
     return render_template("home.html")
-
-
-@app.route("/register", methods=["POST", "GET"])
-def register():
-    return render_template("register.html")
-
 
 
 @app.route("/logout")
