@@ -354,7 +354,8 @@ def home():
 
 @app.route("/logout")
 def logout():
-    return redirect("/")
+    message = "Logout Successful!"
+    return render_template("login.html", message = message)
 
 
 if __name__ == '__main__':
