@@ -46,7 +46,7 @@ def login():
         elif password__attempt == user.password:
             return render_template('home.html')
         
-    error = 'Invalie Username/Password!  Please try again.'
+    error = 'Invalid Username/Password!  Please try again.'
     return render_template('login.html', error=error)
   
 
