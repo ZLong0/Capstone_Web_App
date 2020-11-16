@@ -1,5 +1,5 @@
 #!/usr/bin/python3  
-from flask import Flask, render_template, jsonify, request, session, redirect, flash
+from flask import Flask, render_template, jsonify, request, session, redirect, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 
@@ -167,10 +167,11 @@ class Course(db.Model):
 
 @app.route('/courses', methods =["GET"])
 def get_all_courses():
-    courses = Course.query.all()
+    
+    all_courses = Course.query.all()
     results = []
     
-    for course in courses:
+    for course in all_courses:
         course_info = {}
         course_info['course_name'] = course.course_name
         course_info['term'] = course.term
@@ -190,21 +191,24 @@ def get_instructor_courses(instructor_id):
     courses = Course.query.filter_by(instructor = instructor_id).all()
     results = []
     
-    if not courses:
-        return {"No courses assigned to this instructor"}
+    if request.method=="GET":
+        if not courses:
+            return {"No courses assigned to this instructor"}
     
+        for course in courses:
+          course_info = {}
+          course_info['course_name'] = course.course_name
+          course_info['term'] = course.term
+          course_info['year'] = course.year
+          course_info['course_department'] = course.department
+          course_info['course_number'] = course.course_number
+          course_info['section'] = course.section
+          results.append(course_info)
 
-    for course in courses:
-        course_info = {}
-        course_info['course_name'] = course.course_name
-        course_info['term'] = course.term
-        course_info['year'] = course.year
-        course_info['course_department'] = course.department
-        course_info['course_number'] = course.course_number
-        course_info['section'] = course.section
-        results.append(course_info)
+        return render_template("home.html", courses = results)
 
-    return jsonify(results)
+    else:
+        return render_template("home.html")
 
 
 #OUTCOMES CLASS
@@ -349,6 +353,7 @@ def index():
 
 @app.route("/home", methods=["POST", "GET"])
 def home():
+    courses = None
     return render_template("home.html")
 
 
