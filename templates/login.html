@@ -19,7 +19,10 @@
 		{% with messages = get_flashed_messages() %}
   			{% if error %}
          		<h6>Error: {{ error }} </h6>
-      		{% endif %}
+			{% endif %}
+			{% if message %}
+			  <h6> {{message}}</h6>
+			{% endif %}
 		{% endwith %}
 	</div>
     <form class="form-signin" action="/login" method="post">
