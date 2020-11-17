@@ -1,6 +1,7 @@
 #!/usr/bin/python3  
 from flask import Flask, render_template, jsonify, request, session, redirect, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import create_engine
 
 app = Flask(__name__)
@@ -9,13 +10,13 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///atas.sqlite3'
 db = SQLAlchemy(app)
 
 
-#DATABASE MODELS ARE FOLLOWED DIRECTLY BY THE METHODS THAT CORRESPOND TO THOSE OPJECTS
-#IF TIME ALLOWS - MOVE MODELS TO THEIR OWN MODELS.PY FILE
+# DATABASE MODELS ARE FOLLOWED DIRECTLY BY THE METHODS THAT CORRESPOND TO THOSE OPJECTS
+# IF TIME ALLOWS - MOVE MODELS TO THEIR OWN MODELS.PY FILE
 
-#USERS CLASS
+# USERS CLASS
 class Users(db.Model):
     _id = db.Column("id", db.Integer, primary_key=True)
-    username = db.Column("username", db.String(256))
+    username = db.Column("username", db.String(256), unique=True)
     password = db.Column("password", db.String(256))
     is_Admin = db.Column("admin", db.Boolean(0))
     is_active = db.Column(db.Boolean(0))
@@ -27,9 +28,9 @@ class Users(db.Model):
         self.is_active = is_active
 
 
-#this checks credientials before login
+# this checks credentials before login
 @app.route("/login", methods=["POST", "GET"])
-def login():    
+def login():
     error = None
     message = None
     username_attempt = ''
@@ -37,20 +38,27 @@ def login():
 
     if request.method == "POST":
         username_attempt = request.form["username"]
-        password__attempt = request.form["password"]
+        password_attempt = request.form["password"]
 
-        user = Users.query.filter_by(username = username_attempt).first()
+        user = Users.query.filter_by(username=username_attempt).first()
         if not user:
             error = 'Invalid Username/Password!  Please try again.'
-            return render_template('login.html', error = error)
-        elif password__attempt == user.password:
+            return render_template('login.html', error=error)
+        elif check_password_hash(pwhash=user.password, password=password_attempt) and Users.query.filter_by(is_Admin=1):
             return render_template('home.html')
-        
+        elif check_password_hash(pwhash=user.password, password=password_attempt):
+            return render_template('home.html')
+        elif password_attempt == user.password and Users.query.filter_by(is_Admin=1):
+            # used to direct to admin home page
+            return render_template('home.html')
+        elif password_attempt == user.password:
+            return render_template('home.html')
+
     error = 'Invalid Username/Password!  Please try again.'
     return render_template('login.html', error=error)
-  
 
-#this checks db for existing username before returning
+
+# this checks db for existing username before returning
 @app.route("/register", methods=["POST", "GET"])
 def register_user():
     error = None
@@ -67,7 +75,7 @@ def register_user():
         question_3 = request.form["question_3"]
         answer_3 = request.form["answer_3"]
 
-        #output for debugging only
+        # output for debugging only
         print("username=" + add_username)
         print("email=" + email)
         print("password=" + password)
@@ -78,29 +86,53 @@ def register_user():
         print("question_2=" + question_2)
         print("answer_2=" + answer_2)
         print("question_3=" + question_3)
-        print("answer_3=" + answer_3)   
+        print("answer_3=" + answer_3)
 
         all_users = Users.query.all()
 
         for user in all_users:
             if add_username == user.username:
                 error = "Username already exists"
-                return render_template('register.html', error = error)
-            else:
-                message = 'Registration Sent!'
-                return render_template('login.html', message = message)
+                return render_template('register.html', error=error)
+            elif add_username != user.username:
+                # will remove auto commit later. using for testing currently
+                if access_level == 'admin':
+                    # set admin when sent
+                    new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+                    new_user = Users(username=add_username, password=new_password, is_Admin=1, is_active=0)
+                    db.session.add(new_user)
+                    db.session.commit()
+                    message = 'Registration sent'
+                    return render_template('login.html')
+                else:
+                    # set admin to 0
+                    new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+                    new_user = Users(username=add_username, password=new_password, is_Admin=0, is_active=0)
+                    db.session.add(new_user)
+                    db.session.commit()
+                    message = 'Registration sent'
+                    return render_template('login.html', message=message)
+
+
+#        for user in all_users:
+#            if add_username == user.username:
+#                error = "Username already exists"
+#                return render_template('register.html', error=error)
+#            else:
+#                message = 'Registration Sent!'
+#                return render_template('login.html', message=message)
     else:
         return render_template('register.html')
-         
 
-#INSTRUCTORS CLASS
+
+# INSTRUCTORS CLASS
 class Instructor(db.Model):
     inst_id = db.Column("id", db.Integer, primary_key=True)
     fname = db.Column(db.String(100))
     lname = db.Column(db.String(100))
-    
+
     def __init__(self, fname, lname):
-        self.fname=fname
+        self.fname = fname
         self.lname = lname
 
 
@@ -115,13 +147,13 @@ def get_all_instructors():
         instructor_data['first_name'] = instructor.fname
         instructor_data['last_name'] = instructor.lname
         results.append(instructor_data)
-    
+
     return jsonify(results)
 
 
-#STUDENT CLASS
+# STUDENT CLASS
 class Student(db.Model):
-    student_id = db.Column("id",db.Integer, primary_key=True)
+    student_id = db.Column("id", db.Integer, primary_key=True)
     fname = db.Column(db.String(100))
     lname = db.Column(db.String(100))
 
@@ -140,11 +172,11 @@ def get_all_students():
         student_data['first_name'] = student.fname
         student_data['last name'] = student.lname
         results.append(student_data)
-    
+
     return jsonify(results)
 
 
-#COURSE CLASS
+# COURSE CLASS
 class Course(db.Model):
     _id = db.Column(db.Integer, primary_key=True)
     course_name = db.Column(db.String(100))
@@ -165,12 +197,11 @@ class Course(db.Model):
         self.instructor = instructor
 
 
-@app.route('/courses', methods =["GET"])
+@app.route('/courses', methods=["GET"])
 def get_all_courses():
-    
     all_courses = Course.query.all()
     results = []
-    
+
     for course in all_courses:
         course_info = {}
         course_info['course_name'] = course.course_name
@@ -185,35 +216,35 @@ def get_all_courses():
     return jsonify(results)
 
 
-#gets all courses for specific instructor id
+# gets all courses for specific instructor id
 @app.route('/courses/<instructor_id>', methods=['GET'])
 def get_instructor_courses(instructor_id):
-    courses = Course.query.filter_by(instructor = instructor_id).all()
+    courses = Course.query.filter_by(instructor=instructor_id).all()
     results = []
-    
-    if request.method=="GET":
+
+    if request.method == "GET":
         if not courses:
             return {"No courses assigned to this instructor"}
-    
-        for course in courses:
-          course_info = {}
-          course_info['course_name'] = course.course_name
-          course_info['term'] = course.term
-          course_info['year'] = course.year
-          course_info['course_department'] = course.department
-          course_info['course_number'] = course.course_number
-          course_info['section'] = course.section
-          results.append(course_info)
 
-        return render_template("home.html", courses = results)
+        for course in courses:
+            course_info = {}
+            course_info['course_name'] = course.course_name
+            course_info['term'] = course.term
+            course_info['year'] = course.year
+            course_info['course_department'] = course.department
+            course_info['course_number'] = course.course_number
+            course_info['section'] = course.section
+            results.append(course_info)
+
+        return render_template("home.html", courses=results)
 
     else:
         return render_template("home.html")
 
 
-#OUTCOMES CLASS
+# OUTCOMES CLASS
 class Outcomes(db.Model):
-    so_id = db.Column("so_id",db.Integer, primary_key=True)
+    so_id = db.Column("so_id", db.Integer, primary_key=True)
     so_name = db.Column(db.String(4))
     so_desc = db.Column(db.String(1000))
 
@@ -233,14 +264,14 @@ def get_all_outcomes():
         outcome_data['so_name'] = outcome.so_name
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
-    
-    return render_template('outcomes.html', outcomes = results)
+
+    return render_template('outcomes.html', outcomes=results)
 
 
-#ASSIGNMENTS (SWP) CLASS
+# ASSIGNMENTS (SWP) CLASS
 class Assignments(db.Model):
-    swp_id = db.Column("swp_id", db.Integer,primary_key=True)
-    course_id  = db.Column(db.Integer, db.ForeignKey('course.id'))
+    swp_id = db.Column("swp_id", db.Integer, primary_key=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'))
     swp_name = db.Column(db.String(100))
 
     def __init__(self, course_id, swp_name):
@@ -260,11 +291,11 @@ def get_all_swp():
         swp_data['swp_name'] = swp.swp_name
         swp_data['course_id'] = swp.course_id
         results.append(swp_data)
-    
+
     return jsonify(results)
 
 
-#ATTEMPTS CLASS
+# ATTEMPTS CLASS
 class Attempts(db.Model):
     attempt_id = db.Column("id", db.Integer, primary_key=True)
     swp_id = db.Column(db.Integer, db.ForeignKey('assignments.swp_id'))
@@ -287,14 +318,14 @@ def get_all_attempts():
         attempt_data['swp'] = attempt.swp_id
         attempt_data['so'] = attempt.so_id
         results.append(attempt_data)
-    
+
     return jsonify(results)
 
 
-#ENROLLED CLASS
+# ENROLLED CLASS
 class Enrolled(db.Model):
     enrolled_id = db.Column(db.Integer, primary_key=True)
-    student_id= db.Column(db.Integer, db.ForeignKey('student.id'))
+    student_id = db.Column(db.Integer, db.ForeignKey('student.id'))
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'))
 
     def __init__(self, student_id, course_id):
@@ -317,7 +348,7 @@ def get_all_enrolled():
     return jsonify(results)
 
 
-#RESULTS CLASS
+# RESULTS CLASS
 class Results(db.Model):
     _id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'))
@@ -329,6 +360,8 @@ class Results(db.Model):
 
 
 app.route('/results', methods=['GET'])
+
+
 def get_all_results():
     results = Results.query.all()
     output = []
@@ -336,19 +369,17 @@ def get_all_results():
     for result in results:
         result_data = {}
         result_data['result id'] = result._id
-        results_data['student id'] = result.student_id
+        result_data['student id'] = result.student_id
         result_data['attempt id'] = results.attempt_id
         output.append(result_data)
 
     return jsonify(output)
 
 
-#BASE ROUTES (INDEX/HOME/REGISTER) -- THIS MAY BE MOVED LATER
+# BASE ROUTES (INDEX/HOME/REGISTER) -- THIS MAY BE MOVED LATER
 @app.route("/", methods=["POST", "GET"])
 def index():
     return render_template("login.html")  # this should be the name of your html file
-
-
 
 
 @app.route("/home", methods=["POST", "GET"])
@@ -360,10 +391,9 @@ def home():
 @app.route("/logout")
 def logout():
     message = "Logout Successful!"
-    return render_template("login.html", message = message)
+    return render_template("login.html", message=message)
 
 
 if __name__ == '__main__':
     db.create_all()
     app.run(debug=True)
-
