@@ -15,17 +15,25 @@ db = SQLAlchemy(app)
 
 # USERS CLASS
 class Users(db.Model):
-    _id = db.Column("id", db.Integer, primary_key=True)
-    username = db.Column("username", db.String(256), unique=True)
+    id = db.Column("id", db.Integer, primary_key=True, autoincrement=False)
+    fname = db.Column("first_name", db.String(20))
+    lname = db.Column("last_name", db.String(50))
+    email = db.Column("email", db.String(50), unique=True)
     password = db.Column("password", db.String(256))
-    is_Admin = db.Column("admin", db.Boolean(0))
-    is_active = db.Column(db.Boolean(0))
+    account_type = db.Column("account_type", db.String(20))
+    sec_question = db.Column("question", db.Integer)
+    answer = db.Column("answer", db.String(100))
+    
 
-    def __init__(self, username, password, is_Admin, is_active):
-        self.username = username
+    def __init__(self, id, email, password, account_type, fname, lname, sec_question, answer):
+        self.email = email
         self.password = password
-        self.is_Admin = is_Admin
-        self.is_active = is_active
+        self.account_type = account_type
+        self.fname = fname
+        self.lname = lname
+        self.id = id
+        self.sec_question = sec_question
+        self.answer = answer
 
 
 # this checks credentials before login
@@ -37,18 +45,18 @@ def login():
     password_attempt = ''
 
     if request.method == "POST":
-        username_attempt = request.form["username"]
+        username_attempt = request.form["email"]
         password_attempt = request.form["password"]
 
-        user = Users.query.filter_by(username=username_attempt).first()
+        user = Users.query.filter_by(email=username_attempt).first()
         if not user:
             error = 'Invalid Username/Password!  Please try again.'
             return render_template('login.html', error=error)
-        elif check_password_hash(pwhash=user.password, password=password_attempt) and Users.query.filter_by(is_Admin=1):
+        elif check_password_hash(pwhash=user.password, password=password_attempt) and Users.query.filter_by(account_type='admin'):
             return render_template('home.html')
         elif check_password_hash(pwhash=user.password, password=password_attempt):
             return render_template('home.html')
-        elif password_attempt == user.password and Users.query.filter_by(is_Admin=1):
+        elif password_attempt == user.password and Users.query.filter_by(account_type='admin'):
             # used to direct to admin home page
             return render_template('home.html')
         elif password_attempt == user.password:
@@ -63,64 +71,47 @@ def login():
 def register_user():
     error = None
     if request.method == "POST":
-        add_username = request.form["username"]
+        add_id = request.form['employee_id']
         email = request.form["email"]
         password = request.form["password"]
         employee_id = request.form["employee_id"]
-        access_level = request.form["access_level"]
+        account_type = request.form["access_level"]
         question_1 = request.form["question_1"]
         answer_1 = request.form["answer_1"]
-        question_2 = request.form["question_2"]
-        answer_2 = request.form["answer_2"]
-        question_3 = request.form["question_3"]
-        answer_3 = request.form["answer_3"]
+        #first_name = request.form['first']
+        #last_name = request.form['last']
 
         # output for debugging only
-        print("username=" + add_username)
-        print("email=" + email)
+        print("username=" + email)
         print("password=" + password)
         print("employee_id=" + employee_id)
-        print("access_level=" + access_level)
+        print("access_level=" + account_type)
         print("question_1=" + question_1)
         print("answer_1=" + answer_1)
-        print("question_2=" + question_2)
-        print("answer_2=" + answer_2)
-        print("question_3=" + question_3)
-        print("answer_3=" + answer_3)
 
-        all_users = Users.query.all()
+        user = Users.query.filter_by(id=add_id).first()
 
-        for user in all_users:
-            if add_username == user.username:
-                error = "Username already exists"
-                return render_template('register.html', error=error)
-            elif add_username != user.username:
+        if user:
+            error = "Employee ID is already registered"
+            return render_template('register.html', error=error)
                 # will remove auto commit later. using for testing currently
-                if access_level == 'admin':
+        else:
+            if account_type == 'admin':
                     # set admin when sent
-                    new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
-                    new_user = Users(username=add_username, password=new_password, is_Admin=1, is_active=0)
-                    db.session.add(new_user)
-                    db.session.commit()
-                    message = 'Registration sent'
-                    return render_template('login.html')
-                else:
+                new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+                new_user = Users(email=email, password=new_password, account_type='admin')
+                db.session.add(new_user)
+                db.session.commit()
+                message = 'Registration sent'
+                return render_template('login.html')
+            else:
                     # set admin to 0
-                    new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
-                    new_user = Users(username=add_username, password=new_password, is_Admin=0, is_active=0)
-                    db.session.add(new_user)
-                    db.session.commit()
-                    message = 'Registration sent'
-                    return render_template('login.html', message=message)
-
-
-#        for user in all_users:
-#            if add_username == user.username:
-#                error = "Username already exists"
-#                return render_template('register.html', error=error)
-#            else:
-#                message = 'Registration Sent!'
-#                return render_template('login.html', message=message)
+                new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+                new_user = Users(id=add_id, fname='caro', lname='azzone', sec_question=question_1, answer = answer_1, email=email, password=new_password, account_type='instructor')
+                db.session.add(new_user)
+                db.session.commit()
+                message = 'Registration sent'
+                return render_template('login.html', message=message)
     else:
         return render_template('register.html')
 
@@ -136,7 +127,7 @@ class Instructor(db.Model):
         self.lname = lname
 
 
-@app.route('/instructors', methods=['GET', 'POST'])
+@app.route('/instructors', methods=['GET'])
 def get_all_instructors():
     instructors = Instructor.query.all()
     results = []
@@ -149,6 +140,20 @@ def get_all_instructors():
         results.append(instructor_data)
 
     return jsonify(results)
+
+
+@app.route('/instructors', methods=['POST'])
+def instructors():
+    if request.method=='POST':
+        #TODO: UPDATE THIS TO TAKE IN VALUE FROM FORM
+        id = 1
+        #check for existing instructor id first
+        instructor = Instructor.query.filter_by(id=id).first()
+        if instructor:
+            return 'This employee ID is already registered'
+        else:
+            ""
+    return ""
 
 
 # STUDENT CLASS
@@ -175,6 +180,28 @@ def get_all_students():
 
     return jsonify(results)
 
+
+#TODO  -- complete endpoint
+app.route('/students', methods=['POST'])
+def students():
+    return ""
+
+
+#TODO -- complete put students endpoint
+app.route('/students', methods=['PUT'])
+def students():
+    return ""
+
+
+#TODO -- complete delete students
+app.route('/students/<student_id>', methods=['DELETE'])
+def students(student_id):
+    student = Student.query.filter_by(student_id = student_id).first()
+    db.session.delete(student)
+    db.commit()
+
+    return "Deleted " + student.id
+   
 
 # COURSE CLASS
 class Course(db.Model):
@@ -242,6 +269,24 @@ def get_instructor_courses(instructor_id):
         return render_template("home.html")
 
 
+#TODO  -- complete endpoint
+app.route('/courses', methods=['POST'])
+def courses():
+    return ""
+
+
+#TODO -- complete put courses endpoint
+app.route('/courses', methods=['PUT'])
+def courses():
+    return ""
+
+
+#TODO -- complete delete courses
+app.route('/courses', methods=['DELETE'])
+def courses():
+    return ""
+
+    
 # OUTCOMES CLASS
 class Outcomes(db.Model):
     so_id = db.Column("so_id", db.Integer, primary_key=True)
@@ -254,7 +299,7 @@ class Outcomes(db.Model):
 
 
 @app.route("/outcomes", methods=["GET"])
-def get_all_outcomes():
+def outcomes():
     outcomes = Outcomes.query.all()
 
     results = []
@@ -280,7 +325,7 @@ class Assignments(db.Model):
 
 
 @app.route('/swp', methods=["GET"])
-def get_all_swp():
+def swp():
     swps = Assignments.query.all()
 
     results = []
@@ -295,6 +340,24 @@ def get_all_swp():
     return jsonify(results)
 
 
+#TODO  -- complete endpoint
+app.route('/swp', methods=['POST'])
+def swp():
+    return ""
+
+
+#TODO -- complete put swp endpoint
+app.route('/swp', methods=['PUT'])
+def swp():
+    return ""
+
+
+#TODO -- complete delete swp
+app.route('/swp', methods=['DELETE'])
+def swp():
+    return ""
+
+    
 # ATTEMPTS CLASS
 class Attempts(db.Model):
     attempt_id = db.Column("id", db.Integer, primary_key=True)
@@ -307,7 +370,7 @@ class Attempts(db.Model):
 
 
 @app.route('/attempts', methods=["GET"])
-def get_all_attempts():
+def attempts():
     attempts = Attempts.query.all()
 
     results = []
@@ -322,6 +385,24 @@ def get_all_attempts():
     return jsonify(results)
 
 
+#TODO  -- complete endpoint
+app.route('/attempts', methods=['POST'])
+def attempts():
+    return ""
+
+
+#TODO -- complete put attempts endpoint
+app.route('/attempts', methods=['PUT'])
+def attempts():
+    return ""
+
+
+#TODO -- complete delete attempts
+app.route('/attempts', methods=['DELETE'])
+def attempts():
+    return ""
+
+    
 # ENROLLED CLASS
 class Enrolled(db.Model):
     enrolled_id = db.Column(db.Integer, primary_key=True)
@@ -334,7 +415,7 @@ class Enrolled(db.Model):
 
 
 @app.route('/enrolled', methods=['GET'])
-def get_all_enrolled():
+def enrolled():
     enrolled = Enrolled.query.all()
     results = []
 
@@ -348,6 +429,24 @@ def get_all_enrolled():
     return jsonify(results)
 
 
+#TODO  -- complete endpoint
+app.route('/enrolled', methods=['POST'])
+def enrolled():
+    return ""
+
+
+#TODO -- complete put enrolled endpoint
+app.route('/enrolled', methods=['PUT'])
+def enrolled():
+    return ""
+
+
+#TODO -- complete delete enrolled
+app.route('/enrolled', methods=['DELETE'])
+def enrolled():
+    return ""
+
+    
 # RESULTS CLASS
 class Results(db.Model):
     _id = db.Column(db.Integer, primary_key=True)
@@ -360,9 +459,7 @@ class Results(db.Model):
 
 
 app.route('/results', methods=['GET'])
-
-
-def get_all_results():
+def results():
     results = Results.query.all()
     output = []
 
@@ -376,6 +473,24 @@ def get_all_results():
     return jsonify(output)
 
 
+#TODO  -- complete endpoint
+app.route('/results', methods=['POST'])
+def results():
+    return ""
+
+
+#TODO -- complete put results endpoint
+app.route('/results', methods=['PUT'])
+def results():
+    return ""
+
+
+#TODO -- complete delete results
+app.route('/results', methods=['DELETE'])
+def results():
+    return ""
+
+
 # BASE ROUTES (INDEX/HOME/REGISTER) -- THIS MAY BE MOVED LATER
 @app.route("/", methods=["POST", "GET"])
 def index():
@@ -385,6 +500,9 @@ def index():
 @app.route("/home", methods=["POST", "GET"])
 def home():
     courses = None
+    #if user not in session:
+    #    return redirect('login')
+   # else:
     return render_template("home.html")
 
 
