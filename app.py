@@ -127,7 +127,7 @@ class Instructor(db.Model):
         self.lname = lname
 
 
-@app.route('/instructors', methods=['GET'])
+@app.route('/instructors', methods=['GET', 'POST'])
 def get_all_instructors():
     instructors = Instructor.query.all()
     results = []
