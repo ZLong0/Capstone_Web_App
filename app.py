@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import create_engine
 
-app = Flask(__name__)
+app = Flask('CAPSTONE_WEB_APP')
 app.secret_key = "capstonefall2020"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///atas.sqlite3'
 db = SQLAlchemy(app)
@@ -128,7 +128,7 @@ class Instructor(db.Model):
 
 
 @app.route('/instructors', methods=['GET'])
-def instructors():
+def get_instructors():
     instructors = Instructor.query.all()
     results = []
 
@@ -143,7 +143,7 @@ def instructors():
 
 
 @app.route('/instructors', methods=['POST'])
-def instructors():
+def update_instructors():
     if request.method=='POST':
         #TODO: UPDATE THIS TO TAKE IN VALUE FROM FORM
         id = 1
@@ -181,19 +181,52 @@ def get_all_students():
     return jsonify(results)
 
 
-#TODO  -- complete endpoint
-app.route('/students/<student_id>', methods=['POST'])
-def students():
+@app.route('/students/<student_id>', methods=['GET','POST'])
+def update_student():
+    if request.method == 'POST':
+        try:
+        #get course to update by ID save in var
+            student = Student.query.get(request.form['id'])
+
+        #update existing course info based on form input       
+            student.fname = request.form['first_name']
+            student.lname = request.form['last_name']            
+
+            #commit changes to db
+            db.session.commit()
+            flash('Student Updated!')
+            return redirect(url_for('home'))
+        except:
+            flash('Update failed!')
+            return redirect(url_for('get_all_courses'))
+    
+    return render_template('/home')
+
     return ""
 
 
-#TODO -- complete put students endpoint
-app.route('/students', methods=['PUT'])
-def students():
-    return ""
+@app.route('/students', methods=['GET','PUT'])
+def add_students():
+    if request.method == 'PUT':
+        try:
+        #get course to update by ID save in var
+            student = Student.query.get(request.form['id'])
+
+        except:        
+           #commit changes to db
+           student = Student()
+           student.id = request.form['id']
+           student.fname = request.form['first_name']
+           student.lname = request.form['last_name']
+           db.session.add(student)
+           db.session.commit()
+           flash('Student Added!')
+           return redirect(url_for('get_all_courses'))
+    
+    return render_template('/home')
 
 
-app.route('/students/<student_id>', methods=['GET','DELETE'])
+@app.route('/students/<student_id>', methods=['GET','DELETE'])
 def delete_students(student_id):
     if request.method == 'DELETE':
         try:
@@ -229,7 +262,7 @@ class Course(db.Model):
         self.instructor = instructor
 
 
-@app.route('/courses', methods=["GET"])
+@app.route('/courses', methods=['GET'])
 def get_all_courses():
     all_courses = Course.query.all()
     results = []
@@ -274,20 +307,78 @@ def get_instructor_courses(instructor_id):
         return render_template("home.html")
 
 
-#TODO  -- complete endpoint
-app.route('/courses', methods=['POST'])
-def courses():
-    return ""
+
+@app.route('/courses', methods=['GET','POST'])
+def update_courses():
+    if request.method == 'POST':
+        try:
+        #get course to update by ID save in var
+            course = Course.query.get(request.form['id'])
+
+        #update existing course info based on form input       
+            course.term = request.form['term']
+            course.year = request.form['year']
+            course.deparment = request.form['department']
+            course.course_name = request.form['course_name']
+            course.course_number = request.form['course_number']
+            course.section = request.form['section']
+            course.instructor_id = request.form['instructor_id']
+
+            #commit changes to db
+            db.session.commit()
+            flash('Course Updated!')
+            return redirect(url_for('home'))
+        except:
+            flash('Update failed!')
+            return redirect(url_for('homt'))
+    
+    return render_template('/home')
 
 
-#TODO -- complete put courses endpoint
-app.route('/courses', methods=['PUT'])
-def courses():
-    return ""
+@app.route('/courses', methods=['GET','PUT'])
+def add_courses():
+    if request.method == 'PUT':
+        try:
+            #IF COURSE EXISTS RETURN INVALID ENTRY
+            new_course = Course()
+
+            #instantiate new course info based on form input       
+            new_course.term = request.form['term']
+            new_course.year = request.form['year']
+            new_course.deparment = request.form['department']
+            new_course.course_name = request.form['course_name']
+            new_course.course_number = request.form['course_number']
+            new_course.section = request.form['section']
+            new_course.instructor_id = request.form['instructor_id']
+
+            #check database for existing course overlap
+            existing_course = Course.query.filter_by(
+                term = new_course.term, 
+                year = new_course.year, 
+                department = new_course.department,
+                course_number = new_course.course_number, 
+                section = new_course.section)
+
+            #return error if existing course returns true otherwise add course
+            if existing_course:
+                flash ('Course already exists in selected semester/year!')
+                return redirect(url_for('home'))
+
+            else:
+                #commit changes to db
+                session.add(new_course)
+                db.session.commit()
+                flash('New Course Added!')
+                return redirect(url_for('home'))
+        #IF TRY FAILS -- RETURN FAILURE MESSAGE
+        except:
+            flash('Course Add failed!')
+            return redirect(url_for('home'))
+    
+    return render_template('/home')
 
 
-
-app.route('/courses/<course_id>', methods=['GET','DELETE'])
+@app.route('/courses/<course_id>', methods=['GET','DELETE'])
 def delete_courses(course_id):
     if request.method == 'DELETE':
         try:
@@ -311,6 +402,7 @@ class Outcomes(db.Model):
     def __init__(self, so_name, so_desc):
         self.so_name = so_name
         self.so_desc = so_desc
+
 
 #THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
 @app.route("/outcomes", methods=["GET"])
@@ -340,7 +432,7 @@ class Assignments(db.Model):
 
 
 @app.route('/swp', methods=["GET"])
-def swp():
+def get_swp():
     swps = Assignments.query.all()
 
     results = []
@@ -355,21 +447,62 @@ def swp():
     return jsonify(results)
 
 
-#TODO  -- complete endpoint
-app.route('/swp', methods=['POST'])
-def swp():
-    return ""
+@app.route('/swp', methods=['GET','POST'])
+def update_swp():
+    if request.method == 'POST':
+        try:
+            swp = Assignments.query.get(request.form('swp_id'))
+            swp.course_id = request.form('course_id')
+            swp.swp_name = request.form('swp_name')
+            db.session.commit()
+            flash("Student Work Product succesfully updated!")
+            return redirect(url_for('home'))
+        except:
+            flash("Error:  Student Work Product not found")
+            return redirect(url_for('home'))
+    return redirect(url_for('home'))
 
 
-#TODO -- complete put swp endpoint
-app.route('/swp', methods=['PUT'])
-def swp():
-    return ""
+@app.route('/swp', methods=['GET','PUT'])
+def add_swp():
+    if request.method == 'PUT':
+        try:
+            #IF EXISTS RETURN INVALID ENTRY
+            new_swp = Assignments()
+
+            #instantiate new work product info based on form input       
+            new_swp.course_id = request.form['course_id']
+            new_swp.swp_name = request.form['swp_name']
+           
+
+            #check database for existing  overlap
+            existing_swp = Assignments.query.filter_by(
+                swp_name = new_swp.swp_name, 
+                course_id = new_swp.course_id)
+               
+            #return error if existing info returns true -- otherwise add course
+            if existing_swp:
+                flash ('Student Work Product already exists in current course.  Please pick a unique name')
+                return redirect(url_for('home'))
+
+            else:
+                #commit changes to db
+                session.add(new_swp)
+                db.session.commit()
+                flash('New Work Product Added!')
+                return redirect(url_for('home'))
+        #IF TRY FAILS -- RETURN FAILURE MESSAGE
+        except:
+            flash('Work Product Add failed!')
+            return redirect(url_for('home'))
+    
+    return render_template('/home')
+
+    return redirect(url_for('home'))
 
 
-
-app.route('/swp/<swp_id>', methods=['GET','DELETE'])
-def swp(swp_id):
+@app.route('/swp/<swp_id>', methods=['GET','DELETE'])
+def delete_swp(swp_id):
     if request.method == 'DELETE':
         try:
             swp = Assignments.query.get(swp_id)
@@ -395,7 +528,7 @@ class Attempts(db.Model):
 
 
 @app.route('/attempts', methods=["GET"])
-def attempts():
+def get_attempts():
     attempts = Attempts.query.all()
 
     results = []
@@ -410,21 +543,60 @@ def attempts():
     return jsonify(results)
 
 
-#TODO  -- complete endpoint
-app.route('/attempts', methods=['POST'])
-def attempts():
-    return ""
+@app.route('/attempts', methods=['GET','POST'])
+def update_attempts():
+    if request.method == 'POST':
+        try:
+            attempt = Attempts.query.get(request.form('attempt_id'))
+            attempt.swp_id = request.form('swp_id')
+            attempt.so_id = request.form('so_id')
+            db.session.commit()
+            flash("Attempt record succesfully updated!")
+            return redirect(url_for('home'))
+        except:
+            flash("Error:  Values not found")
+            return redirect(url_for('home'))
+    return redirect(url_for('home'))
 
 
-#TODO -- complete put attempts endpoint
-app.route('/attempts', methods=['PUT'])
-def attempts():
-    return ""
+@app.route('/attempts', methods=['GET','PUT'])
+def add_attempts():
+    if request.method == 'PUT':
+        try:
+            #IF attempt EXISTS RETURN INVALID ENTRY
+            new_attempt = Attempts()
+
+            #instantiate new  info based on form input       
+            new_attempt.swp_id = request.form['swp_id']
+            new_attempt.so_id = request.form['so_id']
+
+            #check database for existing course overlap
+            existing_attempt = Attempts.query.filter_by(
+                swp_id = new_attempt.swp_id, 
+                so_id = new_attempt.so_id)
+
+            #return error if existing course returns true otherwise add course
+            if existing_attempt:
+                flash ('Info already exists!')
+                return redirect(url_for('home'))
+
+            else:
+                #commit changes to db
+                session.add(new_attempt)
+                db.session.commit()
+                flash('New SO/SWP combination Added!')
+                return redirect(url_for('home'))
+        #IF TRY FAILS -- RETURN FAILURE MESSAGE
+        except:
+            flash('Add failed!')
+            return redirect(url_for('home'))
+    
+    return redirect(url_for('home'))
 
 
 
-app.route('/attempts/<attempt_id>', methods=['GET','DELETE'])
-def attempts(attempt_id):
+@app.route('/attempts/<attempt_id>', methods=['GET','DELETE'])
+def delete_attempts(attempt_id):
     if request.method == 'DELETE':
         try:
             attempt = Attempts.query.get(attempt_id)
@@ -450,7 +622,7 @@ class Enrolled(db.Model):
 
 
 @app.route('/enrolled', methods=['GET'])
-def enrolled():
+def get_enrolled():
     enrolled = Enrolled.query.all()
     results = []
 
@@ -464,21 +636,19 @@ def enrolled():
     return jsonify(results)
 
 
-#TODO  -- complete endpoint
-app.route('/enrolled', methods=['POST'])
-def enrolled():
+#TODO -- UPDATE ENROLLMENTS
+@app.route('/enrolled', methods=['GET','POST'])
+def update_enrolled():
+    return ""     
+
+
+@app.route('/enrolled', methods=['PUT'])
+def add_enrolled():
     return ""
 
 
-#TODO -- complete put enrolled endpoint
-app.route('/enrolled', methods=['PUT'])
-def enrolled():
-    return ""
-
-
-
-app.route('/enrolled/<enrolled_id>', methods=['GET','DELETE'])
-def enrolled(enrolled_id):
+@app.route('/enrolled/<enrolled_id>', methods=['GET','DELETE'])
+def delete_enrolled(enrolled_id):
     if request.method == 'DELETE':
         try:
             enrollment = Enrolled.query.get(enrolled_id)
@@ -497,14 +667,16 @@ class Results(db.Model):
     _id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'))
     attempt_id = db.Column(db.Integer, db.ForeignKey('attempts.id'))
+    value = db.Column(db.Integer)
 
-    def __init__(self, student_id, attempt_id):
+    def __init__(self, student_id, attempt_id, value):
         self.student_id = student_id
         self.attempt_id = attempt_id
+        self.value = value
 
 
-app.route('/results', methods=['GET'])
-def results():
+@app.route('/results', methods=['GET'])
+def get_results():
     results = Results.query.all()
     output = []
 
@@ -513,27 +685,32 @@ def results():
         result_data['result id'] = result._id
         result_data['student id'] = result.student_id
         result_data['attempt id'] = results.attempt_id
+        result_data['value'] = results.valueP
+
         output.append(result_data)
 
     return jsonify(output)
 
 
 #TODO  -- complete endpoint
-app.route('/results', methods=['POST'])
-def results():
+@app.route('/results', methods=['GET','POST'])
+def update_results():
+    if request.method == "POST":
+        return ""
+        
     return ""
 
 
 #TODO -- complete put results endpoint
-app.route('/results', methods=['PUT'])
-def results():
+@app.route('/results', methods=['PUT'])
+def add_results():
     return ""
 
 
 
-app.route('/results/<result_id>)', methods=['GET','DELETE'])
-def results(result_id):
-    if request.method == 'DELETE':
+@app.route('/results/<result_id>)', methods=['GET','DELETE'])
+def delete_results(result_id):
+    if request.method == "DELETE":
         try:
             result = Results.query.get(result_id)
             db.session.delete(result)
