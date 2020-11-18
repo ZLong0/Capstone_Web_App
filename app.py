@@ -642,9 +642,39 @@ def update_enrolled():
     return ""     
 
 
-@app.route('/enrolled', methods=['PUT'])
+@app.route('/enrolled', methods=['GET','PUT'])
 def add_enrolled():
-    return ""
+    if request.method == 'PUT':
+        try:
+            #IF emrollment EXISTS RETURN INVALID ENTRY
+            new_enrollment = Enrolled()
+
+            #instantiate new  info based on form input       
+            new_enrollment.student_id = request.form['student_id']
+            new_enrollment.course_id = request.form['course_id']
+
+            #check database for existing enrollment overlap
+            existing_enrollment = Enrolled.query.filter_by(
+                student_id = new_enrollment.student_id, 
+                course_id = new_enrollment.course_id)
+
+            #return error if existing enrollment returns true -- otherwise add enrollment
+            if existing_enrollment:
+                flash ('Student already enrolled in this course!')
+                return redirect(url_for('home'))
+
+            else:
+                #commit changes to db
+                session.add(new_enrollment)
+                db.session.commit()
+                flash('Student successfully enrolled in course!')
+                return redirect(url_for('home'))
+        #IF TRY FAILS -- RETURN FAILURE MESSAGE
+        except:
+            flash('Enrollment failed!')
+            return redirect(url_for('home'))
+    
+    return redirect(url_for('home'))
 
 
 @app.route('/enrolled/<enrolled_id>', methods=['GET','DELETE'])
@@ -704,6 +734,7 @@ def update_results():
 #TODO -- complete put results endpoint
 @app.route('/results', methods=['PUT'])
 def add_results():
+    
     return ""
 
 
