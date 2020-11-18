@@ -127,8 +127,8 @@ class Instructor(db.Model):
         self.lname = lname
 
 
-@app.route('/instructors', methods=['GET', 'POST'])
-def get_all_instructors():
+@app.route('/instructors', methods=['GET'])
+def instructors():
     instructors = Instructor.query.all()
     results = []
 
@@ -182,7 +182,7 @@ def get_all_students():
 
 
 #TODO  -- complete endpoint
-app.route('/students', methods=['POST'])
+app.route('/students/<student_id>', methods=['POST'])
 def students():
     return ""
 
@@ -193,14 +193,19 @@ def students():
     return ""
 
 
-#TODO -- complete delete students
-app.route('/students/<student_id>', methods=['DELETE'])
-def students(student_id):
-    student = Student.query.filter_by(student_id = student_id).first()
-    db.session.delete(student)
-    db.commit()
+app.route('/students/<student_id>', methods=['GET','DELETE'])
+def delete_students(student_id):
+    if request.method == 'DELETE':
+        try:
+            student = Student.query.get(student_id)
+            db.session.delete(student)
+            db.commit()
 
-    return "Deleted " + student.id
+            flash("Student Deleted")
+        except:
+            flash("Error:  Delete Unsuccessful")
+
+    return redirect(url_for('home'))
    
 
 # COURSE CLASS
@@ -281,10 +286,20 @@ def courses():
     return ""
 
 
-#TODO -- complete delete courses
-app.route('/courses', methods=['DELETE'])
-def courses():
-    return ""
+
+app.route('/courses/<course_id>', methods=['GET','DELETE'])
+def delete_courses(course_id):
+    if request.method == 'DELETE':
+        try:
+            course = Course.query.get(course_id)
+            db.session.delete(course)
+            db.commit()
+
+            flash("Course Deleted")
+        except:
+            flash("Error:  Delete Unsuccessful")
+
+    return redirect(url_for('home'))
 
     
 # OUTCOMES CLASS
@@ -297,7 +312,7 @@ class Outcomes(db.Model):
         self.so_name = so_name
         self.so_desc = so_desc
 
-
+#THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
 @app.route("/outcomes", methods=["GET"])
 def outcomes():
     outcomes = Outcomes.query.all()
@@ -352,10 +367,20 @@ def swp():
     return ""
 
 
-#TODO -- complete delete swp
-app.route('/swp', methods=['DELETE'])
-def swp():
-    return ""
+
+app.route('/swp/<swp_id>', methods=['GET','DELETE'])
+def swp(swp_id):
+    if request.method == 'DELETE':
+        try:
+            swp = Assignments.query.get(swp_id)
+            db.session.delete(swp)
+            db.commit()
+
+            flash("Work Product Deleted")
+        except:
+            flash("Error:  Delete Unsuccessful")
+
+    return redirect(url_for('home'))
 
     
 # ATTEMPTS CLASS
@@ -397,10 +422,20 @@ def attempts():
     return ""
 
 
-#TODO -- complete delete attempts
-app.route('/attempts', methods=['DELETE'])
-def attempts():
-    return ""
+
+app.route('/attempts/<attempt_id>', methods=['GET','DELETE'])
+def attempts(attempt_id):
+    if request.method == 'DELETE':
+        try:
+            attempt = Attempts.query.get(attempt_id)
+            db.session.delete(attempt)
+            db.commit()
+
+            flash(" Deleted")
+        except:
+            flash("Error:  Delete Unsuccessful")
+
+    return redirect(url_for('home'))
 
     
 # ENROLLED CLASS
@@ -441,10 +476,20 @@ def enrolled():
     return ""
 
 
-#TODO -- complete delete enrolled
-app.route('/enrolled', methods=['DELETE'])
-def enrolled():
-    return ""
+
+app.route('/enrolled/<enrolled_id>', methods=['GET','DELETE'])
+def enrolled(enrolled_id):
+    if request.method == 'DELETE':
+        try:
+            enrollment = Enrolled.query.get(enrolled_id)
+            db.session.delete(enrollment)
+            db.commit()
+
+            flash("Enrollment Deleted")
+        except:
+            flash("Error:  Delete Unsuccessful")
+
+    return redirect(url_for('home'))
 
     
 # RESULTS CLASS
@@ -485,10 +530,20 @@ def results():
     return ""
 
 
-#TODO -- complete delete results
-app.route('/results', methods=['DELETE'])
-def results():
-    return ""
+
+app.route('/results/<result_id>)', methods=['GET','DELETE'])
+def results(result_id):
+    if request.method == 'DELETE':
+        try:
+            result = Results.query.get(result_id)
+            db.session.delete(result)
+            db.commit()
+
+            flash("Result Deleted")
+        except:
+            flash("Error:  Delete Unsuccessful")
+
+    return redirect(url_for('home'))
 
 
 # BASE ROUTES (INDEX/HOME/REGISTER) -- THIS MAY BE MOVED LATER
