@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import create_engine
 
-app = Flask(__name__)
+app = Flask('CAPSTONE_WEB_APP')
 app.secret_key = "capstonefall2020"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///atas.sqlite3'
 db = SQLAlchemy(app)
@@ -15,17 +15,25 @@ db = SQLAlchemy(app)
 
 # USERS CLASS
 class Users(db.Model):
-    _id = db.Column("id", db.Integer, primary_key=True)
-    username = db.Column("username", db.String(256), unique=True)
+    id = db.Column("id", db.Integer, primary_key=True, autoincrement=False)
+    fname = db.Column("first_name", db.String(20))
+    lname = db.Column("last_name", db.String(50))
+    email = db.Column("email", db.String(50), unique=True)
     password = db.Column("password", db.String(256))
-    is_Admin = db.Column("admin", db.Boolean(0))
-    is_active = db.Column(db.Boolean(0))
+    account_type = db.Column("account_type", db.String(20))
+    sec_question = db.Column("question", db.Integer)
+    answer = db.Column("answer", db.String(100))
+    
 
-    def __init__(self, username, password, is_Admin, is_active):
-        self.username = username
+    def __init__(self, id, email, password, account_type, fname, lname, sec_question, answer):
+        self.email = email
         self.password = password
-        self.is_Admin = is_Admin
-        self.is_active = is_active
+        self.account_type = account_type
+        self.fname = fname
+        self.lname = lname
+        self.id = id
+        self.sec_question = sec_question
+        self.answer = answer
 
 
 # this checks credentials before login
@@ -37,18 +45,18 @@ def login():
     password_attempt = ''
 
     if request.method == "POST":
-        username_attempt = request.form["username"]
+        username_attempt = request.form["email"]
         password_attempt = request.form["password"]
 
-        user = Users.query.filter_by(username=username_attempt).first()
+        user = Users.query.filter_by(email=username_attempt).first()
         if not user:
             error = 'Invalid Username/Password!  Please try again.'
             return render_template('login.html', error=error)
-        elif check_password_hash(pwhash=user.password, password=password_attempt) and Users.query.filter_by(is_Admin=1):
+        elif check_password_hash(pwhash=user.password, password=password_attempt) and Users.query.filter_by(account_type='admin'):
             return render_template('home.html')
         elif check_password_hash(pwhash=user.password, password=password_attempt):
             return render_template('home.html')
-        elif password_attempt == user.password and Users.query.filter_by(is_Admin=1):
+        elif password_attempt == user.password and Users.query.filter_by(account_type='admin'):
             # used to direct to admin home page
             return render_template('home.html')
         elif password_attempt == user.password:
@@ -63,64 +71,47 @@ def login():
 def register_user():
     error = None
     if request.method == "POST":
-        add_username = request.form["username"]
+        add_id = request.form['employee_id']
         email = request.form["email"]
         password = request.form["password"]
         employee_id = request.form["employee_id"]
-        access_level = request.form["access_level"]
+        account_type = request.form["access_level"]
         question_1 = request.form["question_1"]
         answer_1 = request.form["answer_1"]
-        question_2 = request.form["question_2"]
-        answer_2 = request.form["answer_2"]
-        question_3 = request.form["question_3"]
-        answer_3 = request.form["answer_3"]
+        #first_name = request.form['first']
+        #last_name = request.form['last']
 
         # output for debugging only
-        print("username=" + add_username)
-        print("email=" + email)
+        print("username=" + email)
         print("password=" + password)
         print("employee_id=" + employee_id)
-        print("access_level=" + access_level)
+        print("access_level=" + account_type)
         print("question_1=" + question_1)
         print("answer_1=" + answer_1)
-        print("question_2=" + question_2)
-        print("answer_2=" + answer_2)
-        print("question_3=" + question_3)
-        print("answer_3=" + answer_3)
 
-        all_users = Users.query.all()
+        user = Users.query.filter_by(id=add_id).first()
 
-        for user in all_users:
-            if add_username == user.username:
-                error = "Username already exists"
-                return render_template('register.html', error=error)
-            elif add_username != user.username:
+        if user:
+            error = "Employee ID is already registered"
+            return render_template('register.html', error=error)
                 # will remove auto commit later. using for testing currently
-                if access_level == 'admin':
+        else:
+            if account_type == 'admin':
                     # set admin when sent
-                    new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
-                    new_user = Users(username=add_username, password=new_password, is_Admin=1, is_active=0)
-                    db.session.add(new_user)
-                    db.session.commit()
-                    message = 'Registration sent'
-                    return render_template('login.html')
-                else:
+                new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+                new_user = Users(email=email, password=new_password, account_type='admin')
+                db.session.add(new_user)
+                db.session.commit()
+                message = 'Registration sent'
+                return render_template('login.html')
+            else:
                     # set admin to 0
-                    new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
-                    new_user = Users(username=add_username, password=new_password, is_Admin=0, is_active=0)
-                    db.session.add(new_user)
-                    db.session.commit()
-                    message = 'Registration sent'
-                    return render_template('login.html', message=message)
-
-
-#        for user in all_users:
-#            if add_username == user.username:
-#                error = "Username already exists"
-#                return render_template('register.html', error=error)
-#            else:
-#                message = 'Registration Sent!'
-#                return render_template('login.html', message=message)
+                new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+                new_user = Users(id=add_id, fname='caro', lname='azzone', sec_question=question_1, answer = answer_1, email=email, password=new_password, account_type='instructor')
+                db.session.add(new_user)
+                db.session.commit()
+                message = 'Registration sent'
+                return render_template('login.html', message=message)
     else:
         return render_template('register.html')
 
@@ -137,7 +128,7 @@ class Instructor(db.Model):
 
 
 @app.route('/instructors', methods=['GET'])
-def get_all_instructors():
+def get_instructors():
     instructors = Instructor.query.all()
     results = []
 
@@ -149,6 +140,20 @@ def get_all_instructors():
         results.append(instructor_data)
 
     return jsonify(results)
+
+
+@app.route('/instructors', methods=['POST'])
+def update_instructors():
+    if request.method=='POST':
+        #TODO: UPDATE THIS TO TAKE IN VALUE FROM FORM
+        id = 1
+        #check for existing instructor id first
+        instructor = Instructor.query.filter_by(id=id).first()
+        if instructor:
+            return 'This employee ID is already registered'
+        else:
+            ""
+    return ""
 
 
 # STUDENT CLASS
@@ -176,6 +181,66 @@ def get_all_students():
     return jsonify(results)
 
 
+@app.route('/students/<student_id>', methods=['GET','POST'])
+def update_student():
+    if request.method == 'POST':
+        try:
+        #get course to update by ID save in var
+            student = Student.query.get(request.form['id'])
+
+        #update existing course info based on form input       
+            student.fname = request.form['first_name']
+            student.lname = request.form['last_name']            
+
+            #commit changes to db
+            db.session.commit()
+            flash('Student Updated!')
+            return redirect(url_for('home'))
+        except:
+            flash('Update failed!')
+            return redirect(url_for('get_all_courses'))
+    
+    return render_template('/home')
+
+    return ""
+
+
+@app.route('/students', methods=['GET','PUT'])
+def add_students():
+    if request.method == 'PUT':
+        try:
+        #get course to update by ID save in var
+            student = Student.query.get(request.form['id'])
+
+        except:        
+           #commit changes to db
+           student = Student()
+           student.id = request.form['id']
+           student.fname = request.form['first_name']
+           student.lname = request.form['last_name']
+           db.session.add(student)
+           db.session.commit()
+           flash('Student Added!')
+           return redirect(url_for('get_all_courses'))
+    
+    return render_template('/home')
+
+
+@app.route('/students/<student_id>', methods=['GET','DELETE'])
+def delete_students(student_id):
+    if request.method == 'DELETE':
+        try:
+            student = Student.query.get(student_id)
+            db.session.delete(student)
+            db.commit()
+
+            flash("Student Deleted")
+        except:
+            flash("Error:  Delete Unsuccessful")
+
+    return redirect(url_for('home'))
+   
+
 # COURSE CLASS
 class Course(db.Model):
     _id = db.Column(db.Integer, primary_key=True)
@@ -197,7 +262,7 @@ class Course(db.Model):
         self.instructor = instructor
 
 
-@app.route('/courses', methods=["GET"])
+@app.route('/courses', methods=['GET'])
 def get_all_courses():
     all_courses = Course.query.all()
     results = []
@@ -242,6 +307,92 @@ def get_instructor_courses(instructor_id):
         return render_template("home.html")
 
 
+
+@app.route('/courses', methods=['GET','POST'])
+def update_courses():
+    if request.method == 'POST':
+        try:
+        #get course to update by ID save in var
+            course = Course.query.get(request.form['id'])
+
+        #update existing course info based on form input       
+            course.term = request.form['term']
+            course.year = request.form['year']
+            course.deparment = request.form['department']
+            course.course_name = request.form['course_name']
+            course.course_number = request.form['course_number']
+            course.section = request.form['section']
+            course.instructor_id = request.form['instructor_id']
+
+            #commit changes to db
+            db.session.commit()
+            flash('Course Updated!')
+            return redirect(url_for('home'))
+        except:
+            flash('Update failed!')
+            return redirect(url_for('homt'))
+    
+    return render_template('/home')
+
+
+@app.route('/courses', methods=['GET','PUT'])
+def add_courses():
+    if request.method == 'PUT':
+        try:
+            #IF COURSE EXISTS RETURN INVALID ENTRY
+            new_course = Course()
+
+            #instantiate new course info based on form input       
+            new_course.term = request.form['term']
+            new_course.year = request.form['year']
+            new_course.deparment = request.form['department']
+            new_course.course_name = request.form['course_name']
+            new_course.course_number = request.form['course_number']
+            new_course.section = request.form['section']
+            new_course.instructor_id = request.form['instructor_id']
+
+            #check database for existing course overlap
+            existing_course = Course.query.filter_by(
+                term = new_course.term, 
+                year = new_course.year, 
+                department = new_course.department,
+                course_number = new_course.course_number, 
+                section = new_course.section)
+
+            #return error if existing course returns true otherwise add course
+            if existing_course:
+                flash ('Course already exists in selected semester/year!')
+                return redirect(url_for('home'))
+
+            else:
+                #commit changes to db
+                session.add(new_course)
+                db.session.commit()
+                flash('New Course Added!')
+                return redirect(url_for('home'))
+        #IF TRY FAILS -- RETURN FAILURE MESSAGE
+        except:
+            flash('Course Add failed!')
+            return redirect(url_for('home'))
+    
+    return render_template('/home')
+
+
+@app.route('/courses/<course_id>', methods=['GET','DELETE'])
+def delete_courses(course_id):
+    if request.method == 'DELETE':
+        try:
+            course = Course.query.get(course_id)
+            db.session.delete(course)
+            db.commit()
+
+            flash("Course Deleted")
+        except:
+            flash("Error:  Delete Unsuccessful")
+
+    return redirect(url_for('home'))
+
+    
 # OUTCOMES CLASS
 class Outcomes(db.Model):
     so_id = db.Column("so_id", db.Integer, primary_key=True)
@@ -253,8 +404,9 @@ class Outcomes(db.Model):
         self.so_desc = so_desc
 
 
+#THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
 @app.route("/outcomes", methods=["GET"])
-def get_all_outcomes():
+def outcomes():
     outcomes = Outcomes.query.all()
 
     results = []
@@ -280,7 +432,7 @@ class Assignments(db.Model):
 
 
 @app.route('/swp', methods=["GET"])
-def get_all_swp():
+def get_swp():
     swps = Assignments.query.all()
 
     results = []
@@ -295,6 +447,75 @@ def get_all_swp():
     return jsonify(results)
 
 
+@app.route('/swp', methods=['GET','POST'])
+def update_swp():
+    if request.method == 'POST':
+        try:
+            swp = Assignments.query.get(request.form('swp_id'))
+            swp.course_id = request.form('course_id')
+            swp.swp_name = request.form('swp_name')
+            db.session.commit()
+            flash("Student Work Product succesfully updated!")
+            return redirect(url_for('home'))
+        except:
+            flash("Error:  Student Work Product not found")
+            return redirect(url_for('home'))
+    return redirect(url_for('home'))
+
+
+@app.route('/swp', methods=['GET','PUT'])
+def add_swp():
+    if request.method == 'PUT':
+        try:
+            #IF EXISTS RETURN INVALID ENTRY
+            new_swp = Assignments()
+
+            #instantiate new work product info based on form input       
+            new_swp.course_id = request.form['course_id']
+            new_swp.swp_name = request.form['swp_name']
+           
+
+            #check database for existing  overlap
+            existing_swp = Assignments.query.filter_by(
+                swp_name = new_swp.swp_name, 
+                course_id = new_swp.course_id)
+               
+            #return error if existing info returns true -- otherwise add course
+            if existing_swp:
+                flash ('Student Work Product already exists in current course.  Please pick a unique name')
+                return redirect(url_for('home'))
+
+            else:
+                #commit changes to db
+                session.add(new_swp)
+                db.session.commit()
+                flash('New Work Product Added!')
+                return redirect(url_for('home'))
+        #IF TRY FAILS -- RETURN FAILURE MESSAGE
+        except:
+            flash('Work Product Add failed!')
+            return redirect(url_for('home'))
+    
+    return render_template('/home')
+
+    return redirect(url_for('home'))
+
+
+@app.route('/swp/<swp_id>', methods=['GET','DELETE'])
+def delete_swp(swp_id):
+    if request.method == 'DELETE':
+        try:
+            swp = Assignments.query.get(swp_id)
+            db.session.delete(swp)
+            db.commit()
+
+            flash("Work Product Deleted")
+        except:
+            flash("Error:  Delete Unsuccessful")
+
+    return redirect(url_for('home'))
+
+    
 # ATTEMPTS CLASS
 class Attempts(db.Model):
     attempt_id = db.Column("id", db.Integer, primary_key=True)
@@ -307,7 +528,7 @@ class Attempts(db.Model):
 
 
 @app.route('/attempts', methods=["GET"])
-def get_all_attempts():
+def get_attempts():
     attempts = Attempts.query.all()
 
     results = []
@@ -322,6 +543,73 @@ def get_all_attempts():
     return jsonify(results)
 
 
+@app.route('/attempts', methods=['GET','POST'])
+def update_attempts():
+    if request.method == 'POST':
+        try:
+            attempt = Attempts.query.get(request.form('attempt_id'))
+            attempt.swp_id = request.form('swp_id')
+            attempt.so_id = request.form('so_id')
+            db.session.commit()
+            flash("Attempt record succesfully updated!")
+            return redirect(url_for('home'))
+        except:
+            flash("Error:  Values not found")
+            return redirect(url_for('home'))
+    return redirect(url_for('home'))
+
+
+@app.route('/attempts', methods=['GET','PUT'])
+def add_attempts():
+    if request.method == 'PUT':
+        try:
+            #IF attempt EXISTS RETURN INVALID ENTRY
+            new_attempt = Attempts()
+
+            #instantiate new  info based on form input       
+            new_attempt.swp_id = request.form['swp_id']
+            new_attempt.so_id = request.form['so_id']
+
+            #check database for existing course overlap
+            existing_attempt = Attempts.query.filter_by(
+                swp_id = new_attempt.swp_id, 
+                so_id = new_attempt.so_id)
+
+            #return error if existing course returns true otherwise add course
+            if existing_attempt:
+                flash ('Info already exists!')
+                return redirect(url_for('home'))
+
+            else:
+                #commit changes to db
+                session.add(new_attempt)
+                db.session.commit()
+                flash('New SO/SWP combination Added!')
+                return redirect(url_for('home'))
+        #IF TRY FAILS -- RETURN FAILURE MESSAGE
+        except:
+            flash('Add failed!')
+            return redirect(url_for('home'))
+    
+    return redirect(url_for('home'))
+
+
+
+@app.route('/attempts/<attempt_id>', methods=['GET','DELETE'])
+def delete_attempts(attempt_id):
+    if request.method == 'DELETE':
+        try:
+            attempt = Attempts.query.get(attempt_id)
+            db.session.delete(attempt)
+            db.commit()
+
+            flash(" Deleted")
+        except:
+            flash("Error:  Delete Unsuccessful")
+
+    return redirect(url_for('home'))
+
+    
 # ENROLLED CLASS
 class Enrolled(db.Model):
     enrolled_id = db.Column(db.Integer, primary_key=True)
@@ -334,7 +622,7 @@ class Enrolled(db.Model):
 
 
 @app.route('/enrolled', methods=['GET'])
-def get_all_enrolled():
+def get_enrolled():
     enrolled = Enrolled.query.all()
     results = []
 
@@ -348,21 +636,47 @@ def get_all_enrolled():
     return jsonify(results)
 
 
+#TODO -- UPDATE ENROLLMENTS
+@app.route('/enrolled', methods=['GET','POST'])
+def update_enrolled():
+    return ""     
+
+
+@app.route('/enrolled', methods=['PUT'])
+def add_enrolled():
+    return ""
+
+
+@app.route('/enrolled/<enrolled_id>', methods=['GET','DELETE'])
+def delete_enrolled(enrolled_id):
+    if request.method == 'DELETE':
+        try:
+            enrollment = Enrolled.query.get(enrolled_id)
+            db.session.delete(enrollment)
+            db.commit()
+
+            flash("Enrollment Deleted")
+        except:
+            flash("Error:  Delete Unsuccessful")
+
+    return redirect(url_for('home'))
+
+    
 # RESULTS CLASS
 class Results(db.Model):
     _id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'))
     attempt_id = db.Column(db.Integer, db.ForeignKey('attempts.id'))
+    value = db.Column(db.Integer)
 
-    def __init__(self, student_id, attempt_id):
+    def __init__(self, student_id, attempt_id, value):
         self.student_id = student_id
         self.attempt_id = attempt_id
+        self.value = value
 
 
-app.route('/results', methods=['GET'])
-
-
-def get_all_results():
+@app.route('/results', methods=['GET'])
+def get_results():
     results = Results.query.all()
     output = []
 
@@ -371,9 +685,42 @@ def get_all_results():
         result_data['result id'] = result._id
         result_data['student id'] = result.student_id
         result_data['attempt id'] = results.attempt_id
+        result_data['value'] = results.valueP
+
         output.append(result_data)
 
     return jsonify(output)
+
+
+#TODO  -- complete endpoint
+@app.route('/results', methods=['GET','POST'])
+def update_results():
+    if request.method == "POST":
+        return ""
+        
+    return ""
+
+
+#TODO -- complete put results endpoint
+@app.route('/results', methods=['PUT'])
+def add_results():
+    return ""
+
+
+
+@app.route('/results/<result_id>)', methods=['GET','DELETE'])
+def delete_results(result_id):
+    if request.method == "DELETE":
+        try:
+            result = Results.query.get(result_id)
+            db.session.delete(result)
+            db.commit()
+
+            flash("Result Deleted")
+        except:
+            flash("Error:  Delete Unsuccessful")
+
+    return redirect(url_for('home'))
 
 
 # BASE ROUTES (INDEX/HOME/REGISTER) -- THIS MAY BE MOVED LATER
@@ -385,6 +732,9 @@ def index():
 @app.route("/home", methods=["POST", "GET"])
 def home():
     courses = None
+    #if user not in session:
+    #    return redirect('login')
+   # else:
     return render_template("home.html")
 
 
