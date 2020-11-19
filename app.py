@@ -52,15 +52,15 @@ def login():
         if not user:
             error = 'Invalid Username/Password!  Please try again.'
             return render_template('login.html', error=error)
-        elif check_password_hash(pwhash=user.password, password=password_attempt) and Users.query.filter_by(account_type='admin'):
+        elif check_password_hash(pwhash=user.password, password=password_attempt) and (user.account_type == 'admin' or user.account_type =='root'):
             return redirect(url_for('home'))
-        elif check_password_hash(pwhash=user.password, password=password_attempt):
+        elif check_password_hash(pwhash=user.password, password=password_attempt) and user.account_type == 'instructor':
             return redirect(url_for('instructor_home'))
         elif password_attempt == user.password and Users.query.filter_by(account_type='admin'):
             # used to direct to admin home page
             return render_template('home.html')
         elif password_attempt == user.password:
-            return render_template('home.html')
+            return render_template('inst_home.html')
 
     error = 'Invalid Username/Password!  Please try again.'
     return render_template('login.html', error=error)
@@ -281,7 +281,7 @@ def get_all_courses():
         course_info['instructor_id'] = course.instructor
         results.append(course_info)
 
-    return jsonify(results)
+    return render_template('courses.html', courses = results)
 
 
 # gets all courses for specific instructor id
@@ -307,10 +307,10 @@ def get_instructor_courses(instructor_id):
 
             #debug
             print(course._id)
-        return render_template("inst_home.html", courses=results)
+        return render_template("inst_courses.html", courses=results)
 
     else:
-        return render_template("home.html")
+        return render_template("inst_courses.html")
 
 
 @app.route('/courses', methods=['GET','POST'])

@@ -30,7 +30,7 @@
 			        <div class="nav-item dropdown">
 						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
 						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                            {% if coursinst_es %}
+                            {% if courses %}
                                 {% for course in courses %}
                                     <a class="dropdown-item" href="{{url_for('get_enrolled', course_id = course.course_id)}}">{{course.course_department}} {{course.course_number}}:{{course.section}}</a>
                                 {% endfor %}
