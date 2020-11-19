@@ -313,7 +313,6 @@ def get_instructor_courses(instructor_id):
         return render_template("home.html")
 
 
-
 @app.route('/courses', methods=['GET','POST'])
 def update_courses():
     if request.method == 'POST':
@@ -336,7 +335,7 @@ def update_courses():
             return redirect(url_for('home'))
         except:
             flash('Update failed!')
-            return redirect(url_for('homt'))
+            return redirect(url_for('home'))
     
     return render_template('/home')
 
@@ -634,8 +633,11 @@ def get_enrolled(course_id):
 
     for enroll in enrolled:
         enrollment_data = {}
+        student_id = enroll.student_id
+        student = Student.query.get(student_id)
         enrollment_data['enrolled_id'] = enroll.enrolled_id
-        enrollment_data['student_id'] = enroll.student_id
+        enrollment_data['student_first'] = student.fname
+        enrollment_data['student_last'] = student.lname
         enrollment_data['course_id'] = enroll.course_id
         results.append(enrollment_data)
 
