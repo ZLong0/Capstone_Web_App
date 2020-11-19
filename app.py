@@ -436,17 +436,38 @@ class Assignments(db.Model):
         self.swp_name = swp_name
 
 
+
+#THIS GETS ALL WORK PRODUCTS IN THE DATABASE
 @app.route('/swp', methods=["GET"])
-def get_swp():
+def get_all_swp():
     swps = Assignments.query.all()
 
     results = []
 
     for swp in swps:
         swp_data = {}
+        course = Course.query.get(swp.course_id)
         swp_data['swp_id'] = swp.swp_id
         swp_data['swp_name'] = swp.swp_name
-        swp_data['course_id'] = swp.course_id
+        swp_data['course name'] = course.course_name
+        results.append(swp_data)
+
+    return jsonify(results)
+
+
+#THIS GETS WORK PRODUCT FOR SPECIFIC COURSE
+@app.route('/swp/<int:course_id>', methods=["GET"])
+def get_course_swp(course_id):
+    swps = Assignments.query.filter_by(course_id = course_id).all()
+
+    results = []
+
+    for swp in swps:
+        swp_data = {}
+        course = Course.query.get(swp.course_id)
+        swp_data['swp_id'] = swp.swp_id
+        swp_data['swp_name'] = swp.swp_name
+        swp_data['course name'] = course.course_name
         results.append(swp_data)
 
     return jsonify(results)
@@ -532,17 +553,23 @@ class Attempts(db.Model):
         self.so_id = so_id
 
 
+#GET ALL ATTEMPTS -- UNION OF SWP AND SO
 @app.route('/attempts', methods=["GET"])
-def get_attempts():
+def get_all_attempts():
     attempts = Attempts.query.all()
 
     results = []
 
     for attempt in attempts:
         attempt_data = {}
+        swp = Assignments.query.get(attempt.swp_id)
+        so = Outcomes.query.get(attempt.so_id)
+        course = Course.query.get(swp.course_id)
+
         attempt_data['attempt_id'] = attempt.attempt_id
-        attempt_data['swp'] = attempt.swp_id
-        attempt_data['so'] = attempt.so_id
+        attempt_data['course_name'] = course.course_name
+        attempt_data['swp'] = swp.swp_name
+        attempt_data['so'] = so.so_name
         results.append(attempt_data)
 
     return jsonify(results)
@@ -626,6 +653,7 @@ class Enrolled(db.Model):
         self.course_id = course_id
 
 
+#GET ENROLLMENTS FOR A SPECIFIC COURSE
 @app.route('/enrolled/<int:course_id>', methods=['GET'])
 def get_enrolled(course_id):
     enrolled = Enrolled.query.filter_by(course_id = course_id)
@@ -721,13 +749,18 @@ def get_results():
 
     for result in results:
         result_data = {}
+        student = Student.query.get(result.student_id)
+        attempt = Attempts.query.get(result.attempt_id)
+        swp = Assignments.query.get(attempt.swp_id)
+
         result_data['result id'] = result._id
-        result_data['student id'] = result.student_id
-        result_data['attempt id'] = results.attempt_id
+        result_data['student first'] = student.fname
+        result_data['student last'] = student.lname
+        result_data['swp name'] = swp.swp_name
         result_data['value'] = results.valueP
 
         output.append(result_data)
-
+    print(output)
     return jsonify(output)
 
 
@@ -774,7 +807,7 @@ def home():
     courses = None
     #if user not in session:
     #    return redirect('login')
-   # else:
+    #else:
     return render_template("home.html")
 
 
