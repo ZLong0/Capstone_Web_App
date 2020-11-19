@@ -293,6 +293,7 @@ def get_instructor_courses(instructor_id):
 
         for course in courses:
             course_info = {}
+            course_info['course_id'] = course._id
             course_info['course_name'] = course.course_name
             course_info['term'] = course.term
             course_info['year'] = course.year
@@ -301,7 +302,9 @@ def get_instructor_courses(instructor_id):
             course_info['section'] = course.section
             results.append(course_info)
 
-        return render_template("home.html", courses=results)
+            #debug
+            print(course._id)
+        return render_template("inst_home.html", courses=results)
 
     else:
         return render_template("home.html")
@@ -621,18 +624,19 @@ class Enrolled(db.Model):
         self.course_id = course_id
 
 
-@app.route('/enrolled', methods=['GET'])
-def get_enrolled():
-    enrolled = Enrolled.query.all()
+@app.route('/enrolled/<int:course_id>', methods=['GET'])
+def get_enrolled(course_id):
+    enrolled = Enrolled.query.filter_by(course_id = course_id)
     results = []
 
     for enroll in enrolled:
         enrollment_data = {}
-        enrollment_data['enrolled-id'] = enroll.enrolled_id
-        enrollment_data['student-id'] = enroll.student_id
+        enrollment_data['enrolled_id'] = enroll.enrolled_id
+        enrollment_data['student_id'] = enroll.student_id
         enrollment_data['course_id'] = enroll.course_id
         results.append(enrollment_data)
 
+    print(results)
     return jsonify(results)
 
 
