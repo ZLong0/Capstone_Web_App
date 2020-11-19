@@ -78,8 +78,8 @@ def register_user():
         account_type = request.form["access_level"]
         question_1 = request.form["question_1"]
         answer_1 = request.form["answer_1"]
-        #first_name = request.form['first']
-        #last_name = request.form['last']
+        first_name = request.form['fname']
+        last_name = request.form['lname']
 
         # output for debugging only
         print("username=" + email)
@@ -94,21 +94,23 @@ def register_user():
         if user:
             error = "Employee ID is already registered"
             return render_template('register.html', error=error)
-                # will remove auto commit later. using for testing currently
+            # will remove auto commit later. using for testing currently
         else:
             if account_type == 'admin':
-                    # set admin when sent
+                # set admin when sent
                 new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
-                new_user = Users(email=email, password=new_password, account_type='admin')
+                new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=email, password=new_password, account_type='admin', sec_question=question_1, answer=answer_1)
                 db.session.add(new_user)
                 db.session.commit()
                 message = 'Registration sent'
                 return render_template('login.html')
             else:
-                    # set admin to 0
+                # set admin to 0
                 new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
-                new_user = Users(id=add_id, fname='caro', lname='azzone', sec_question=question_1, answer = answer_1, email=email, password=new_password, account_type='instructor')
+                new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=email, password=new_password, account_type='instructor', sec_question=question_1, answer=answer_1)
+                new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
                 db.session.add(new_user)
+                db.session.add(new_instructor)
                 db.session.commit()
                 message = 'Registration sent'
                 return render_template('login.html', message=message)
@@ -118,11 +120,12 @@ def register_user():
 
 # INSTRUCTORS CLASS
 class Instructor(db.Model):
-    inst_id = db.Column("id", db.Integer, primary_key=True)
+    inst_id = db.Column("id", db.Integer, primary_key=True, autoincrement=False)
     fname = db.Column(db.String(100))
     lname = db.Column(db.String(100))
 
-    def __init__(self, fname, lname):
+    def __init__(self, inst_id, fname, lname):
+        self.inst_id = inst_id
         self.fname = fname
         self.lname = lname
 
