@@ -53,9 +53,9 @@ def login():
             error = 'Invalid Username/Password!  Please try again.'
             return render_template('login.html', error=error)
         elif check_password_hash(pwhash=user.password, password=password_attempt) and Users.query.filter_by(account_type='admin'):
-            return render_template('home.html')
+            return redirect(url_for('home'))
         elif check_password_hash(pwhash=user.password, password=password_attempt):
-            return render_template('home.html')
+            return redirect(url_for('instructor_home'))
         elif password_attempt == user.password and Users.query.filter_by(account_type='admin'):
             # used to direct to admin home page
             return render_template('home.html')
@@ -292,7 +292,7 @@ def get_instructor_courses(instructor_id):
 
     if request.method == "GET":
         if not courses:
-            return {"No courses assigned to this instructor"}
+            return "No courses assigned to this instructor"
 
         for course in courses:
             course_info = {}
@@ -423,6 +423,22 @@ def outcomes():
         results.append(outcome_data)
 
     return render_template('outcomes.html', outcomes=results)
+
+
+#THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
+@app.route("/inst_outcomes", methods=["GET"])
+def instructor_outcomes():
+    outcomes = Outcomes.query.all()
+
+    results = []
+
+    for outcome in outcomes:
+        outcome_data = {}
+        outcome_data['so_name'] = outcome.so_name
+        outcome_data['so_desc'] = outcome.so_desc
+        results.append(outcome_data)
+
+    return render_template('inst_outcomes.html', outcomes=results)
 
 
 # ASSIGNMENTS (SWP) CLASS
@@ -809,6 +825,15 @@ def home():
     #    return redirect('login')
     #else:
     return render_template("home.html")
+
+
+@app.route("/inst_home", methods=["POST", "GET"])
+def instructor_home():
+    courses = None
+    #if user not in session:
+    #    return redirect('login')
+    #else:
+    return render_template("inst_home.html")
 
 
 @app.route("/logout")

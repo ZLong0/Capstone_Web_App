@@ -27,22 +27,19 @@
       		<div class="collapse navbar-collapse" id="navbarResponsive">
 				<div class="navbar-nav ml-auto">
 					<a class="nav-item nav-link active" href="/inst_home">Home</a>
-			        <div class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
-						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                            {% if courses %}
-                                {% for course in courses %}
-                                    <a class="dropdown-item" href="{{url_for('get_enrolled', course_id = course.course_id)}}">{{course.course_department}} {{course.course_number}}:{{course.section}}</a>
-                                {% endfor %}
-                            {% endif %}
-						</div>
-					</div>
+					<a class="nav-item nav-link" href="/courses">Courses</a>
 					<a class="nav-item nav-link" href="/inst_outcomes">Student Outcomes</a>
-					
 					<a class="nav-item nav-link" href="/logout">Log Out</a>
 				</div>
-      		</div> 
-    	</div><!--END NAV CONTAINER-->
-	  </nav>
+      		</div>
+    	</div>
+      </nav>
+      
+      <ul>
+        <h4>Student Outcomes</h4> 
+        {% for outcome in outcomes %}        
+            <p>{{ outcome.so_name }} -- {{outcome.so_desc}}</p>
+        {% endfor %}
+	  </ul>
   </body>
 </html>
