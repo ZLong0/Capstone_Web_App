@@ -26,26 +26,26 @@
       		</button>
       		<div class="collapse navbar-collapse" id="navbarResponsive">
 				<div class="navbar-nav ml-auto">
-					<a class="nav-item nav-link active" href="/home">Home</a>
-					<a class="nav-item nav-link" href="/courses">Courses</a>
-					<a class="nav-item nav-link" href="/outcomes">Student Outcomes</a>
-					<div class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Administrative Tasks</a>
+					<a class="nav-item nav-link active" href="/inst_home">Home</a>
+			        <div class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
 						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-							<a class="dropdown-item" href="/registration_requests">Registration Requests</a>
-							<a class="dropdown-item" href="/manage_users">Manage Users</a>
-							<a class="dropdown-item" href="/edit_courses">Edit Courses</a>
-							<a class="dropdown-item" href="/edit_student_outcomes">Edit Student Outcomes</a>
-							<a class="dropdown-item" href="/generate_report">Generate Report</a>
+                            {% if coursinst_es %}
+                                {% for course in courses %}
+                                    <a class="dropdown-item" href="{{url_for('get_enrolled', course_id = course.course_id)}}">{{course.course_department}} {{course.course_number}}:{{course.section}}</a>
+                                {% endfor %}
+                            {% endif %}
 						</div>
 					</div>
+					<a class="nav-item nav-link" href="/inst_outcomes">Student Outcomes</a>
+					
 					<a class="nav-item nav-link" href="/logout">Log Out</a>
 				</div>
-      		</div>
-    	</div>
-	  </nav>
-	  <div>
-		<h2>Welcome Admin!</h2>
-	  </div>
+      		</div> 
+    	</div><!--END NAV CONTAINER-->
+      </nav>
+      <div class="main_content">
+          <h2>My Courses!</h2>
+      </div>
   </body>
 </html>
