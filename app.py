@@ -79,7 +79,14 @@ def login():
             return redirect(url_for('home'))
         elif check_password_hash(pwhash=user.password, password=password_attempt) and user.account_type == 'instructor':
             login_user(user)
-            return redirect(url_for('instructor_home'))
+            user = current_user
+            courses = Course.query.filter_by(instructor = Users.get_id(user))
+
+            if not courses:
+                return redirect(url_for('instructor_home', current_user = current_user))
+
+            else:
+                return redirect(url_for('instructor_home', current_user = current_user, courses = courses))
         elif password_attempt == user.password and Users.query.filter_by(account_type='admin'):
            
             # used to direct to admin home page
@@ -299,6 +306,12 @@ class Course(db.Model):
 @app.route('/courses', methods=['GET'])
 @login_required
 def get_all_courses():
+
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+    if user.account_type == 'instructor':
+        return redirect(url_for('get_instructor_courses'))
+    
     all_courses = Course.query.all()
     results = []
 
@@ -325,21 +338,19 @@ def get_instructor_courses(instructor_id):
 
     if request.method == "GET":
         if not courses:
-            return "No courses assigned to this instructor"
+            results = "No courses assigned"
+        else:
+            for course in courses:
+                course_info = {}
+                course_info['course_id'] = course._id
+                course_info['course_name'] = course.course_name
+                course_info['term'] = course.term
+                course_info['year'] = course.year
+                course_info['course_department'] = course.department
+                course_info['course_number'] = course.course_number
+                course_info['section'] = course.section
+                results.append(course_info)
 
-        for course in courses:
-            course_info = {}
-            course_info['course_id'] = course._id
-            course_info['course_name'] = course.course_name
-            course_info['term'] = course.term
-            course_info['year'] = course.year
-            course_info['course_department'] = course.department
-            course_info['course_number'] = course.course_number
-            course_info['section'] = course.section
-            results.append(course_info)
-
-            #debug
-            print(course._id)
         return render_template("inst_courses.html", courses=results)
 
     else:
@@ -449,6 +460,12 @@ class Outcomes(db.Model):
 @app.route("/outcomes", methods=["GET"])
 @login_required
 def outcomes():
+
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+    if user.account_type == 'instructor':
+        return redirect(url_for('instructor_outcomes'))
+    
     outcomes = Outcomes.query.all()
 
     results = []
@@ -876,30 +893,33 @@ def index():
 @app.route("/home", methods=["POST", "GET"])
 @login_required
 def home():
-    courses = None
-    #if user not in session:
-    #    return redirect('login')
-    #else:
-    return render_template("home.html")
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+    courses = Course.query.all()
+
+    if user.account_type == 'instructor':
+        return redirect(url_for('instructor_home'))
+
+    return render_template("home.html", courses = courses)
 
 
 @app.route("/inst_home", methods=["POST", "GET"])
 @login_required
 def instructor_home():
-    courses = None
-    #if user not in session:
-    #    return redirect('login')
-    #else:
-    return render_template("inst_home.html")
+    courses = []
+
+    user = current_user
+    courses = Course.query.filter_by(instructor = Users.get_id(user)).all()
+    
+    if not courses:
+        return render_template("inst_home.html", current_user = user)
+    else:
+        return render_template("inst_home.html", current_user = user, courses = courses)
 
 
 @app.route("/logout")
 @login_required
 def logout():
-    user = current_user
-    user.is_authenticated = False
-    db.session.add(user)
-    db.session.commit()
     logout_user()
     message = "Logout Successful!"
     return render_template("login.html", message=message)
