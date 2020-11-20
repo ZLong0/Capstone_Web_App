@@ -45,12 +45,22 @@
     	</div>
 	  </nav>
 	  <div>
-	  {% if courses %}
-	  	<h4>Courses</h4> 
-	  		{% for course in courses %}        
-		 	 <p class='course_link'>{{ course.course_department }} {{course.course_number}}: {{course.section}}</p>
-	  		{% endfor %}
-	  {% endif %}
+		{% if enrolled %}
+		<h2>Course</h2>
+				<table> 
+					<th>
+						<td>Name</td>
+						<td>T-Number</td>
+					</th>
+				{% for enroll in enrolled %}
+				  <tr>
+					  <td>{{enroll.student_last}}, {{enroll.student_first}}</td>
+					  <td> {{enroll.student_id}}</td>
+				  </tr>
+
+			  {% endfor %}
+			  </table>
+		{% endif %}
 	  </div>
   </body>
 </html

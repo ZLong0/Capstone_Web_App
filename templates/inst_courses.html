@@ -13,8 +13,7 @@
 	  <link href="../static/styles/styles.css" rel="stylesheet">
   </head>
  
-  <body>
-	  
+  <body>	  
 	  <nav class="navbar navbar-expand-lg navbar-dark static-top" id="nav">
  		<div class="container">
       		<div class="navbar-brand">
@@ -32,7 +31,7 @@
 						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             {% if courses %}
                                 {% for course in courses %}
-                                    <a class="dropdown-item" href="{{url_for('get_enrolled', course_id = course.course_id)}}">{{course.course_department}} {{course.course_number}}:{{course.section}}</a>
+                                    <a class="dropdown-item" href="{{url_for('get_enrolled', course_id = course.id)}}">{{course.department}} {{course.course_number}}:{{course.section}}</a>
 								{% endfor %}
 							{% else  %}
 								<a class="dropdown-item" href="">No Courses Assigned</a>
@@ -47,7 +46,20 @@
     	</div><!--END NAV CONTAINER-->
       </nav>
       <div class="main_content">
-          <h2>My Courses!</h2>
+		{% if enrolled %}
+		  <h2>Course</h2>
+		  		<table> 
+					<th>Name</th>
+					<th>T-Number</th>
+			  	{% for enroll in enrolled %}
+					<tr>
+						<td>{{enroll.student_last}}, {{enroll.student_first}}</td>
+						<td> {{enroll.student_id}}</td>
+					</tr>
+
+				{% endfor %}
+				</table>
+		{% endif %}
       </div>
   </body>
 </html>
