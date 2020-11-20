@@ -287,7 +287,7 @@ def delete_students(student_id):
 
 # COURSE CLASS
 class Course(db.Model):
-    _id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     course_name = db.Column(db.String(100))
     term = db.Column(db.String(11))
     year = db.Column(db.String(4))
@@ -345,7 +345,7 @@ def get_instructor_courses(instructor_id):
         else:
             for course in courses:
                 course_info = {}
-                course_info['course_id'] = course._id
+                course_info['course_id'] = course.id
                 course_info['course_name'] = course.course_name
                 course_info['term'] = course.term
                 course_info['year'] = course.year
@@ -742,19 +742,25 @@ class Enrolled(db.Model):
 def get_enrolled(course_id):
     enrolled = Enrolled.query.filter_by(course_id = course_id)
     results = []
+    user = current_user
 
     for enroll in enrolled:
         enrollment_data = {}
         student_id = enroll.student_id
         student = Student.query.get(student_id)
-        enrollment_data['enrolled_id'] = enroll.enrolled_id
+        enrollment_data['student_id'] = student.student_id
         enrollment_data['student_first'] = student.fname
         enrollment_data['student_last'] = student.lname
         enrollment_data['course_id'] = enroll.course_id
         results.append(enrollment_data)
 
     print(results)
-    return jsonify(results)
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+    if user.account_type == 'instructor':
+        return render_template('inst_courses.html', enrolled = results)
+    else:
+        return render_template('courses.html', enrolled = results)
 
 
 #TODO -- UPDATE ENROLLMENTS
