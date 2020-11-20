@@ -2,13 +2,14 @@
 from flask import Flask, render_template, jsonify, request, session, redirect, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from sqlalchemy import create_engine
 
 app = Flask('CAPSTONE_WEB_APP')
 app.secret_key = "capstonefall2020"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///atas.sqlite3'
 db = SQLAlchemy(app)
-
+login_manager = LoginManager(app)
 
 # DATABASE MODELS ARE FOLLOWED DIRECTLY BY THE METHODS THAT CORRESPOND TO THOSE OPJECTS
 # IF TIME ALLOWS - MOVE MODELS TO THEIR OWN MODELS.PY FILE
@@ -34,6 +35,27 @@ class Users(db.Model):
         self.id = id
         self.sec_question = sec_question
         self.answer = answer
+    
+
+    def is_active(self):
+        return True
+    
+
+    def is_authenticated(self):
+        return self.authenticated
+
+
+    def get_id(self):
+        return self.id
+
+
+    def is_anonymous(self):
+        return False
+
+
+@login_manager.user_loader
+def user_loader(user_id):
+    return Users.query.get(user_id)
 
 
 # this checks credentials before login
@@ -53,10 +75,13 @@ def login():
             error = 'Invalid Username/Password!  Please try again.'
             return render_template('login.html', error=error)
         elif check_password_hash(pwhash=user.password, password=password_attempt) and (user.account_type == 'admin' or user.account_type =='root'):
+            login_user(user)
             return redirect(url_for('home'))
         elif check_password_hash(pwhash=user.password, password=password_attempt) and user.account_type == 'instructor':
+            login_user(user)
             return redirect(url_for('instructor_home'))
         elif password_attempt == user.password and Users.query.filter_by(account_type='admin'):
+           
             # used to direct to admin home page
             return render_template('home.html')
         elif password_attempt == user.password:
@@ -131,6 +156,7 @@ class Instructor(db.Model):
 
 
 @app.route('/instructors', methods=['GET'])
+@login_required
 def get_instructors():
     instructors = Instructor.query.all()
     results = []
@@ -146,6 +172,7 @@ def get_instructors():
 
 
 @app.route('/instructors', methods=['POST'])
+@login_required
 def update_instructors():
     if request.method=='POST':
         #TODO: UPDATE THIS TO TAKE IN VALUE FROM FORM
@@ -171,6 +198,7 @@ class Student(db.Model):
 
 
 @app.route('/students', methods=['GET'])
+@login_required
 def get_all_students():
     students = Student.query.all()
     results = []
@@ -185,6 +213,7 @@ def get_all_students():
 
 
 @app.route('/students/<student_id>', methods=['GET','POST'])
+@login_required
 def update_student():
     if request.method == 'POST':
         try:
@@ -209,6 +238,7 @@ def update_student():
 
 
 @app.route('/students', methods=['GET','PUT'])
+@login_required
 def add_students():
     if request.method == 'PUT':
         try:
@@ -230,6 +260,7 @@ def add_students():
 
 
 @app.route('/students/<student_id>', methods=['GET','DELETE'])
+@login_required
 def delete_students(student_id):
     if request.method == 'DELETE':
         try:
@@ -266,6 +297,7 @@ class Course(db.Model):
 
 
 @app.route('/courses', methods=['GET'])
+@login_required
 def get_all_courses():
     all_courses = Course.query.all()
     results = []
@@ -286,6 +318,7 @@ def get_all_courses():
 
 # gets all courses for specific instructor id
 @app.route('/courses/<instructor_id>', methods=['GET'])
+@login_required
 def get_instructor_courses(instructor_id):
     courses = Course.query.filter_by(instructor=instructor_id).all()
     results = []
@@ -314,6 +347,7 @@ def get_instructor_courses(instructor_id):
 
 
 @app.route('/courses', methods=['GET','POST'])
+@login_required
 def update_courses():
     if request.method == 'POST':
         try:
@@ -341,6 +375,7 @@ def update_courses():
 
 
 @app.route('/courses', methods=['GET','PUT'])
+@login_required
 def add_courses():
     if request.method == 'PUT':
         try:
@@ -384,6 +419,7 @@ def add_courses():
 
 
 @app.route('/courses/<course_id>', methods=['GET','DELETE'])
+@login_required
 def delete_courses(course_id):
     if request.method == 'DELETE':
         try:
@@ -411,6 +447,7 @@ class Outcomes(db.Model):
 
 #THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
 @app.route("/outcomes", methods=["GET"])
+@login_required
 def outcomes():
     outcomes = Outcomes.query.all()
 
@@ -427,6 +464,7 @@ def outcomes():
 
 #THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
 @app.route("/inst_outcomes", methods=["GET"])
+@login_required
 def instructor_outcomes():
     outcomes = Outcomes.query.all()
 
@@ -455,6 +493,7 @@ class Assignments(db.Model):
 
 #THIS GETS ALL WORK PRODUCTS IN THE DATABASE
 @app.route('/swp', methods=["GET"])
+@login_required
 def get_all_swp():
     swps = Assignments.query.all()
 
@@ -473,6 +512,7 @@ def get_all_swp():
 
 #THIS GETS WORK PRODUCT FOR SPECIFIC COURSE
 @app.route('/swp/<int:course_id>', methods=["GET"])
+@login_required
 def get_course_swp(course_id):
     swps = Assignments.query.filter_by(course_id = course_id).all()
 
@@ -490,6 +530,7 @@ def get_course_swp(course_id):
 
 
 @app.route('/swp', methods=['GET','POST'])
+@login_required
 def update_swp():
     if request.method == 'POST':
         try:
@@ -506,6 +547,7 @@ def update_swp():
 
 
 @app.route('/swp', methods=['GET','PUT'])
+@login_required
 def add_swp():
     if request.method == 'PUT':
         try:
@@ -544,6 +586,7 @@ def add_swp():
 
 
 @app.route('/swp/<swp_id>', methods=['GET','DELETE'])
+@login_required
 def delete_swp(swp_id):
     if request.method == 'DELETE':
         try:
@@ -571,6 +614,7 @@ class Attempts(db.Model):
 
 #GET ALL ATTEMPTS -- UNION OF SWP AND SO
 @app.route('/attempts', methods=["GET"])
+@login_required
 def get_all_attempts():
     attempts = Attempts.query.all()
 
@@ -592,6 +636,7 @@ def get_all_attempts():
 
 
 @app.route('/attempts', methods=['GET','POST'])
+@login_required
 def update_attempts():
     if request.method == 'POST':
         try:
@@ -608,6 +653,7 @@ def update_attempts():
 
 
 @app.route('/attempts', methods=['GET','PUT'])
+@login_required
 def add_attempts():
     if request.method == 'PUT':
         try:
@@ -644,6 +690,7 @@ def add_attempts():
 
 
 @app.route('/attempts/<attempt_id>', methods=['GET','DELETE'])
+@login_required
 def delete_attempts(attempt_id):
     if request.method == 'DELETE':
         try:
@@ -671,6 +718,7 @@ class Enrolled(db.Model):
 
 #GET ENROLLMENTS FOR A SPECIFIC COURSE
 @app.route('/enrolled/<int:course_id>', methods=['GET'])
+@login_required
 def get_enrolled(course_id):
     enrolled = Enrolled.query.filter_by(course_id = course_id)
     results = []
@@ -691,11 +739,13 @@ def get_enrolled(course_id):
 
 #TODO -- UPDATE ENROLLMENTS
 @app.route('/enrolled', methods=['GET','POST'])
+@login_required
 def update_enrolled():
     return ""     
 
 
 @app.route('/enrolled', methods=['GET','PUT'])
+@login_required
 def add_enrolled():
     if request.method == 'PUT':
         try:
@@ -731,6 +781,7 @@ def add_enrolled():
 
 
 @app.route('/enrolled/<enrolled_id>', methods=['GET','DELETE'])
+@login_required
 def delete_enrolled(enrolled_id):
     if request.method == 'DELETE':
         try:
@@ -759,6 +810,7 @@ class Results(db.Model):
 
 
 @app.route('/results', methods=['GET'])
+@login_required
 def get_results():
     results = Results.query.all()
     output = []
@@ -782,6 +834,7 @@ def get_results():
 
 #TODO  -- complete endpoint
 @app.route('/results', methods=['GET','POST'])
+@login_required
 def update_results():
     if request.method == "POST":
         return ""
@@ -791,6 +844,7 @@ def update_results():
 
 #TODO -- complete put results endpoint
 @app.route('/results', methods=['PUT'])
+@login_required
 def add_results():
     
     return ""
@@ -798,6 +852,7 @@ def add_results():
 
 
 @app.route('/results/<result_id>)', methods=['GET','DELETE'])
+@login_required
 def delete_results(result_id):
     if request.method == "DELETE":
         try:
@@ -819,6 +874,7 @@ def index():
 
 
 @app.route("/home", methods=["POST", "GET"])
+@login_required
 def home():
     courses = None
     #if user not in session:
@@ -828,6 +884,7 @@ def home():
 
 
 @app.route("/inst_home", methods=["POST", "GET"])
+@login_required
 def instructor_home():
     courses = None
     #if user not in session:
@@ -837,7 +894,13 @@ def instructor_home():
 
 
 @app.route("/logout")
+@login_required
 def logout():
+    user = current_user
+    user.is_authenticated = False
+    db.session.add(user)
+    db.session.commit()
+    logout_user()
     message = "Logout Successful!"
     return render_template("login.html", message=message)
 
