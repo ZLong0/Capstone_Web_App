@@ -52,15 +52,15 @@ def login():
         if not user:
             error = 'Invalid Username/Password!  Please try again.'
             return render_template('login.html', error=error)
-        elif check_password_hash(pwhash=user.password, password=password_attempt) and Users.query.filter_by(account_type='admin'):
-            return render_template('home.html')
-        elif check_password_hash(pwhash=user.password, password=password_attempt):
-            return render_template('home.html')
+        elif check_password_hash(pwhash=user.password, password=password_attempt) and (user.account_type == 'admin' or user.account_type =='root'):
+            return redirect(url_for('home'))
+        elif check_password_hash(pwhash=user.password, password=password_attempt) and user.account_type == 'instructor':
+            return redirect(url_for('instructor_home'))
         elif password_attempt == user.password and Users.query.filter_by(account_type='admin'):
             # used to direct to admin home page
             return render_template('home.html')
         elif password_attempt == user.password:
-            return render_template('home.html')
+            return render_template('inst_home.html')
 
     error = 'Invalid Username/Password!  Please try again.'
     return render_template('login.html', error=error)
@@ -281,7 +281,7 @@ def get_all_courses():
         course_info['instructor_id'] = course.instructor
         results.append(course_info)
 
-    return jsonify(results)
+    return render_template('courses.html', courses = results)
 
 
 # gets all courses for specific instructor id
@@ -292,7 +292,7 @@ def get_instructor_courses(instructor_id):
 
     if request.method == "GET":
         if not courses:
-            return {"No courses assigned to this instructor"}
+            return "No courses assigned to this instructor"
 
         for course in courses:
             course_info = {}
@@ -307,11 +307,10 @@ def get_instructor_courses(instructor_id):
 
             #debug
             print(course._id)
-        return render_template("inst_home.html", courses=results)
+        return render_template("inst_courses.html", courses=results)
 
     else:
-        return render_template("home.html")
-
+        return render_template("inst_courses.html")
 
 
 @app.route('/courses', methods=['GET','POST'])
@@ -336,7 +335,7 @@ def update_courses():
             return redirect(url_for('home'))
         except:
             flash('Update failed!')
-            return redirect(url_for('homt'))
+            return redirect(url_for('home'))
     
     return render_template('/home')
 
@@ -426,6 +425,22 @@ def outcomes():
     return render_template('outcomes.html', outcomes=results)
 
 
+#THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
+@app.route("/inst_outcomes", methods=["GET"])
+def instructor_outcomes():
+    outcomes = Outcomes.query.all()
+
+    results = []
+
+    for outcome in outcomes:
+        outcome_data = {}
+        outcome_data['so_name'] = outcome.so_name
+        outcome_data['so_desc'] = outcome.so_desc
+        results.append(outcome_data)
+
+    return render_template('inst_outcomes.html', outcomes=results)
+
+
 # ASSIGNMENTS (SWP) CLASS
 class Assignments(db.Model):
     swp_id = db.Column("swp_id", db.Integer, primary_key=True)
@@ -437,17 +452,38 @@ class Assignments(db.Model):
         self.swp_name = swp_name
 
 
+
+#THIS GETS ALL WORK PRODUCTS IN THE DATABASE
 @app.route('/swp', methods=["GET"])
-def get_swp():
+def get_all_swp():
     swps = Assignments.query.all()
 
     results = []
 
     for swp in swps:
         swp_data = {}
+        course = Course.query.get(swp.course_id)
         swp_data['swp_id'] = swp.swp_id
         swp_data['swp_name'] = swp.swp_name
-        swp_data['course_id'] = swp.course_id
+        swp_data['course name'] = course.course_name
+        results.append(swp_data)
+
+    return jsonify(results)
+
+
+#THIS GETS WORK PRODUCT FOR SPECIFIC COURSE
+@app.route('/swp/<int:course_id>', methods=["GET"])
+def get_course_swp(course_id):
+    swps = Assignments.query.filter_by(course_id = course_id).all()
+
+    results = []
+
+    for swp in swps:
+        swp_data = {}
+        course = Course.query.get(swp.course_id)
+        swp_data['swp_id'] = swp.swp_id
+        swp_data['swp_name'] = swp.swp_name
+        swp_data['course name'] = course.course_name
         results.append(swp_data)
 
     return jsonify(results)
@@ -533,17 +569,23 @@ class Attempts(db.Model):
         self.so_id = so_id
 
 
+#GET ALL ATTEMPTS -- UNION OF SWP AND SO
 @app.route('/attempts', methods=["GET"])
-def get_attempts():
+def get_all_attempts():
     attempts = Attempts.query.all()
 
     results = []
 
     for attempt in attempts:
         attempt_data = {}
+        swp = Assignments.query.get(attempt.swp_id)
+        so = Outcomes.query.get(attempt.so_id)
+        course = Course.query.get(swp.course_id)
+
         attempt_data['attempt_id'] = attempt.attempt_id
-        attempt_data['swp'] = attempt.swp_id
-        attempt_data['so'] = attempt.so_id
+        attempt_data['course_name'] = course.course_name
+        attempt_data['swp'] = swp.swp_name
+        attempt_data['so'] = so.so_name
         results.append(attempt_data)
 
     return jsonify(results)
@@ -627,6 +669,7 @@ class Enrolled(db.Model):
         self.course_id = course_id
 
 
+#GET ENROLLMENTS FOR A SPECIFIC COURSE
 @app.route('/enrolled/<int:course_id>', methods=['GET'])
 def get_enrolled(course_id):
     enrolled = Enrolled.query.filter_by(course_id = course_id)
@@ -634,8 +677,11 @@ def get_enrolled(course_id):
 
     for enroll in enrolled:
         enrollment_data = {}
+        student_id = enroll.student_id
+        student = Student.query.get(student_id)
         enrollment_data['enrolled_id'] = enroll.enrolled_id
-        enrollment_data['student_id'] = enroll.student_id
+        enrollment_data['student_first'] = student.fname
+        enrollment_data['student_last'] = student.lname
         enrollment_data['course_id'] = enroll.course_id
         results.append(enrollment_data)
 
@@ -649,9 +695,39 @@ def update_enrolled():
     return ""     
 
 
-@app.route('/enrolled', methods=['PUT'])
+@app.route('/enrolled', methods=['GET','PUT'])
 def add_enrolled():
-    return ""
+    if request.method == 'PUT':
+        try:
+            #IF emrollment EXISTS RETURN INVALID ENTRY
+            new_enrollment = Enrolled()
+
+            #instantiate new  info based on form input       
+            new_enrollment.student_id = request.form['student_id']
+            new_enrollment.course_id = request.form['course_id']
+
+            #check database for existing enrollment overlap
+            existing_enrollment = Enrolled.query.filter_by(
+                student_id = new_enrollment.student_id, 
+                course_id = new_enrollment.course_id)
+
+            #return error if existing enrollment returns true -- otherwise add enrollment
+            if existing_enrollment:
+                flash ('Student already enrolled in this course!')
+                return redirect(url_for('home'))
+
+            else:
+                #commit changes to db
+                session.add(new_enrollment)
+                db.session.commit()
+                flash('Student successfully enrolled in course!')
+                return redirect(url_for('home'))
+        #IF TRY FAILS -- RETURN FAILURE MESSAGE
+        except:
+            flash('Enrollment failed!')
+            return redirect(url_for('home'))
+    
+    return redirect(url_for('home'))
 
 
 @app.route('/enrolled/<enrolled_id>', methods=['GET','DELETE'])
@@ -689,13 +765,18 @@ def get_results():
 
     for result in results:
         result_data = {}
+        student = Student.query.get(result.student_id)
+        attempt = Attempts.query.get(result.attempt_id)
+        swp = Assignments.query.get(attempt.swp_id)
+
         result_data['result id'] = result._id
-        result_data['student id'] = result.student_id
-        result_data['attempt id'] = results.attempt_id
+        result_data['student first'] = student.fname
+        result_data['student last'] = student.lname
+        result_data['swp name'] = swp.swp_name
         result_data['value'] = results.valueP
 
         output.append(result_data)
-
+    print(output)
     return jsonify(output)
 
 
@@ -711,6 +792,7 @@ def update_results():
 #TODO -- complete put results endpoint
 @app.route('/results', methods=['PUT'])
 def add_results():
+    
     return ""
 
 
@@ -741,8 +823,17 @@ def home():
     courses = None
     #if user not in session:
     #    return redirect('login')
-   # else:
+    #else:
     return render_template("home.html")
+
+
+@app.route("/inst_home", methods=["POST", "GET"])
+def instructor_home():
+    courses = None
+    #if user not in session:
+    #    return redirect('login')
+    #else:
+    return render_template("inst_home.html")
 
 
 @app.route("/logout")
