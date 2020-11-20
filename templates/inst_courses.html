@@ -33,7 +33,9 @@
                             {% if courses %}
                                 {% for course in courses %}
                                     <a class="dropdown-item" href="{{url_for('get_enrolled', course_id = course.course_id)}}">{{course.course_department}} {{course.course_number}}:{{course.section}}</a>
-                                {% endfor %}
+								{% endfor %}
+							{% else  %}
+								<a class="dropdown-item" href="">No Courses Assigned</a>
                             {% endif %}
 						</div>
 					</div>
