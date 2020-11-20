@@ -25,7 +25,6 @@ class Users(db.Model):
     sec_question = db.Column("question", db.Integer)
     answer = db.Column("answer", db.String(100))
     
-
     def __init__(self, id, email, password, account_type, fname, lname, sec_question, answer):
         self.email = email
         self.password = password
@@ -104,7 +103,7 @@ def register_user():
     error = None
     if request.method == "POST":
         add_id = request.form['employee_id']
-        email = request.form["email"]
+        add_email = request.form["email"]
         password = request.form["password"]
         employee_id = request.form["employee_id"]
         account_type = request.form["access_level"]
@@ -114,7 +113,7 @@ def register_user():
         last_name = request.form['lname']
 
         # output for debugging only
-        print("username=" + email)
+        print("email=" + add_email)
         print("password=" + password)
         print("employee_id=" + employee_id)
         print("access_level=" + account_type)
@@ -122,11 +121,15 @@ def register_user():
         print("answer_1=" + answer_1)
 
         user = Users.query.filter_by(id=add_id).first()
+        email = Users.query.filter_by(email = add_email).first()
 
         if user:
             error = "Employee ID is already registered"
             return render_template('register.html', error=error)
             # will remove auto commit later. using for testing currently
+        elif email:
+            error = "This email is already registered.  Please try again."
+            return render_template('register.html', error = error)
         else:
             if account_type == 'admin':
                 # set admin when sent
