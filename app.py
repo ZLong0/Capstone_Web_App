@@ -472,22 +472,25 @@ def outcomes():
     outcomes = Outcomes.query.all()
 
     results = []
-
+    courses = Course.query.all()
     for outcome in outcomes:
         outcome_data = {}
         outcome_data['so_name'] = outcome.so_name
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
 
-    return render_template('outcomes.html', outcomes=results)
+    return render_template('outcomes.html', outcomes=results, courses = courses)
 
 
 #THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
 @app.route("/inst_outcomes", methods=["GET"])
 @login_required
 def instructor_outcomes():
-    outcomes = Outcomes.query.all()
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+    courses = Course.query.filter_by(instructor=user.id).all()
 
+    outcomes = Outcomes.query.all()
     results = []
 
     for outcome in outcomes:
@@ -496,7 +499,7 @@ def instructor_outcomes():
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
 
-    return render_template('inst_outcomes.html', outcomes=results)
+    return render_template('inst_outcomes.html', outcomes=results, courses = courses)
 
 
 # ASSIGNMENTS (SWP) CLASS
@@ -758,9 +761,11 @@ def get_enrolled(course_id):
     user_id = Users.get_id(current_user)
     user = Users.query.get(user_id)
     if user.account_type == 'instructor':
-        return render_template('inst_courses.html', enrolled = results)
+        courses = Course.query.filter_by(instructor=user.id).all()
+        return render_template('inst_courses.html', enrolled = results, courses=courses)
     else:
-        return render_template('courses.html', enrolled = results)
+        courses = Course.query.all()
+        return render_template('courses.html', enrolled = results, courses = courses)
 
 
 #TODO -- UPDATE ENROLLMENTS
