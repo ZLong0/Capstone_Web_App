@@ -15,35 +15,43 @@
  
   <body>
 	  
-	  <nav class="navbar navbar-expand-lg navbar-dark static-top" id="nav">
- 		<div class="container">
-      		<div class="navbar-brand">
-				Accreditation Tracker and Analysis System
-			</div>
-			
-      		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-        		<span class="navbar-toggler-icon"></span>
-      		</button>
-      		<div class="collapse navbar-collapse" id="navbarResponsive">
-				<div class="navbar-nav ml-auto">
-					<a class="nav-item nav-link active" href="/inst_home">Home</a>
-			        <div class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
-						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                            {% if courses %}
-                                {% for course in courses %}
-                                    <a class="dropdown-item" href="{{url_for('get_enrolled', course_id = course.course_id)}}">{{course.course_department}} {{course.course_number}}:{{course.section}}</a>
-                                {% endfor %}
-                            {% endif %}
-						</div>
-					</div>
-					<a class="nav-item nav-link" href="/inst_outcomes">Student Outcomes</a>
-					
-					<a class="nav-item nav-link" href="/logout">Log Out</a>
-				</div>
-      		</div> 
-    	</div><!--END NAV CONTAINER-->
-	  </nav>
+	<nav class="navbar navbar-expand-lg navbar-dark static-top" id="nav">
+		<div class="container">
+			 <div class="navbar-brand">
+			   Accreditation Tracker and Analysis System
+		   </div>
+		   
+			 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+			   <span class="navbar-toggler-icon"></span>
+			 </button>
+			 <div class="collapse navbar-collapse" id="navbarResponsive">
+			   <div class="navbar-nav ml-auto">
+				   <a class="nav-item nav-link active" href="/inst_home">Home</a>
+				   <div class="nav-item dropdown">
+					   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
+					   <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+						   {% if courses %}
+							   {% for course in courses %}
+								   <a class="dropdown-item" href="{{url_for('get_enrolled', course_id = course.id)}}">{{course.department}} {{course.course_number}}:{{course.section}}</a>
+							   {% endfor %}
+						   {% else  %}
+							   <a class="dropdown-item" href="">No Courses Assigned</a>
+						   {% endif %}
+					   </div>
+				   </div>
+				   <a class="nav-item nav-link" href="/inst_outcomes">Student Outcomes</a>
+				    <div class="nav-item dropdown">
+					   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tasks</a>
+					   <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+						   <a class="dropdown-item" href="/registration_requests">Add Student Work Product</a>
+					   </div>
+				   </div>
+				   
+				   <a class="nav-item nav-link" href="/logout">Log Out</a>
+			   </div>
+			 </div> 
+	   </div><!--END NAV CONTAINER-->
+	 </nav>
 	  <div class="main_content">
 		  <h2>Welcome Professor!</h2>
 	  </div>
