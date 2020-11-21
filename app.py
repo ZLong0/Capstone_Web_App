@@ -2,13 +2,14 @@
 from flask import Flask, render_template, jsonify, request, session, redirect, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from sqlalchemy import create_engine
 
 app = Flask('CAPSTONE_WEB_APP')
 app.secret_key = "capstonefall2020"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///atas.sqlite3'
 db = SQLAlchemy(app)
-
+login_manager = LoginManager(app)
 
 # DATABASE MODELS ARE FOLLOWED DIRECTLY BY THE METHODS THAT CORRESPOND TO THOSE OPJECTS
 # IF TIME ALLOWS - MOVE MODELS TO THEIR OWN MODELS.PY FILE
@@ -24,7 +25,6 @@ class Users(db.Model):
     sec_question = db.Column("question", db.Integer)
     answer = db.Column("answer", db.String(100))
     
-
     def __init__(self, id, email, password, account_type, fname, lname, sec_question, answer):
         self.email = email
         self.password = password
@@ -34,6 +34,27 @@ class Users(db.Model):
         self.id = id
         self.sec_question = sec_question
         self.answer = answer
+    
+
+    def is_active(self):
+        return True
+    
+
+    def is_authenticated(self):
+        return self.authenticated
+
+
+    def get_id(self):
+        return self.id
+
+
+    def is_anonymous(self):
+        return False
+
+
+@login_manager.user_loader
+def user_loader(user_id):
+    return Users.query.get(user_id)
 
 
 # this checks credentials before login
@@ -53,10 +74,20 @@ def login():
             error = 'Invalid Username/Password!  Please try again.'
             return render_template('login.html', error=error)
         elif check_password_hash(pwhash=user.password, password=password_attempt) and (user.account_type == 'admin' or user.account_type =='root'):
+            login_user(user)
             return redirect(url_for('home'))
         elif check_password_hash(pwhash=user.password, password=password_attempt) and user.account_type == 'instructor':
-            return redirect(url_for('instructor_home'))
+            login_user(user)
+            user = current_user
+            courses = Course.query.filter_by(instructor = Users.get_id(user))
+
+            if not courses:
+                return redirect(url_for('instructor_home', current_user = current_user))
+
+            else:
+                return redirect(url_for('instructor_home', current_user = current_user, courses = courses))
         elif password_attempt == user.password and Users.query.filter_by(account_type='admin'):
+           
             # used to direct to admin home page
             return render_template('home.html')
         elif password_attempt == user.password:
@@ -72,7 +103,7 @@ def register_user():
     error = None
     if request.method == "POST":
         add_id = request.form['employee_id']
-        email = request.form["email"]
+        add_email = request.form["email"]
         password = request.form["password"]
         employee_id = request.form["employee_id"]
         account_type = request.form["access_level"]
@@ -82,7 +113,7 @@ def register_user():
         last_name = request.form['lname']
 
         # output for debugging only
-        print("username=" + email)
+        print("email=" + add_email)
         print("password=" + password)
         print("employee_id=" + employee_id)
         print("access_level=" + account_type)
@@ -90,11 +121,15 @@ def register_user():
         print("answer_1=" + answer_1)
 
         user = Users.query.filter_by(id=add_id).first()
+        email = Users.query.filter_by(email = add_email).first()
 
         if user:
             error = "Employee ID is already registered"
             return render_template('register.html', error=error)
             # will remove auto commit later. using for testing currently
+        elif email:
+            error = "This email is already registered.  Please try again."
+            return render_template('register.html', error = error)
         else:
             if account_type == 'admin':
                 # set admin when sent
@@ -131,6 +166,7 @@ class Instructor(db.Model):
 
 
 @app.route('/instructors', methods=['GET'])
+@login_required
 def get_instructors():
     instructors = Instructor.query.all()
     results = []
@@ -146,6 +182,7 @@ def get_instructors():
 
 
 @app.route('/instructors', methods=['POST'])
+@login_required
 def update_instructors():
     if request.method=='POST':
         #TODO: UPDATE THIS TO TAKE IN VALUE FROM FORM
@@ -171,6 +208,7 @@ class Student(db.Model):
 
 
 @app.route('/students', methods=['GET'])
+@login_required
 def get_all_students():
     students = Student.query.all()
     results = []
@@ -185,6 +223,7 @@ def get_all_students():
 
 
 @app.route('/students/<student_id>', methods=['GET','POST'])
+@login_required
 def update_student():
     if request.method == 'POST':
         try:
@@ -209,6 +248,7 @@ def update_student():
 
 
 @app.route('/students', methods=['GET','PUT'])
+@login_required
 def add_students():
     if request.method == 'PUT':
         try:
@@ -230,6 +270,7 @@ def add_students():
 
 
 @app.route('/students/<student_id>', methods=['GET','DELETE'])
+@login_required
 def delete_students(student_id):
     if request.method == 'DELETE':
         try:
@@ -246,7 +287,7 @@ def delete_students(student_id):
 
 # COURSE CLASS
 class Course(db.Model):
-    _id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     course_name = db.Column(db.String(100))
     term = db.Column(db.String(11))
     year = db.Column(db.String(4))
@@ -266,7 +307,14 @@ class Course(db.Model):
 
 
 @app.route('/courses', methods=['GET'])
+@login_required
 def get_all_courses():
+
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+    if user.account_type == 'instructor':
+        return redirect(url_for('get_instructor_courses'))
+    
     all_courses = Course.query.all()
     results = []
 
@@ -286,27 +334,26 @@ def get_all_courses():
 
 # gets all courses for specific instructor id
 @app.route('/courses/<instructor_id>', methods=['GET'])
+@login_required
 def get_instructor_courses(instructor_id):
     courses = Course.query.filter_by(instructor=instructor_id).all()
     results = []
 
     if request.method == "GET":
         if not courses:
-            return "No courses assigned to this instructor"
+            results = "No courses assigned"
+        else:
+            for course in courses:
+                course_info = {}
+                course_info['course_id'] = course.id
+                course_info['course_name'] = course.course_name
+                course_info['term'] = course.term
+                course_info['year'] = course.year
+                course_info['course_department'] = course.department
+                course_info['course_number'] = course.course_number
+                course_info['section'] = course.section
+                results.append(course_info)
 
-        for course in courses:
-            course_info = {}
-            course_info['course_id'] = course._id
-            course_info['course_name'] = course.course_name
-            course_info['term'] = course.term
-            course_info['year'] = course.year
-            course_info['course_department'] = course.department
-            course_info['course_number'] = course.course_number
-            course_info['section'] = course.section
-            results.append(course_info)
-
-            #debug
-            print(course._id)
         return render_template("inst_courses.html", courses=results)
 
     else:
@@ -314,6 +361,7 @@ def get_instructor_courses(instructor_id):
 
 
 @app.route('/courses', methods=['GET','POST'])
+@login_required
 def update_courses():
     if request.method == 'POST':
         try:
@@ -341,6 +389,7 @@ def update_courses():
 
 
 @app.route('/courses', methods=['GET','PUT'])
+@login_required
 def add_courses():
     if request.method == 'PUT':
         try:
@@ -384,6 +433,7 @@ def add_courses():
 
 
 @app.route('/courses/<course_id>', methods=['GET','DELETE'])
+@login_required
 def delete_courses(course_id):
     if request.method == 'DELETE':
         try:
@@ -411,25 +461,36 @@ class Outcomes(db.Model):
 
 #THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
 @app.route("/outcomes", methods=["GET"])
+@login_required
 def outcomes():
+
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+    if user.account_type == 'instructor':
+        return redirect(url_for('instructor_outcomes'))
+    
     outcomes = Outcomes.query.all()
 
     results = []
-
+    courses = Course.query.all()
     for outcome in outcomes:
         outcome_data = {}
         outcome_data['so_name'] = outcome.so_name
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
 
-    return render_template('outcomes.html', outcomes=results)
+    return render_template('outcomes.html', outcomes=results, courses = courses)
 
 
 #THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
 @app.route("/inst_outcomes", methods=["GET"])
+@login_required
 def instructor_outcomes():
-    outcomes = Outcomes.query.all()
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+    courses = Course.query.filter_by(instructor=user.id).all()
 
+    outcomes = Outcomes.query.all()
     results = []
 
     for outcome in outcomes:
@@ -438,7 +499,7 @@ def instructor_outcomes():
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
 
-    return render_template('inst_outcomes.html', outcomes=results)
+    return render_template('inst_outcomes.html', outcomes=results, courses = courses)
 
 
 # ASSIGNMENTS (SWP) CLASS
@@ -455,6 +516,7 @@ class Assignments(db.Model):
 
 #THIS GETS ALL WORK PRODUCTS IN THE DATABASE
 @app.route('/swp', methods=["GET"])
+@login_required
 def get_all_swp():
     swps = Assignments.query.all()
 
@@ -473,6 +535,7 @@ def get_all_swp():
 
 #THIS GETS WORK PRODUCT FOR SPECIFIC COURSE
 @app.route('/swp/<int:course_id>', methods=["GET"])
+@login_required
 def get_course_swp(course_id):
     swps = Assignments.query.filter_by(course_id = course_id).all()
 
@@ -490,6 +553,7 @@ def get_course_swp(course_id):
 
 
 @app.route('/swp', methods=['GET','POST'])
+@login_required
 def update_swp():
     if request.method == 'POST':
         try:
@@ -506,6 +570,7 @@ def update_swp():
 
 
 @app.route('/swp', methods=['GET','PUT'])
+@login_required
 def add_swp():
     if request.method == 'PUT':
         try:
@@ -544,6 +609,7 @@ def add_swp():
 
 
 @app.route('/swp/<swp_id>', methods=['GET','DELETE'])
+@login_required
 def delete_swp(swp_id):
     if request.method == 'DELETE':
         try:
@@ -571,6 +637,7 @@ class Attempts(db.Model):
 
 #GET ALL ATTEMPTS -- UNION OF SWP AND SO
 @app.route('/attempts', methods=["GET"])
+@login_required
 def get_all_attempts():
     attempts = Attempts.query.all()
 
@@ -592,6 +659,7 @@ def get_all_attempts():
 
 
 @app.route('/attempts', methods=['GET','POST'])
+@login_required
 def update_attempts():
     if request.method == 'POST':
         try:
@@ -608,6 +676,7 @@ def update_attempts():
 
 
 @app.route('/attempts', methods=['GET','PUT'])
+@login_required
 def add_attempts():
     if request.method == 'PUT':
         try:
@@ -644,6 +713,7 @@ def add_attempts():
 
 
 @app.route('/attempts/<attempt_id>', methods=['GET','DELETE'])
+@login_required
 def delete_attempts(attempt_id):
     if request.method == 'DELETE':
         try:
@@ -671,31 +741,42 @@ class Enrolled(db.Model):
 
 #GET ENROLLMENTS FOR A SPECIFIC COURSE
 @app.route('/enrolled/<int:course_id>', methods=['GET'])
+@login_required
 def get_enrolled(course_id):
     enrolled = Enrolled.query.filter_by(course_id = course_id)
     results = []
+    user = current_user
 
     for enroll in enrolled:
         enrollment_data = {}
         student_id = enroll.student_id
         student = Student.query.get(student_id)
-        enrollment_data['enrolled_id'] = enroll.enrolled_id
+        enrollment_data['student_id'] = student.student_id
         enrollment_data['student_first'] = student.fname
         enrollment_data['student_last'] = student.lname
         enrollment_data['course_id'] = enroll.course_id
         results.append(enrollment_data)
 
     print(results)
-    return jsonify(results)
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+    if user.account_type == 'instructor':
+        courses = Course.query.filter_by(instructor=user.id).all()
+        return render_template('inst_courses.html', enrolled = results, courses=courses)
+    else:
+        courses = Course.query.all()
+        return render_template('courses.html', enrolled = results, courses = courses)
 
 
 #TODO -- UPDATE ENROLLMENTS
 @app.route('/enrolled', methods=['GET','POST'])
+@login_required
 def update_enrolled():
     return ""     
 
 
 @app.route('/enrolled', methods=['GET','PUT'])
+@login_required
 def add_enrolled():
     if request.method == 'PUT':
         try:
@@ -731,6 +812,7 @@ def add_enrolled():
 
 
 @app.route('/enrolled/<enrolled_id>', methods=['GET','DELETE'])
+@login_required
 def delete_enrolled(enrolled_id):
     if request.method == 'DELETE':
         try:
@@ -759,6 +841,7 @@ class Results(db.Model):
 
 
 @app.route('/results', methods=['GET'])
+@login_required
 def get_results():
     results = Results.query.all()
     output = []
@@ -782,6 +865,7 @@ def get_results():
 
 #TODO  -- complete endpoint
 @app.route('/results', methods=['GET','POST'])
+@login_required
 def update_results():
     if request.method == "POST":
         return ""
@@ -791,6 +875,7 @@ def update_results():
 
 #TODO -- complete put results endpoint
 @app.route('/results', methods=['PUT'])
+@login_required
 def add_results():
     
     return ""
@@ -798,6 +883,7 @@ def add_results():
 
 
 @app.route('/results/<result_id>)', methods=['GET','DELETE'])
+@login_required
 def delete_results(result_id):
     if request.method == "DELETE":
         try:
@@ -819,25 +905,36 @@ def index():
 
 
 @app.route("/home", methods=["POST", "GET"])
+@login_required
 def home():
-    courses = None
-    #if user not in session:
-    #    return redirect('login')
-    #else:
-    return render_template("home.html")
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+    courses = Course.query.all()
+
+    if user.account_type == 'instructor':
+        return redirect(url_for('instructor_home'))
+
+    return render_template("home.html", courses = courses)
 
 
 @app.route("/inst_home", methods=["POST", "GET"])
+@login_required
 def instructor_home():
-    courses = None
-    #if user not in session:
-    #    return redirect('login')
-    #else:
-    return render_template("inst_home.html")
+    courses = []
+
+    user = current_user
+    courses = Course.query.filter_by(instructor = Users.get_id(user)).all()
+    
+    if not courses:
+        return render_template("inst_home.html", current_user = user)
+    else:
+        return render_template("inst_home.html", current_user = user, courses = courses)
 
 
 @app.route("/logout")
+@login_required
 def logout():
+    logout_user()
     message = "Logout Successful!"
     return render_template("login.html", message=message)
 
