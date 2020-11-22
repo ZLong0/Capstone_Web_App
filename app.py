@@ -888,7 +888,15 @@ def delete_results(result_id):
 # BASE ROUTES (INDEX/HOME/REGISTER) -- THIS MAY BE MOVED LATER
 @app.route("/", methods=["POST", "GET"])
 def index():
-    return render_template("login.html")  # this should be the name of your html file
+    user = current_user.get_id()
+    active = Users.query.filter_by(id=user).first()
+    
+    if not active:
+        return redirect(url_for("login"))
+    elif active.account_type == 'instructor':
+        return redirect(url_for('instructor_home'))
+    else:
+        return redirect(url_for('home'))
 
 
 @app.route("/home", methods=["POST", "GET"])
@@ -914,8 +922,6 @@ def instructor_home():
     courses = Course.query.filter_by(instructor=uid).all()
 
     if user.account_type == 'admin':
-        #courses = Course.query.all()
-        #return render_template("home.html", current_user=user, courses=courses)
         return redirect(url_for('home'))
     if not courses:
         return render_template("inst_home.html", current_user=user)
