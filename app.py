@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from sqlalchemy import create_engine
 
-app = Flask('CAPSTONE_WEB_APP')
+app = Flask('__name__')
 app.secret_key = "capstonefall2020"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///atas.sqlite3'
 db = SQLAlchemy(app)
