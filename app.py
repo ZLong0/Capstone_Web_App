@@ -81,9 +81,9 @@ def login():
             uid = current_user.get_id()
             courses = Course.query.filter_by(instructor=uid).all()
             if not courses:
-                return redirect(url_for('instructor_home', current_user=current_user))
+                return redirect(url_for('instructor_home'))
             else:
-                return redirect(url_for('instructor_home', current_user=current_user, courses=courses))
+                return redirect(url_for('instructor_home'))
     error = 'Invalid Username/Password!  Please try again.'
     return render_template('login.html', error=error)
 
@@ -899,8 +899,7 @@ def home():
     courses = Course.query.all()
 
     if user.account_type == 'instructor':
-        inst_courses = Course.query.filter_by(instructor=Users.get_id(user)).all()
-        return render_template("inst_home.html", current_user=user, courses=inst_courses)
+        return redirect(url_for("instructor_home"))
 
     return render_template("home.html", current_user=user, courses=courses)
 
@@ -911,13 +910,13 @@ def instructor_home():
     courses = []
 
     user = current_user
-    # courses = current_user.get_id()
     uid = current_user.get_id()
     courses = Course.query.filter_by(instructor=uid).all()
 
     if user.account_type == 'admin':
-        courses = Course.query.all()
-        return render_template("home.html", current_user=user, courses=courses)
+        #courses = Course.query.all()
+        #return render_template("home.html", current_user=user, courses=courses)
+        return redirect(url_for('home'))
     if not courses:
         return render_template("inst_home.html", current_user=user)
     else:
