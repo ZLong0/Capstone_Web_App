@@ -747,7 +747,7 @@ def get_enrolled(course_id):
         results.append(enrollment_data)
 
     print(results)
-    user_id = Users.get_id(current_user)
+    user_id = current_user.get_id()
     user = Users.query.get(user_id)
     if user.account_type == 'instructor':
         courses = Course.query.filter_by(instructor=user.id).all()
@@ -894,7 +894,7 @@ def index():
 @app.route("/home", methods=["POST", "GET"])
 @login_required
 def home():
-    user_id = Users.get_id(current_user)
+    user_id = current_user.get_id()
     user = Users.query.get(user_id)
     courses = Course.query.all()
 
