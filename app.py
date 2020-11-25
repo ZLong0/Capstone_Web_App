@@ -204,7 +204,7 @@ class Student(db.Model):
 @app.route('/students', methods=['GET'])
 @login_required
 def get_all_students():
-    students = Student.query.all()
+    students = Student.query.group_by('lname').all()
     results = []
     for student in students:
         student_data = {}
@@ -733,28 +733,49 @@ class Enrolled(db.Model):
 @login_required
 def get_enrolled(course_id):
     enrolled = Enrolled.query.filter_by(course_id=course_id)
-    results = []
+    results_list = []
+    swp_list = []
     user = current_user
+    swps = Assignments.query.filter_by(course_id=course_id).all()
+    for swp in swps:
+        swp_data = {}
+        swp_name = swp.swp_name
+        swp_data['swp_name']= swp_name
+        swp_data['swp_id'] = swp.swp_id
+        swp_list.append(swp_data)              
 
     for enroll in enrolled:
-        enrollment_data = {}
+        enrollment_data = {} 
         student_id = enroll.student_id
         student = Student.query.get(student_id)
-        enrollment_data['student_id'] = student.student_id
-        enrollment_data['student_first'] = student.fname
-        enrollment_data['student_last'] = student.lname
-        enrollment_data['course_id'] = enroll.course_id
-        results.append(enrollment_data)
+        results = Results.query.filter_by(student_id = student_id).all()
+        #print(results)
+        if not results:
+            enrollment_data['swp_id'] = None
+            enrollment_data['swp_name'] = 'Test'
+            enrollment_data['score'] = None
+        else:
+            enrollment_data['swp_id'] = results.swp_id
+            swp = Assignments.query.filter_by(swp_id = results.swp_id).first()
+            enrollment_data['swp_name'] = swp.swp_name
+            enrollment_data['score'] = results.value
+        if student:
+            enrollment_data['student_id'] = student.student_id
+            enrollment_data['student_first'] = student.fname
+            enrollment_data['student_last'] = student.lname
 
-    print(results)
+        enrollment_data['course_id'] = enroll.course_id
+        results_list.append(enrollment_data)
+    
+    sorted_results = sorted(results_list, key=lambda i:i['student_last'])
     user_id = current_user.get_id()
     user = Users.query.get(user_id)
     if user.account_type == 'instructor':
         courses = Course.query.filter_by(instructor=user.id).all()
-        return render_template('inst_courses.html', enrolled=results, courses=courses)
+        return render_template('inst_courses.html', enrolled=sorted_results, courses=courses, swps=swp_list)
     else:
         courses = Course.query.all()
-        return render_template('courses.html', enrolled=results, courses=courses)
+        return render_template('courses.html', enrolled=sorted_results, courses=courses)
 
 
 # TODO -- UPDATE ENROLLMENTS
