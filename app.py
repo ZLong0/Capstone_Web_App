@@ -892,7 +892,7 @@ def index():
     active = Users.query.filter_by(id=user).first()
     
     if not active:
-        return redirect(url_for("login"))
+        return render_template("login.html")
     elif active.account_type == 'instructor':
         return redirect(url_for('instructor_home'))
     else:
