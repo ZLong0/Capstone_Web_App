@@ -452,8 +452,34 @@ class Outcomes(db.Model):
 @app.route("/outcomes", methods=["GET"])
 @login_required
 def outcomes():
-    user_id = Users.get_id(current_user)
-    user = Users.query.get(user_id)
+    courses_group = []
+    terms = []
+    user = current_user
+    uid = current_user.get_id()
+    year = []
+    semesters_list = []
+
+    dbconnection = engine.connect()
+    terms = dbconnection.execute("select distinct term, year from course")
+    
+    for term in terms:
+        semester_data={}
+        courses_group  = Course.query.filter_by(term = term[0], year=term[1]).all()
+        print(courses_group)
+        if courses_group:            
+            semester_data['term'] = term[0]
+            semester_data['year'] = term[1]
+            courses = []
+            for course in courses_group:                            
+                courses.append(course.get_id())
+                semester_data['course_list'] = courses  
+               # print(courses)          
+        else:
+            semester_data['term'] = "No Assigned Courses"       
+       
+        semesters_list.append(semester_data)
+        print(semesters_list) 
+    
     if user.account_type == 'instructor':
         return redirect(url_for('instructor_outcomes'))
 
@@ -467,16 +493,39 @@ def outcomes():
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
 
-    return render_template('outcomes.html', outcomes=results, courses=courses)
+    return render_template('outcomes.html', outcomes=results, semesters = semesters_list)
 
 
 # THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
 @app.route("/inst_outcomes", methods=["GET"])
 @login_required
 def instructor_outcomes():
-    user_id = Users.get_id(current_user)
-    user = Users.query.get(user_id)
-    courses = Course.query.filter_by(instructor=user.id).all()
+    courses_group = []
+    terms = []
+    user = current_user
+    uid = current_user.get_id()
+    year = []
+    semesters_list = []
+
+    dbconnection = engine.connect()
+    terms = dbconnection.execute("select distinct term, year from course")
+    
+    for term in terms:
+        semester_data={}
+        courses_group  = Course.query.filter_by(instructor=uid, term = term[0], year=term[1]).all()
+        if courses_group:            
+            semester_data['term'] = term[0]
+            semester_data['year'] = term[1]
+            courses = []     
+            for course in courses_group:                       
+                courses.append(course.get_id())
+                semester_data['course_list'] = courses  
+               # print(courses)          
+        else:
+            semester_data['term'] = "No Assigned Courses"       
+        
+        semesters_list.append(semester_data)
+        print(semesters_list) 
 
     outcomes = Outcomes.query.all()
     results = []
@@ -487,7 +536,7 @@ def instructor_outcomes():
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
 
-    return render_template('inst_outcomes.html', outcomes=results, courses=courses)
+    return render_template('inst_outcomes.html', outcomes=results, semesters=semesters_list)
 
 
 # ASSIGNMENTS (SWP) CLASS
@@ -922,10 +971,38 @@ def home():
     user = Users.query.get(user_id)
     courses = Course.query.all()
 
+    courses_group = []
+    terms = []
+    user = current_user
+    uid = current_user.get_id()
+    year = []
+    semesters_list = []
+
+    dbconnection = engine.connect()
+    terms = dbconnection.execute("select distinct term, year from course")
+    
+    for term in terms:
+        semester_data={}
+        courses_group  = Course.query.filter_by(term = term[0], year=term[1]).all()
+        #print(courses_group)
+        if courses_group:            
+            semester_data['term'] = term[0]
+            semester_data['year'] = term[1]
+            courses = []  
+            for course in courses_group:                          
+                courses.append(course.get_id())
+                semester_data['course_list'] = courses  
+                #print(courses)          
+        else:
+            semester_data['term'] = "No Assigned Courses"       
+        
+        semesters_list.append(semester_data)
+         
+    print(semesters_list)
     if user.account_type == 'instructor':
         return redirect(url_for("instructor_home"))
 
-    return render_template("home.html", current_user=user, courses=courses)
+    return render_template("home.html", current_user=user, semesters=semesters_list)
 
 
 @app.route("/inst_home", methods=["POST", "GET"])
@@ -944,13 +1021,12 @@ def instructor_home():
     for term in terms:
         semester_data={}
         courses_group  = Course.query.filter_by(instructor=uid, term = term[0], year=term[1]).all()
-        print(courses_group)
+        #print(courses_group)
         if courses_group:            
             semester_data['term'] = term[0]
             semester_data['year'] = term[1]
-            
+            courses = []
             for course in courses_group:  
-                courses = []            
                 courses.append(course.get_id())
                 semester_data['course_list'] = courses  
                # print(courses)          
@@ -958,8 +1034,8 @@ def instructor_home():
             semester_data['term'] = "No Assigned Courses"       
         
         semesters_list.append(semester_data)
-        print(semesters_list) 
-
+        
+    print(semesters_list) 
     if user.account_type == 'admin':
         return redirect(url_for('home'))
 
