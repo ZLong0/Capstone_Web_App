@@ -3,12 +3,13 @@ from flask import Flask, render_template, jsonify, request, session, redirect, f
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, distinct, func
 
 app = Flask('__name__')
 app.secret_key = "capstonefall2020"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///atas.sqlite3'
 db = SQLAlchemy(app)
+engine = create_engine('sqlite:///atas.sqlite3')
 login_manager = LoginManager(app)
 
 
@@ -292,6 +293,8 @@ class Course(db.Model):
         self.section = section
         self.instructor = instructor
 
+    def get_id(self):
+        return self.id
 
 @app.route('/courses', methods=['GET'])
 @login_required
@@ -928,18 +931,42 @@ def home():
 @app.route("/inst_home", methods=["POST", "GET"])
 @login_required
 def instructor_home():
-    courses = []
-
+    courses_group = []
+    terms = []
     user = current_user
     uid = current_user.get_id()
-    courses = Course.query.filter_by(instructor=uid).all()
+    year = []
+    semesters_list = []
+
+    dbconnection = engine.connect()
+    terms = dbconnection.execute("select distinct term, year from course")
+    
+    for term in terms:
+        semester_data={}
+        courses_group  = Course.query.filter_by(instructor=uid, term = term[0], year=term[1]).all()
+        print(courses_group)
+        if courses_group:            
+            semester_data['term'] = term[0]
+            semester_data['year'] = term[1]
+            
+            for course in courses_group:  
+                courses = []            
+                courses.append(course.get_id())
+                semester_data['course_list'] = courses  
+               # print(courses)          
+        else:
+            semester_data['term'] = "No Assigned Courses"       
+        
+        semesters_list.append(semester_data)
+        print(semesters_list) 
 
     if user.account_type == 'admin':
         return redirect(url_for('home'))
-    if not courses:
+
+    if not terms:
         return render_template("inst_home.html", current_user=user)
     else:
-        return render_template("inst_home.html", current_user=user, courses=courses)
+        return render_template("inst_home.html", current_user=user, semesters = semesters_list)
 
 
 @app.route("/logout")
