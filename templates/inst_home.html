@@ -27,18 +27,31 @@
 			 <div class="collapse navbar-collapse" id="navbarResponsive">
 			   <div class="navbar-nav ml-auto">
 				   <a class="nav-item nav-link active" href="/inst_home">Home</a>
-				   <div class="nav-item dropdown">
-					   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
-					   <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-						   {% if courses %}
-							   {% for course in courses %}
-								   <a class="dropdown-item" href="{{url_for('get_enrolled', course_id = course.id)}}">{{course.department}} {{course.course_number}}:{{course.section}}</a>
-							   {% endfor %}
-						   {% else  %}
-							   <a class="dropdown-item" href="">No Courses Assigned</a>
-						   {% endif %}
-					   </div>
-				   </div>
+				    <div class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
+						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            {% if courses %}
+                                {% for course in courses %}
+                                    <a class="dropdown-item" href="{{url_for('get_enrolled', course_id = course.id)}}">{{course.department}} {{course.course_number}}:{{course.section}}</a>
+								{% endfor %}
+							{% else  %}
+								<a class="dropdown-item" href="">No Courses Assigned</a>
+                            {% endif %}
+						</div>
+					</div>
+					<div class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Semesters</a>
+						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            {% if semesters %}
+                                {% for semester in semesters %}
+                                    <a class="dropdown-item" href="{{url_for('get_')}}">{{semester.term}} {{semester.year}}</a>
+								{% endfor %}
+							{% else  %}
+								<a class="dropdown-item" href="">No Courses Assigned</a>
+                            {% endif %}
+						</div>
+					</div>
+						   
 				   <a class="nav-item nav-link" href="/inst_outcomes">Student Outcomes</a>
 				    <div class="nav-item dropdown">
 					   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tasks</a>
