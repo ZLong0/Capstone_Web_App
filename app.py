@@ -296,14 +296,11 @@ class Course(db.Model):
     def get_id(self):
         return self.id
 
-@app.route('/courses', methods=['GET'])
+@app.route('/courses/', methods=['GET'])
 @login_required
 def get_all_courses():
     user_id = Users.get_id(current_user)
     user = Users.query.get(user_id)
-    if user.account_type == 'instructor':
-        return redirect(url_for('get_instructor_courses'))
-
     all_courses = Course.query.all()
     results = []
 
@@ -318,6 +315,10 @@ def get_all_courses():
         course_info['instructor_id'] = course.instructor
         results.append(course_info)
 
+    if user.account_type == 'instructor':
+        return redirect(url_for('get_instructor_courses', instructor_id = user_id))
+    
+    print(results)
     return render_template('courses.html', courses=results)
 
 
@@ -325,11 +326,14 @@ def get_all_courses():
 @app.route('/courses/<instructor_id>', methods=['GET'])
 @login_required
 def get_instructor_courses(instructor_id):
+    print('GET_INSTRUCTOR_COURSES')
     courses = Course.query.filter_by(instructor=instructor_id).all()
+    print(courses)
     results = []
 
     if request.method == "GET":
         if not courses:
+            print('no courses hit')
             results = "No courses assigned"
         else:
             for course in courses:
@@ -343,7 +347,7 @@ def get_instructor_courses(instructor_id):
                 course_info['section'] = course.section
                 results.append(course_info)
 
-        return render_template("inst_courses.html", courses=results)
+        return render_template("inst_courses.html", semesters=results)
 
     else:
         return render_template("inst_courses.html")
@@ -475,7 +479,7 @@ def outcomes():
                 semester_data['course_list'] = courses  
                # print(courses)          
         else:
-            semester_data['term'] = "No Assigned Courses"       
+            continue
        
         semesters_list.append(semester_data)
         print(semesters_list) 
@@ -522,7 +526,7 @@ def instructor_outcomes():
                 semester_data['course_list'] = courses  
                # print(courses)          
         else:
-            semester_data['term'] = "No Assigned Courses"       
+            continue      
         
         semesters_list.append(semester_data)
         print(semesters_list) 
@@ -993,9 +997,7 @@ def home():
                 courses.append(course.get_id())
                 semester_data['course_list'] = courses  
                 #print(courses)          
-        else:
-            semester_data['term'] = "No Assigned Courses"       
-        
+       
         semesters_list.append(semester_data)
          
     print(semesters_list)
@@ -1031,8 +1033,7 @@ def instructor_home():
                 semester_data['course_list'] = courses  
                # print(courses)          
         else:
-            semester_data['term'] = "No Assigned Courses"       
-        
+            continue
         semesters_list.append(semester_data)
         
     print(semesters_list) 
