@@ -76,14 +76,7 @@ def login():
             return redirect(url_for('home'))
         elif check_password_hash(pwhash=user.password, password=password_attempt) and user.account_type == 'instructor':
             login_user(user)
-            user = current_user
-            # courses = current_user.get_id()
-            uid = current_user.get_id()
-            courses = Course.query.filter_by(instructor=uid).all()
-            if not courses:
-                return redirect(url_for('instructor_home'))
-            else:
-                return redirect(url_for('instructor_home'))
+            return redirect(url_for('instructor_home'))
     error = 'Invalid Username/Password!  Please try again.'
     return render_template('login.html', error=error)
 
@@ -839,14 +832,14 @@ def delete_enrolled(enrolled_id):
 
 # RESULTS CLASS
 class Results(db.Model):
-    _id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'))
-    attempt_id = db.Column(db.Integer, db.ForeignKey('attempts.id'))
+    swp_id = db.Column(db.Integer, db.ForeignKey('assignments.swp_id'))
     value = db.Column(db.Integer)
 
-    def __init__(self, student_id, attempt_id, value):
+    def __init__(self, student_id, swp_id, value):
         self.student_id = student_id
-        self.attempt_id = attempt_id
+        self.swp_id = swp_id
         self.value = value
 
 
@@ -859,14 +852,13 @@ def get_results():
     for result in results:
         result_data = {}
         student = Student.query.get(result.student_id)
-        attempt = Attempts.query.get(result.attempt_id)
-        swp = Assignments.query.get(attempt.swp_id)
+        swp = Assignments.query.get(results.swp_id)
 
-        result_data['result id'] = result._id
+        result_data['result id'] = result.id
         result_data['student first'] = student.fname
         result_data['student last'] = student.lname
         result_data['swp name'] = swp.swp_name
-        result_data['value'] = results.valueP
+        result_data['value'] = results.value
 
         output.append(result_data)
     print(output)
