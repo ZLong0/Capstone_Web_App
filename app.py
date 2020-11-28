@@ -645,8 +645,8 @@ def add_swp():
         except:
             flash('Work Product Add failed!')
             return redirect(url_for('home'))
-
-    return render_template('/home')
+    else:
+        return render_template('/home')
 
     return redirect(url_for('home'))
 
