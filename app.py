@@ -93,6 +93,103 @@ def login():
     return render_template('login.html', error=error)
 
 
+# BASE ROUTES (INDEX/HOME/REGISTER)
+@app.route("/", methods=["POST", "GET"])
+def index():
+    user = current_user.get_id()
+    active = Users.query.filter_by(id=user).first()
+    
+    if not active:
+        return render_template("login.html")
+    elif active.account_type == 'instructor':
+        return redirect(url_for('instructor_home'))
+    else:
+        return redirect(url_for('home'))
+
+
+@app.route("/home", methods=["POST", "GET"])
+@login_required
+def home():
+    user_id = current_user.get_id()
+    user = Users.query.get(user_id)
+    courses = Course.query.all()
+
+    courses_group = []
+    terms = []
+    user = current_user
+    uid = current_user.get_id()
+    year = []
+    semesters_list = []
+
+    dbconnection = engine.connect()
+    terms = dbconnection.execute("select distinct term, year from course")
+    
+    for term in terms:
+        semester_data={}
+        courses_group  = Course.query.filter_by(term = term[0], year=term[1]).all()
+        #print(courses_group)
+        if courses_group:            
+            semester_data['term'] = term[0]
+            semester_data['year'] = term[1]
+            courses = []  
+            for course in courses_group:                          
+                courses.append(course.get_id())
+                semester_data['course_list'] = courses  
+                #print(courses)          
+       
+        semesters_list.append(semester_data)
+         
+    print(semesters_list)
+    if user.account_type == 'instructor':
+        dbconnection.close()
+        return redirect(url_for("instructor_home"))
+
+    dbconnection.close()
+    return render_template("home.html", current_user=user, semesters=semesters_list)
+
+
+@app.route("/inst_home", methods=["POST", "GET"])
+@login_required
+def instructor_home():
+    courses_group = []
+    terms = []
+    user = current_user
+    uid = current_user.get_id()
+    year = []
+    semesters_list = []
+
+    dbconnection = engine.connect()
+    terms = dbconnection.execute("select distinct term, year from course")
+    
+    for term in terms:
+        semester_data={}
+        courses_group  = Course.query.filter_by(instructor=uid, term = term[0], year=term[1]).all()
+        #print(courses_group)
+        if courses_group:            
+            semester_data['term'] = term[0]
+            semester_data['year'] = term[1]
+            courses = []
+            for course in courses_group:  
+                courses.append(course.get_id())
+                semester_data['course_list'] = courses  
+               # print(courses)          
+        else:
+            continue
+        semesters_list.append(semester_data)
+        
+    print(semesters_list) 
+    if user.account_type == 'admin':
+        dbconnection.close()
+        return redirect(url_for('home'))
+
+    if not terms:
+        dbconnection.close()
+        return render_template("inst_home.html", current_user=user)
+    else:
+        dbconnection.close()
+        return render_template("inst_home.html", current_user=user, semesters = semesters_list)
+
+
 # this checks db for existing username before returning
 @app.route("/register", methods=["POST", "GET"])
 def register_user():
@@ -166,6 +263,14 @@ def register_user():
                 return render_template('login.html', message=message)
     else:
         return render_template('register.html')
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    message = "Logout Successful!"
+    return render_template("login.html", message=message)
 
 
 # INSTRUCTORS CLASS
@@ -985,109 +1090,7 @@ def delete_results(result_id):
     return redirect(url_for('home'))
 
 
-# BASE ROUTES (INDEX/HOME/REGISTER) -- THIS MAY BE MOVED LATER
-@app.route("/", methods=["POST", "GET"])
-def index():
-    user = current_user.get_id()
-    active = Users.query.filter_by(id=user).first()
-    
-    if not active:
-        return render_template("login.html")
-    elif active.account_type == 'instructor':
-        return redirect(url_for('instructor_home'))
-    else:
-        return redirect(url_for('home'))
 
-
-@app.route("/home", methods=["POST", "GET"])
-@login_required
-def home():
-    user_id = current_user.get_id()
-    user = Users.query.get(user_id)
-    courses = Course.query.all()
-
-    courses_group = []
-    terms = []
-    user = current_user
-    uid = current_user.get_id()
-    year = []
-    semesters_list = []
-
-    dbconnection = engine.connect()
-    terms = dbconnection.execute("select distinct term, year from course")
-    
-    for term in terms:
-        semester_data={}
-        courses_group  = Course.query.filter_by(term = term[0], year=term[1]).all()
-        #print(courses_group)
-        if courses_group:            
-            semester_data['term'] = term[0]
-            semester_data['year'] = term[1]
-            courses = []  
-            for course in courses_group:                          
-                courses.append(course.get_id())
-                semester_data['course_list'] = courses  
-                #print(courses)          
-       
-        semesters_list.append(semester_data)
-         
-    print(semesters_list)
-    if user.account_type == 'instructor':
-        dbconnection.close()
-        return redirect(url_for("instructor_home"))
-
-    dbconnection.close()
-    return render_template("home.html", current_user=user, semesters=semesters_list)
-
-
-@app.route("/inst_home", methods=["POST", "GET"])
-@login_required
-def instructor_home():
-    courses_group = []
-    terms = []
-    user = current_user
-    uid = current_user.get_id()
-    year = []
-    semesters_list = []
-
-    dbconnection = engine.connect()
-    terms = dbconnection.execute("select distinct term, year from course")
-    
-    for term in terms:
-        semester_data={}
-        courses_group  = Course.query.filter_by(instructor=uid, term = term[0], year=term[1]).all()
-        #print(courses_group)
-        if courses_group:            
-            semester_data['term'] = term[0]
-            semester_data['year'] = term[1]
-            courses = []
-            for course in courses_group:  
-                courses.append(course.get_id())
-                semester_data['course_list'] = courses  
-               # print(courses)          
-        else:
-            continue
-        semesters_list.append(semester_data)
-        
-    print(semesters_list) 
-    if user.account_type == 'admin':
-        dbconnection.close()
-        return redirect(url_for('home'))
-
-    if not terms:
-        dbconnection.close()
-        return render_template("inst_home.html", current_user=user)
-    else:
-        dbconnection.close()
-        return render_template("inst_home.html", current_user=user, semesters = semesters_list)
-
-
-@app.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    message = "Logout Successful!"
-    return render_template("login.html", message=message)
 
 
 if __name__ == '__main__':
