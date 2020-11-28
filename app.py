@@ -169,14 +169,14 @@ def get_instructors():
     return jsonify(results)
 
 
-@app.route('/instructors', methods=['POST'])
+@app.route('/instructors/<instructor_id>', methods=['POST'])
 @login_required
-def update_instructors():
+def update_instructors(instructor_id):
     if request.method == 'POST':
         # TODO: UPDATE THIS TO TAKE IN VALUE FROM FORM
         id = 1
         # check for existing instructor id first
-        instructor = Instructor.query.filter_by(id=id).first()
+        instructor = Instructor.query.filter_by(id=instructor_id).first()
         if instructor:
             return 'This employee ID is already registered'
         else:
@@ -295,6 +295,7 @@ class Course(db.Model):
 
     def get_id(self):
         return self.id
+
 
 @app.route('/courses/', methods=['GET'])
 @login_required
@@ -485,6 +486,7 @@ def outcomes():
         print(semesters_list) 
     
     if user.account_type == 'instructor':
+        dbconnection.close()
         return redirect(url_for('instructor_outcomes'))
 
     outcomes = Outcomes.query.all()
@@ -497,6 +499,7 @@ def outcomes():
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
 
+    dbconnection.close()
     return render_template('outcomes.html', outcomes=results, semesters = semesters_list)
 
 
@@ -540,6 +543,7 @@ def instructor_outcomes():
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
 
+    dbconnection.close()
     return render_template('inst_outcomes.html', outcomes=results, semesters=semesters_list)
 
 
@@ -1002,8 +1006,10 @@ def home():
          
     print(semesters_list)
     if user.account_type == 'instructor':
+        dbconnection.close()
         return redirect(url_for("instructor_home"))
 
+    dbconnection.close()
     return render_template("home.html", current_user=user, semesters=semesters_list)
 
 
@@ -1038,11 +1044,14 @@ def instructor_home():
         
     print(semesters_list) 
     if user.account_type == 'admin':
+        dbconnection.close()
         return redirect(url_for('home'))
 
     if not terms:
+        dbconnection.close()
         return render_template("inst_home.html", current_user=user)
     else:
+        dbconnection.close()
         return render_template("inst_home.html", current_user=user, semesters = semesters_list)
 
 
