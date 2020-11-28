@@ -118,6 +118,7 @@ def register_user():
 
         user = Users.query.filter_by(id=add_id).first()
         email = Users.query.filter_by(email=add_email).first()
+        # this still needs fixing
         # cc_emails = Users.query(email).filter_by(account_type='admin' or 'root').all()
         if user:
             error = "Employee ID is already registered"
