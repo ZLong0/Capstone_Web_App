@@ -25,23 +25,23 @@
 			 <div class="collapse navbar-collapse" id="navbarResponsive">
 			   <div class="navbar-nav ml-auto">
 				   <a class="nav-item nav-link active" href="/inst_home">Home</a>
-				   <div class="nav-item dropdown">
-					   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
-					   <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-						   {% if courses %}
-							   {% for course in courses %}
-								   <a class="dropdown-item" href="{{url_for('get_enrolled', course_id = course.id)}}">{{course.department}} {{course.course_number}}:{{course.section}}</a>
-							   {% endfor %}
-						   {% else  %}
-							   <a class="dropdown-item" href="">No Courses Assigned</a>
-						   {% endif %}
-					   </div>
-				   </div>
+				 <div class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
+						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            {% if semesters %}
+                                {% for semester in semesters %}
+                                    <a class="dropdown-item" href="#">{{semester.term}} {{semester.year}}</a>
+								{% endfor %}
+							{% else  %}
+								<a class="dropdown-item" href="">No Courses Assigned</a>
+                            {% endif %}
+						</div>
+					</div>
 				   <a class="nav-item nav-link" href="/inst_outcomes">Student Outcomes</a>
 				    <div class="nav-item dropdown">
 					   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tasks</a>
 					   <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-						   <a class="dropdown-item" href="/registration_requests">Add Student Work Product</a>
+						   <a class="dropdown-item" data-toggle="modal" href="#workProductModal">Add Work Products</a>
 					   </div>
 				   </div>
 				   <a class="nav-item nav-link" href="/logout">Log Out</a>
@@ -55,5 +55,31 @@
             <p>{{ outcome.so_name }} -- {{outcome.so_desc}}</p>
         {% endfor %}
 	  </ul>
+	  <div class="modal fade" id="workProductModal">
+		<div class="modal-dialog">
+			  <div class="modal-content">
+  
+				<!-- Modal Header -->
+				<div class="modal-header">
+					 <h4 class="modal-title">Add Work Product</h4>
+					  <button type="button" class="close" data-dismiss="modal">×</button>
+				</div>
+	
+					<!-- Modal body -->
+					<div class="modal-body">
+						<form action="/swp" class="modal-form" method="put">
+							CREATE FORM HERE							 
+							<button type="submit">Submit</button>
+					  </form>
+				</div>
+	
+				<!-- Modal footer -->
+				<div class="modal-footer">
+					  <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+				</div>
+	
+			</div>
+		   </div>
+	  </div>
   </body>
 </html>

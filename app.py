@@ -3,12 +3,13 @@ from flask import Flask, render_template, jsonify, request, session, redirect, f
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, distinct, func
 
 app = Flask('__name__')
 app.secret_key = "capstonefall2020"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///atas.sqlite3'
 db = SQLAlchemy(app)
+engine = create_engine('sqlite:///atas.sqlite3')
 login_manager = LoginManager(app)
 
 
@@ -76,14 +77,7 @@ def login():
             return redirect(url_for('home'))
         elif check_password_hash(pwhash=user.password, password=password_attempt) and user.account_type == 'instructor':
             login_user(user)
-            user = current_user
-            # courses = current_user.get_id()
-            uid = current_user.get_id()
-            courses = Course.query.filter_by(instructor=uid).all()
-            if not courses:
-                return redirect(url_for('instructor_home'))
-            else:
-                return redirect(url_for('instructor_home'))
+            return redirect(url_for('instructor_home'))
     error = 'Invalid Username/Password!  Please try again.'
     return render_template('login.html', error=error)
 
@@ -175,14 +169,14 @@ def get_instructors():
     return jsonify(results)
 
 
-@app.route('/instructors', methods=['POST'])
+@app.route('/instructors/<instructor_id>', methods=['POST'])
 @login_required
-def update_instructors():
+def update_instructors(instructor_id):
     if request.method == 'POST':
         # TODO: UPDATE THIS TO TAKE IN VALUE FROM FORM
         id = 1
         # check for existing instructor id first
-        instructor = Instructor.query.filter_by(id=id).first()
+        instructor = Instructor.query.filter_by(id=instructor_id).first()
         if instructor:
             return 'This employee ID is already registered'
         else:
@@ -204,7 +198,7 @@ class Student(db.Model):
 @app.route('/students', methods=['GET'])
 @login_required
 def get_all_students():
-    students = Student.query.all()
+    students = Student.query.group_by('lname').all()
     results = []
     for student in students:
         student_data = {}
@@ -299,15 +293,15 @@ class Course(db.Model):
         self.section = section
         self.instructor = instructor
 
+    def get_id(self):
+        return self.id
 
-@app.route('/courses', methods=['GET'])
+
+@app.route('/courses/', methods=['GET'])
 @login_required
 def get_all_courses():
     user_id = Users.get_id(current_user)
     user = Users.query.get(user_id)
-    if user.account_type == 'instructor':
-        return redirect(url_for('get_instructor_courses'))
-
     all_courses = Course.query.all()
     results = []
 
@@ -322,6 +316,10 @@ def get_all_courses():
         course_info['instructor_id'] = course.instructor
         results.append(course_info)
 
+    if user.account_type == 'instructor':
+        return redirect(url_for('get_instructor_courses', instructor_id = user_id))
+    
+    print(results)
     return render_template('courses.html', courses=results)
 
 
@@ -329,11 +327,14 @@ def get_all_courses():
 @app.route('/courses/<instructor_id>', methods=['GET'])
 @login_required
 def get_instructor_courses(instructor_id):
+    print('GET_INSTRUCTOR_COURSES')
     courses = Course.query.filter_by(instructor=instructor_id).all()
+    print(courses)
     results = []
 
     if request.method == "GET":
         if not courses:
+            print('no courses hit')
             results = "No courses assigned"
         else:
             for course in courses:
@@ -347,7 +348,7 @@ def get_instructor_courses(instructor_id):
                 course_info['section'] = course.section
                 results.append(course_info)
 
-        return render_template("inst_courses.html", courses=results)
+        return render_template("inst_courses.html", semesters=results)
 
     else:
         return render_template("inst_courses.html")
@@ -456,9 +457,36 @@ class Outcomes(db.Model):
 @app.route("/outcomes", methods=["GET"])
 @login_required
 def outcomes():
-    user_id = Users.get_id(current_user)
-    user = Users.query.get(user_id)
+    courses_group = []
+    terms = []
+    user = current_user
+    uid = current_user.get_id()
+    year = []
+    semesters_list = []
+
+    dbconnection = engine.connect()
+    terms = dbconnection.execute("select distinct term, year from course")
+    
+    for term in terms:
+        semester_data={}
+        courses_group  = Course.query.filter_by(term = term[0], year=term[1]).all()
+        print(courses_group)
+        if courses_group:            
+            semester_data['term'] = term[0]
+            semester_data['year'] = term[1]
+            courses = []
+            for course in courses_group:                            
+                courses.append(course.get_id())
+                semester_data['course_list'] = courses  
+               # print(courses)          
+        else:
+            continue
+       
+        semesters_list.append(semester_data)
+        print(semesters_list) 
+    
     if user.account_type == 'instructor':
+        dbconnection.close()
         return redirect(url_for('instructor_outcomes'))
 
     outcomes = Outcomes.query.all()
@@ -471,16 +499,40 @@ def outcomes():
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
 
-    return render_template('outcomes.html', outcomes=results, courses=courses)
+    dbconnection.close()
+    return render_template('outcomes.html', outcomes=results, semesters = semesters_list)
 
 
 # THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
 @app.route("/inst_outcomes", methods=["GET"])
 @login_required
 def instructor_outcomes():
-    user_id = Users.get_id(current_user)
-    user = Users.query.get(user_id)
-    courses = Course.query.filter_by(instructor=user.id).all()
+    courses_group = []
+    terms = []
+    user = current_user
+    uid = current_user.get_id()
+    year = []
+    semesters_list = []
+
+    dbconnection = engine.connect()
+    terms = dbconnection.execute("select distinct term, year from course")
+    
+    for term in terms:
+        semester_data={}
+        courses_group  = Course.query.filter_by(instructor=uid, term = term[0], year=term[1]).all()
+        if courses_group:            
+            semester_data['term'] = term[0]
+            semester_data['year'] = term[1]
+            courses = []     
+            for course in courses_group:                       
+                courses.append(course.get_id())
+                semester_data['course_list'] = courses  
+               # print(courses)          
+        else:
+            continue      
+        
+        semesters_list.append(semester_data)
+        print(semesters_list) 
 
     outcomes = Outcomes.query.all()
     results = []
@@ -491,7 +543,8 @@ def instructor_outcomes():
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
 
-    return render_template('inst_outcomes.html', outcomes=results, courses=courses)
+    dbconnection.close()
+    return render_template('inst_outcomes.html', outcomes=results, semesters=semesters_list)
 
 
 # ASSIGNMENTS (SWP) CLASS
@@ -592,8 +645,8 @@ def add_swp():
         except:
             flash('Work Product Add failed!')
             return redirect(url_for('home'))
-
-    return render_template('/home')
+    else:
+        return render_template('/home')
 
     return redirect(url_for('home'))
 
@@ -733,28 +786,49 @@ class Enrolled(db.Model):
 @login_required
 def get_enrolled(course_id):
     enrolled = Enrolled.query.filter_by(course_id=course_id)
-    results = []
+    results_list = []
+    swp_list = []
     user = current_user
+    swps = Assignments.query.filter_by(course_id=course_id).all()
+    for swp in swps:
+        swp_data = {}
+        swp_name = swp.swp_name
+        swp_data['swp_name']= swp_name
+        swp_data['swp_id'] = swp.swp_id
+        swp_list.append(swp_data)              
 
     for enroll in enrolled:
-        enrollment_data = {}
+        enrollment_data = {} 
         student_id = enroll.student_id
         student = Student.query.get(student_id)
-        enrollment_data['student_id'] = student.student_id
-        enrollment_data['student_first'] = student.fname
-        enrollment_data['student_last'] = student.lname
-        enrollment_data['course_id'] = enroll.course_id
-        results.append(enrollment_data)
+        results = Results.query.filter_by(student_id = student_id).all()
+        #print(results)
+        if not results:
+            enrollment_data['swp_id'] = None
+            enrollment_data['swp_name'] = 'Test'
+            enrollment_data['score'] = None
+        else:
+            enrollment_data['swp_id'] = results.swp_id
+            swp = Assignments.query.filter_by(swp_id = results.swp_id).first()
+            enrollment_data['swp_name'] = swp.swp_name
+            enrollment_data['score'] = results.value
+        if student:
+            enrollment_data['student_id'] = student.student_id
+            enrollment_data['student_first'] = student.fname
+            enrollment_data['student_last'] = student.lname
 
-    print(results)
+        enrollment_data['course_id'] = enroll.course_id
+        results_list.append(enrollment_data)
+    
+    sorted_results = sorted(results_list, key=lambda i:i['student_last'])
     user_id = current_user.get_id()
     user = Users.query.get(user_id)
     if user.account_type == 'instructor':
         courses = Course.query.filter_by(instructor=user.id).all()
-        return render_template('inst_courses.html', enrolled=results, courses=courses)
+        return render_template('inst_courses.html', enrolled=sorted_results, courses=courses, swps=swp_list)
     else:
         courses = Course.query.all()
-        return render_template('courses.html', enrolled=results, courses=courses)
+        return render_template('courses.html', enrolled=sorted_results, courses=courses)
 
 
 # TODO -- UPDATE ENROLLMENTS
@@ -818,14 +892,14 @@ def delete_enrolled(enrolled_id):
 
 # RESULTS CLASS
 class Results(db.Model):
-    _id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'))
-    attempt_id = db.Column(db.Integer, db.ForeignKey('attempts.id'))
+    swp_id = db.Column(db.Integer, db.ForeignKey('assignments.swp_id'))
     value = db.Column(db.Integer)
 
-    def __init__(self, student_id, attempt_id, value):
+    def __init__(self, student_id, swp_id, value):
         self.student_id = student_id
-        self.attempt_id = attempt_id
+        self.swp_id = swp_id
         self.value = value
 
 
@@ -838,14 +912,13 @@ def get_results():
     for result in results:
         result_data = {}
         student = Student.query.get(result.student_id)
-        attempt = Attempts.query.get(result.attempt_id)
-        swp = Assignments.query.get(attempt.swp_id)
+        swp = Assignments.query.get(results.swp_id)
 
-        result_data['result id'] = result._id
+        result_data['result id'] = result.id
         result_data['student first'] = student.fname
         result_data['student last'] = student.lname
         result_data['swp name'] = swp.swp_name
-        result_data['value'] = results.valueP
+        result_data['value'] = results.value
 
         output.append(result_data)
     print(output)
@@ -906,27 +979,80 @@ def home():
     user = Users.query.get(user_id)
     courses = Course.query.all()
 
+    courses_group = []
+    terms = []
+    user = current_user
+    uid = current_user.get_id()
+    year = []
+    semesters_list = []
+
+    dbconnection = engine.connect()
+    terms = dbconnection.execute("select distinct term, year from course")
+    
+    for term in terms:
+        semester_data={}
+        courses_group  = Course.query.filter_by(term = term[0], year=term[1]).all()
+        #print(courses_group)
+        if courses_group:            
+            semester_data['term'] = term[0]
+            semester_data['year'] = term[1]
+            courses = []  
+            for course in courses_group:                          
+                courses.append(course.get_id())
+                semester_data['course_list'] = courses  
+                #print(courses)          
+       
+        semesters_list.append(semester_data)
+         
+    print(semesters_list)
     if user.account_type == 'instructor':
+        dbconnection.close()
         return redirect(url_for("instructor_home"))
 
-    return render_template("home.html", current_user=user, courses=courses)
+    dbconnection.close()
+    return render_template("home.html", current_user=user, semesters=semesters_list)
 
 
 @app.route("/inst_home", methods=["POST", "GET"])
 @login_required
 def instructor_home():
-    courses = []
-
+    courses_group = []
+    terms = []
     user = current_user
     uid = current_user.get_id()
-    courses = Course.query.filter_by(instructor=uid).all()
+    year = []
+    semesters_list = []
 
+    dbconnection = engine.connect()
+    terms = dbconnection.execute("select distinct term, year from course")
+    
+    for term in terms:
+        semester_data={}
+        courses_group  = Course.query.filter_by(instructor=uid, term = term[0], year=term[1]).all()
+        #print(courses_group)
+        if courses_group:            
+            semester_data['term'] = term[0]
+            semester_data['year'] = term[1]
+            courses = []
+            for course in courses_group:  
+                courses.append(course.get_id())
+                semester_data['course_list'] = courses  
+               # print(courses)          
+        else:
+            continue
+        semesters_list.append(semester_data)
+        
+    print(semesters_list) 
     if user.account_type == 'admin':
+        dbconnection.close()
         return redirect(url_for('home'))
-    if not courses:
+
+    if not terms:
+        dbconnection.close()
         return render_template("inst_home.html", current_user=user)
     else:
-        return render_template("inst_home.html", current_user=user, courses=courses)
+        dbconnection.close()
+        return render_template("inst_home.html", current_user=user, semesters = semesters_list)
 
 
 @app.route("/logout")
