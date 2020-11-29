@@ -82,13 +82,9 @@ def login():
         if not user:
             error = 'Invalid Username/Password!  Please try again.'
             return render_template('login.html', error=error)
-        elif check_password_hash(pwhash=user.password, password=password_attempt) and \
-                (user.account_type == 'admin' or user.account_type == 'root'):
+        elif check_password_hash(pwhash=user.password, password=password_attempt):
             login_user(user)
             return redirect(url_for('home'))
-        elif check_password_hash(pwhash=user.password, password=password_attempt) and user.account_type == 'instructor':
-            login_user(user)
-            return redirect(url_for('instructor_home'))
     error = 'Invalid Username/Password!  Please try again.'
     return render_template('login.html', error=error)
 
@@ -112,7 +108,6 @@ def index():
 def home():
     user_id = current_user.get_id()
     user = Users.query.get(user_id)
-    courses = Course.query.all()
 
     courses_group = []
     terms = []
@@ -123,71 +118,49 @@ def home():
 
     dbconnection = engine.connect()
     terms = dbconnection.execute("select distinct term, year from course")
-    
-    for term in terms:
-        semester_data={}
-        courses_group  = Course.query.filter_by(term = term[0], year=term[1]).all()
-        #print(courses_group)
-        if courses_group:            
-            semester_data['term'] = term[0]
-            semester_data['year'] = term[1]
-            courses = []  
-            for course in courses_group:                          
-                courses.append(course.get_id())
-                semester_data['course_list'] = courses  
-                #print(courses)          
-       
-        semesters_list.append(semester_data)
-         
-    print(semesters_list)
     if user.account_type == 'instructor':
-        dbconnection.close()
-        return redirect(url_for("instructor_home"))
+        for term in terms:
+            semester_data={}
+            courses_group  = Course.query.filter_by(instructor=uid, term = term[0], year=term[1]).all()
+            #print(courses_group)
+            if courses_group:            
+                semester_data['term'] = term[0]
+                semester_data['year'] = term[1]
+                courses = []
+                for course in courses_group:  
+                    courses.append(course.get_id())
+                    semester_data['course_list'] = courses  
+                # print(courses)          
+            else:
+                continue
+            semesters_list.append(semester_data)
 
-    dbconnection.close()
-    return render_template("home.html", current_user=user, semesters=semesters_list)
-
-
-@app.route("/inst_home", methods=["POST", "GET"])
-@login_required
-def instructor_home():
-    courses_group = []
-    terms = []
-    user = current_user
-    uid = current_user.get_id()
-    year = []
-    semesters_list = []
-
-    dbconnection = engine.connect()
-    terms = dbconnection.execute("select distinct term, year from course")
-    
-    for term in terms:
-        semester_data={}
-        courses_group  = Course.query.filter_by(instructor=uid, term = term[0], year=term[1]).all()
-        #print(courses_group)
-        if courses_group:            
-            semester_data['term'] = term[0]
-            semester_data['year'] = term[1]
-            courses = []
-            for course in courses_group:  
-                courses.append(course.get_id())
-                semester_data['course_list'] = courses  
-               # print(courses)          
+        if not terms:
+            dbconnection.close()
+            return render_template("inst_home.html", current_user=user)
         else:
-            continue
-        semesters_list.append(semester_data)
-        
-    print(semesters_list) 
-    if user.account_type == 'admin':
-        dbconnection.close()
-        return redirect(url_for('home'))
+            dbconnection.close()
+            return render_template("inst_home.html", current_user=user, semesters = semesters_list)
 
-    if not terms:
-        dbconnection.close()
-        return render_template("inst_home.html", current_user=user)
     else:
+        for term in terms:
+            semester_data={}
+            courses_group  = Course.query.filter_by(term = term[0], year=term[1]).all()
+            #print(courses_group)
+            if courses_group:            
+                semester_data['term'] = term[0]
+                semester_data['year'] = term[1]
+                courses = []  
+                for course in courses_group:                          
+                    courses.append(course.get_id())
+                    semester_data['course_list'] = courses  
+                    #print(courses)          
+        
+            semesters_list.append(semester_data)
+            
+        print(semesters_list) 
         dbconnection.close()
-        return render_template("inst_home.html", current_user=user, semesters = semesters_list)
+        return render_template("home.html", current_user=user, semesters=semesters_list) 
 
 
 # this checks db for existing username before returning
@@ -251,7 +224,8 @@ def register_user():
                                  password=new_password, account_type='instructor', sec_question=question_1,
                                  answer=answer_1)
                 new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
-                msg = Message('ATAS Registration Sent', recipients=[add_email], cc=[cc_emails])
+                #msg = Message('ATAS Registration Sent', recipients=[add_email], cc=[cc_emails])
+                msg = Message('ATAS Registration Sent', recipients=[add_email])
                 msg.body = 'ATAS Registration Sent'
                 msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
                            add_email + '. We will notify you when your account is ready to use'
@@ -595,32 +569,6 @@ def outcomes():
     uid = current_user.get_id()
     year = []
     semesters_list = []
-
-    dbconnection = engine.connect()
-    terms = dbconnection.execute("select distinct term, year from course")
-    
-    for term in terms:
-        semester_data={}
-        courses_group  = Course.query.filter_by(term = term[0], year=term[1]).all()
-        print(courses_group)
-        if courses_group:            
-            semester_data['term'] = term[0]
-            semester_data['year'] = term[1]
-            courses = []
-            for course in courses_group:                            
-                courses.append(course.get_id())
-                semester_data['course_list'] = courses  
-               # print(courses)          
-        else:
-            continue
-       
-        semesters_list.append(semester_data)
-        print(semesters_list) 
-    
-    if user.account_type == 'instructor':
-        dbconnection.close()
-        return redirect(url_for('instructor_outcomes'))
-
     outcomes = Outcomes.query.all()
 
     results = []
@@ -630,53 +578,49 @@ def outcomes():
         outcome_data['so_name'] = outcome.so_name
         outcome_data['so_desc'] = outcome.so_desc
         results.append(outcome_data)
-
-    dbconnection.close()
-    return render_template('outcomes.html', outcomes=results, semesters = semesters_list)
-
-
-# THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
-@app.route("/inst_outcomes", methods=["GET"])
-@login_required
-def instructor_outcomes():
-    courses_group = []
-    terms = []
-    user = current_user
-    uid = current_user.get_id()
-    year = []
-    semesters_list = []
-
+    
     dbconnection = engine.connect()
     terms = dbconnection.execute("select distinct term, year from course")
-    
-    for term in terms:
-        semester_data={}
-        courses_group  = Course.query.filter_by(instructor=uid, term = term[0], year=term[1]).all()
-        if courses_group:            
-            semester_data['term'] = term[0]
-            semester_data['year'] = term[1]
-            courses = []     
-            for course in courses_group:                       
-                courses.append(course.get_id())
-                semester_data['course_list'] = courses  
-               # print(courses)          
-        else:
-            continue      
+
+    if user.account_type =='instructor':
+        for term in terms:
+            semester_data={}
+            courses_group  = Course.query.filter_by(instructor=uid, term = term[0], year=term[1]).all()
+            if courses_group:            
+                semester_data['term'] = term[0]
+                semester_data['year'] = term[1]
+                courses = []     
+                for course in courses_group:                       
+                    courses.append(course.get_id())
+                    semester_data['course_list'] = courses  
+                # print(courses)          
+            else:
+                continue      
+            semesters_list.append(semester_data)
+            print(semesters_list)       
+        dbconnection.close()
+        return render_template('inst_outcomes.html', outcomes=results, semesters=semesters_list)
+    else:
+        for term in terms:
+            semester_data={}
+            courses_group  = Course.query.filter_by(term = term[0], year=term[1]).all()
+            print(courses_group)
+            if courses_group:            
+                semester_data['term'] = term[0]
+                semester_data['year'] = term[1]
+                courses = []
+                for course in courses_group:                            
+                    courses.append(course.get_id())
+                    semester_data['course_list'] = courses  
+                # print(courses)          
+            else:
+                continue
         
-        semesters_list.append(semester_data)
-        print(semesters_list) 
+            semesters_list.append(semester_data)
+            print(semesters_list) 
 
-    outcomes = Outcomes.query.all()
-    results = []
-
-    for outcome in outcomes:
-        outcome_data = {}
-        outcome_data['so_name'] = outcome.so_name
-        outcome_data['so_desc'] = outcome.so_desc
-        results.append(outcome_data)
-
-    dbconnection.close()
-    return render_template('inst_outcomes.html', outcomes=results, semesters=semesters_list)
+        dbconnection.close()
+        return render_template('outcomes.html', outcomes=results, semesters = semesters_list)
 
 
 # ASSIGNMENTS (SWP) CLASS
