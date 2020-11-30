@@ -854,6 +854,7 @@ def add_swp():
         swp_name = request.form['swp_name']
         print(swp_name)
         print(course_id)
+        swp_name = swp_name.upper()
         new_swp = Assignments(course_id, swp_name)
         # check database for existing  overlap
         existing_swp = Assignments.query.filter_by(swp_name=swp_name,course_id=course_id).all()
@@ -880,18 +881,16 @@ def add_swp():
 
 
 @app.route('/swp/<swp_id>', methods=['GET', 'DELETE'])
-@login_required
+#@login_required
 def delete_swp(swp_id):
     if request.method == 'DELETE':
-        try:
-            swp = Assignments.query.get(swp_id)
-            db.session.delete(swp)
-            db.commit()
+        swp = Assignments.query.get(swp_id)
+        db.session.delete(swp)
+        db.session.commit()
 
-            flash("Work Product Deleted")
-        except:
-            flash("Error:  Delete Unsuccessful")
+        print("Work Product Deleted")
 
+    return redirect(url_for('get_all_swp'))
     return redirect(url_for('home'))
 
 
