@@ -25,6 +25,7 @@
       		</button>
       		<div class="collapse navbar-collapse" id="navbarResponsive">
 				<div class="navbar-nav ml-auto">
+
 					<a class="nav-item nav-link" href="/inst_home">Home</a>
 					
 			   		<!-- Courses Dropdown -->
@@ -34,14 +35,17 @@
 						   {% if semesters %}
 						   		{% for semester in semesters %}
 									<a class="dropdown-item" data-toggle="modal" href="#{{semester.term}}{{semester.year}}course-list-modal">{{semester.term}} {{semester.year}}</a>
+
 								{% endfor %}
 						   {% else  %}
 								<a class="dropdown-item" href="">No Courses Assigned</a>
+
 						   {% endif %}
 					   </div>
 				   </div>
 					
 					<a class="nav-item nav-link" href="/inst_outcomes">Student Outcomes</a>
+
 					<div class="nav-item dropdown">
 						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown">Tasks</a>
 						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">

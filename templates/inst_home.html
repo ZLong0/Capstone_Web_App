@@ -16,6 +16,7 @@
   <body>
 	  
 	<nav class="navbar navbar-expand-lg navbar-dark static-top" id="nav">
+
  		<div class="container">
       		<div class="navbar-brand">
 				Accreditation Tracker and Analysis System
@@ -35,10 +36,12 @@
 						   {% if semesters %}
 						   		{% for semester in semesters %}
 									<a class="dropdown-item" data-toggle="modal" href="#{{semester.term}}{{semester.year}}course-list-modal">{{semester.term}} {{semester.year}}</a>
-								{% endfor %}
+							{% endfor %}
 						   {% else  %}
 								<a class="dropdown-item" href="">No Courses Assigned</a>
+
 						   {% endif %}
+
 					   </div>
 				   </div>
 					
