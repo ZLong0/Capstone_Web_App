@@ -509,11 +509,11 @@ class Course(db.Model):
         return self.id
 
 
-@app.route('/courses/', methods=['GET'])
-@login_required
+@app.route('/courses', methods=['GET'])
+#@login_required
 def get_all_courses():
-    user_id = Users.get_id(current_user)
-    user = Users.query.get(user_id)
+    #user_id = Users.get_id(current_user)
+    #user = Users.query.get(user_id)
     all_courses = Course.query.all()
     results = []
 
@@ -526,18 +526,48 @@ def get_all_courses():
         course_info['course_number'] = course.course_number
         course_info['section'] = course.section
         course_info['instructor_id'] = course.instructor
+        course_info['course_id'] = course.id
         results.append(course_info)
 
-    if user.account_type == 'instructor':
-        return redirect(url_for('get_instructor_courses', instructor_id = user_id))
+   # if user.account_type == 'instructor':
+      # return redirect(url_for('get_instructor_courses', instructor_id = user_id))
     
     print(results)
+    return jsonify(results)
+    return render_template('courses.html', courses=results)
+
+
+@app.route('/courses/<int:course_id>', methods=['GET'])
+#@login_required
+def get_one_course(course_id):
+    #user_id = Users.get_id(current_user)
+    #user = Users.query.get(user_id)
+    course = Course.query.get(course_id)
+    results = []
+    course_info = {}
+    if not course:
+        return ("Course not found")
+    course_info['course_name'] = course.course_name
+    course_info['term'] = course.term
+    course_info['year'] = course.year
+    course_info['course_department'] = course.department
+    course_info['course_number'] = course.course_number
+    course_info['section'] = course.section
+    course_info['instructor_id'] = course.instructor
+    course_info['course_id'] = course.id
+    results.append(course_info)
+
+   # if user.account_type == 'instructor':
+      # return redirect(url_for('get_instructor_courses', instructor_id = user_id))
+    
+    print(results)
+    return jsonify(results)
     return render_template('courses.html', courses=results)
 
 
 # gets all courses for specific instructor id
-@app.route('/courses/<instructor_id>', methods=['GET'])
-@login_required
+@app.route('/courses/inst/<int:instructor_id>', methods=['GET'])
+#@login_required
 def get_instructor_courses(instructor_id):
     print('GET_INSTRUCTOR_COURSES')
     courses = Course.query.filter_by(instructor=instructor_id).all()
@@ -560,20 +590,20 @@ def get_instructor_courses(instructor_id):
                 course_info['section'] = course.section
                 results.append(course_info)
 
+        return jsonify(results)
         return render_template("inst_courses.html", semesters=results)
 
     else:
         return render_template("inst_courses.html")
 
 
-@app.route('/courses', methods=['GET', 'POST'])
-@login_required
-def update_courses():
+@app.route('/courses/<int:course_id>', methods=['GET', 'POST'])
+#@login_required
+def update_courses(course_id):
     if request.method == 'POST':
-        try:
-            # get course to update by ID save in var
-            course = Course.query.get(request.form['id'])
-
+        # get course to update by ID save in var
+        course = Course.query.get(course_id)
+        if course:
             # update existing course info based on form input
             course.term = request.form['term']
             course.year = request.form['year']
@@ -581,77 +611,73 @@ def update_courses():
             course.course_name = request.form['course_name']
             course.course_number = request.form['course_number']
             course.section = request.form['section']
-            course.instructor_id = request.form['instructor_id']
-
-            # commit changes to db
+            course.instructor = request.form['instructor_id']
             db.session.commit()
-            flash('Course Updated!')
-            return redirect(url_for('home'))
-        except:
-            flash('Update failed!')
-            return redirect(url_for('home'))
-
-    return render_template('/home')
+            print(course.instructor)      
+        else:
+            return ("update course failed")
+            #return render_template('/home')
+        
+        print('Course Updated!')
+        return redirect(url_for('get_all_courses'))
+        #return redirect(url_for('home'))
 
 
 @app.route('/courses', methods=['GET', 'PUT'])
-@login_required
+#@login_required
 def add_courses():
     if request.method == 'PUT':
-        try:
-            # IF COURSE EXISTS RETURN INVALID ENTRY
-            new_course = Course()
+        # instantiate new course info based on form input
+        term = request.form['term']
+        year = request.form['year']
+        department = request.form['department']
+        course_name = request.form['course_name']
+        course_number = request.form['course_number']
+        section = request.form['section']
+        instructor_id = request.form['instructor_id']
+        new_course = Course(course_name, term, year, department, course_number, section, instructor_id)
 
-            # instantiate new course info based on form input
-            new_course.term = request.form['term']
-            new_course.year = request.form['year']
-            new_course.deparment = request.form['department']
-            new_course.course_name = request.form['course_name']
-            new_course.course_number = request.form['course_number']
-            new_course.section = request.form['section']
-            new_course.instructor_id = request.form['instructor_id']
+        # check database for existing course overlap
+        existing_course = Course.query.filter_by(
+            term=term,
+            year=year,
+            department=department,
+            course_number=course_number,
+            section=section).first()
 
-            # check database for existing course overlap
-            existing_course = Course.query.filter_by(
-                term=new_course.term,
-                year=new_course.year,
-                department=new_course.department,
-                course_number=new_course.course_number,
-                section=new_course.section)
-
-            # return error if existing course returns true otherwise add course
-            if existing_course:
-                flash('Course already exists in selected semester/year!')
-                return redirect(url_for('home'))
-
-            else:
-                # commit changes to db
-                session.add(new_course)
-                db.session.commit()
-                flash('New Course Added!')
-                return redirect(url_for('home'))
-        # IF TRY FAILS -- RETURN FAILURE MESSAGE
-        except:
-            flash('Course Add failed!')
+        # return error if existing course returns true otherwise add course
+        if existing_course:
+            print('Course already exists in selected semester/year!')
             return redirect(url_for('home'))
 
-    return render_template('/home')
+        else:
+            # commit changes to db
+            print("ADD NEW COURSE TO DB")
+            dbconnection = engine.connect()                
+            statement = f"INSERT INTO course(course_name, term, year, department, course_number, section, instructor)\
+                    VALUES ('{new_course.course_name}','{new_course.term}', '{new_course.year}', \
+                        '{new_course.department}','{new_course.course_number}','{new_course.section}', {new_course.instructor} );"
+            print (statement)
+            dbconnection.execute(statement)
+            dbconnection.close()
+            print("course added!")
+            return redirect(url_for('get_all_courses'))
+            #return redirect(url_for('home'))
+
+    return ("course add failed")
 
 
-@app.route('/courses/<course_id>', methods=['GET', 'DELETE'])
-@login_required
+@app.route('/courses/<int:course_id>', methods=['GET', 'DELETE'])
+#@login_required
 def delete_courses(course_id):
     if request.method == 'DELETE':
-        try:
-            course = Course.query.get(course_id)
+        course = Course.query.get(course_id)
+        if course:
             db.session.delete(course)
-            db.commit()
-
-            flash("Course Deleted")
-        except:
-            flash("Error:  Delete Unsuccessful")
-
-    return redirect(url_for('home'))
+            db.session.commit()
+            return redirect(url_for('get_all_courses'))
+            return ("course found")
+        return ("please stop getting mad")
 
 
 # OUTCOMES CLASS
@@ -742,7 +768,7 @@ class Assignments(db.Model):
 
 # THIS GETS ALL WORK PRODUCTS IN THE DATABASE
 @app.route('/swp', methods=["GET"])
-@login_required
+#@login_required
 def get_all_swp():
     swps = Assignments.query.all()
 
@@ -753,16 +779,34 @@ def get_all_swp():
         course = Course.query.get(swp.course_id)
         swp_data['swp_id'] = swp.swp_id
         swp_data['swp_name'] = swp.swp_name
+        swp_data['course_id'] = course.id
         swp_data['course name'] = course.course_name
         results.append(swp_data)
 
     return jsonify(results)
 
 
+@app.route('/swp/<int:swp_id>', methods=["GET"])
+#@login_required
+def get_one_swp(swp_id):
+    swp = Assignments.query.get(swp_id)
+
+    results = []
+    swp_data = {}
+    swp_data['swp_id'] = swp.swp_id
+    swp_data['swp_name'] = swp.swp_name
+    swp_data['course_id'] = swp.course_id
+    course = Course.query.get(swp.course_id)
+    swp_data['course name'] = course.course_name
+    results.append(swp_data)
+
+    return jsonify(results)
+
+
 # THIS GETS WORK PRODUCT FOR SPECIFIC COURSE
-@app.route('/swp/<int:course_id>', methods=["GET"])
-@login_required
-def get_course_swp(course_id):
+@app.route('/swp/course/<int:course_id>', methods=["GET"])
+#@login_required
+def get_course_swps(course_id):
     swps = Assignments.query.filter_by(course_id=course_id).all()
 
     results = []
@@ -772,61 +816,63 @@ def get_course_swp(course_id):
         course = Course.query.get(swp.course_id)
         swp_data['swp_id'] = swp.swp_id
         swp_data['swp_name'] = swp.swp_name
+        swp_data['course_id'] = course.id
         swp_data['course name'] = course.course_name
         results.append(swp_data)
 
     return jsonify(results)
 
 
-@app.route('/swp', methods=['GET', 'POST'])
-@login_required
-def update_swp():
+@app.route('/swp/<int:swp_id>', methods=['GET', 'POST'])
+#@login_required
+def update_swp(swp_id):
     if request.method == 'POST':
-        try:
-            swp = Assignments.query.get(request.form('swp_id'))
-            swp.course_id = request.form('course_id')
-            swp.swp_name = request.form('swp_name')
+        swp = Assignments.query.get(swp_id)
+        print(swp)
+        if swp:
+            #swp.course_id = request.form('course_id')            
+            course_id = request.form['course_id']
+            name = request.form['swp_name']
+            name = name.upper()
+            swp.swp_name = name
             db.session.commit()
-            flash("Student Work Product succesfully updated!")
-            return redirect(url_for('home'))
-        except:
-            flash("Error:  Student Work Product not found")
-            return redirect(url_for('home'))
-    return redirect(url_for('home'))
+            print("Student Work Product succesfully updated!")
+            return redirect(url_for('get_all_swp'))
+            #return redirect(url_for('home'))
+        else:
+            return "Error:  Student Work Product not found"
+            #return redirect(url_for('home'))
+    return redirect(url_for('get_all_swp'))
 
 
 @app.route('/swp', methods=['GET', 'PUT'])
-@login_required
+#@login_required
 def add_swp():
     if request.method == 'PUT':
-        try:
-            # IF EXISTS RETURN INVALID ENTRY
-            new_swp = Assignments()
+        # instantiate new work product info based on form input
+        course_id = request.form['course_id']
+        swp_name = request.form['swp_name']
+        print(swp_name)
+        print(course_id)
+        new_swp = Assignments(course_id, swp_name)
+        # check database for existing  overlap
+        existing_swp = Assignments.query.filter_by(swp_name=swp_name,course_id=course_id).all()
 
-            # instantiate new work product info based on form input
-            new_swp.course_id = request.form['course_id']
-            new_swp.swp_name = request.form['swp_name']
-
-            # check database for existing  overlap
-            existing_swp = Assignments.query.filter_by(
-                swp_name=new_swp.swp_name,
-                course_id=new_swp.course_id)
-
-            # return error if existing info returns true -- otherwise add course
-            if existing_swp:
-                flash('Student Work Product already exists in current course.  Please pick a unique name')
-                return redirect(url_for('home'))
-
-            else:
-                # commit changes to db
-                session.add(new_swp)
-                db.session.commit()
-                flash('New Work Product Added!')
-                return redirect(url_for('home'))
-        # IF TRY FAILS -- RETURN FAILURE MESSAGE
-        except:
-            flash('Work Product Add failed!')
+        # return error if existing info returns true -- otherwise add course
+        if existing_swp:
+            return("Student Work Product already exists in current course.  Please pick a unique name")
             return redirect(url_for('home'))
+        else:
+            # commit changes to db
+            dbconnection = engine.connect()                
+            statement = f"INSERT INTO Assignments(course_id, swp_name)\
+                    VALUES ({new_swp.course_id},'{new_swp.swp_name}');"
+            print (statement)
+            dbconnection.execute(statement)
+            dbconnection.close()
+            print("SWP added!")
+            return redirect(url_for('get_all_swp'))
+
     else:
         return render_template('/home')
 
