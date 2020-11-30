@@ -20,29 +20,36 @@
 				Accreditation Tracker and Analysis System
 			</div>
 			
-      		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+      		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
         		<span class="navbar-toggler-icon"></span>
       		</button>
       		<div class="collapse navbar-collapse" id="navbarResponsive">
 				<div class="navbar-nav ml-auto">
-					<a class="nav-item nav-link active" href="/home">Home</a>
-			   <div class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
-						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                            {% if semesters %}
-                                {% for semester in semesters %}
-                                    <a class="dropdown-item" href="#">{{semester.term}} {{semester.year}}</a>
+
+					<a class="nav-item nav-link" href="/inst_home">Home</a>
+					
+			   		<!-- Courses Dropdown -->
+				   <div class="nav-item dropdown">
+					   <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
+					   <div class="dropdown-menu">
+						   {% if semesters %}
+						   		{% for semester in semesters %}
+									<a class="dropdown-item" data-toggle="modal" href="#{{semester.term}}{{semester.year}}course-list-modal">{{semester.term}} {{semester.year}}</a>
+
 								{% endfor %}
-							{% else  %}
+						   {% else  %}
 								<a class="dropdown-item" href="">No Courses Assigned</a>
-                            {% endif %}
-						</div>
-					</div>
-					<a class="nav-item nav-link" href="/outcomes">Student Outcomes</a>
+
+						   {% endif %}
+					   </div>
+				   </div>
+					
+					<a class="nav-item nav-link" href="/inst_outcomes">Student Outcomes</a>
+
 					<div class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tasks</a>
+						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown">Tasks</a>
 						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-							<a class="dropdown-item" data-toggle="modal" href="#workProductModal">Add Work Products</a>
+							<a class="dropdown-item" data-toggle="modal" href="#add-swp-modal">Add Work Products</a>
 						</div>
 					</div>
 					<a class="nav-item nav-link" href="/logout">Log Out</a>
@@ -51,23 +58,226 @@
     	</div><!--END NAV CONTAINER-->
       </nav>
       <div class="main_content">
-		{% if enrolled %}
-		  <h2>Course</h2>
-		  		<table>
-					<hr>
-						<th>Name</th>
-						<th>T-Number</th>	
-					</hr>								
-					{% for enroll in enrolled %}
-						<tr>
-							<td>{{enroll.student_last}}, {{enroll.student_first}}</td>
-							<td> {{enroll.student_id}}</td>
-						</tr>
-					{% endfor %}
-				</table>
-		{% endif %}
+		  <h2 class="text-center">Course Name</h2>
+		  
+		  <!-- TODO: update tables to pull real information from database and create related modals -->
+		  <!-- Collapseable table views -->
+		  <div id="collapse-container">
+			  <div class="text-center mb-2">
+				  <button type="button" class="btn btn-sm btn-secondary" data-toggle="collapse" data-target="#student-view">View Students</button>
+
+				  <button type="button" class="btn btn-sm btn-secondary" data-toggle="collapse" data-target="#swp-view">View Work Products</button>
+			  </div>
+			  
+			  <!-- Student View -->
+			  <div class="collapse" id="student-view" data-parent="#collapse-container">
+				  <h4 class="text-center">Students</h4>
+				  <table class="table table-bordered text-center">
+					  <thead>
+						  <tr>
+							  <th scope="col">Student Name</th>
+							  <th scope="col">Student ID</th>
+							  <th scope="col">SWP 1</th>
+							  <th scope="col">SWP 2</th>
+							  <th scope="col">SWP 3</th>
+						  </tr>
+					  </thead>
+					  <tbody>
+						  <tr>
+							  <td><a data-toggle="modal" href="#edit-student-modal">First Last</a></td>
+							  <td>123456</td>
+							  <td>score</td>
+							  <td>score</td>
+							  <td>score</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">First Last</a></td>
+							  <td>123456</td>
+							  <td>score</td>
+							  <td>score</td>
+							  <td>score</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">First Last</a></td>
+							  <td>123456</td>
+							  <td>score</td>
+							  <td>score</td>
+							  <td>score</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">First Last</a></td>
+							  <td>123456</td>
+							  <td>score</td>
+							  <td>score</td>
+							  <td>score</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">First Last</a></td>
+							  <td>123456</td>
+							  <td>score</td>
+							  <td>score</td>
+							  <td>score</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">First Last</a></td>
+							  <td>123456</td>
+							  <td>score</td>
+							  <td>score</td>
+							  <td>score</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">First Last</a></td>
+							  <td>123456</td>
+							  <td>score</td>
+							  <td>score</td>
+							  <td>score</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">First Last</a></td>
+							  <td>123456</td>
+							  <td>score</td>
+							  <td>score</td>
+							  <td>score</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">First Last</a></td>
+							  <td>123456</td>
+							  <td>score</td>
+							  <td>score</td>
+							  <td>score</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">First Last</a></td>
+							  <td>123456</td>
+							  <td>score</td>
+							  <td>score</td>
+							  <td>score</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">First Last</a></td>
+							  <td>123456</td>
+							  <td>score</td>
+							  <td>score</td>
+							  <td>score</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">First Last</a></td>
+							  <td>123456</td>
+							  <td>score</td>
+							  <td>score</td>
+							  <td>score</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">First Last</a></td>
+							  <td>123456</td>
+							  <td>score</td>
+							  <td>score</td>
+							  <td>score</td>
+						  </tr>
+						  
+
+					  </tbody>
+				  </table>
+			  </div>
+			  
+			  <!-- SWP View -->
+			  <div class="collapse" id="swp-view" data-parent="#collapse-container">
+				  <h4 class="text-center">Student Work Products</h4>
+				  <table class="table table-bordered text-center">
+					  <thead>
+						  <tr>
+							  <th scope="col">SWP Name</th>
+							  <th scope="col">SWP ID</th>
+						  </tr>
+					  </thead>
+					  <tbody>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">Fun Assignment</a></td>
+							  <td>123456</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">Fun Assignment</a></td>
+							  <td>123456</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">Fun Assignment</a></td>
+							  <td>123456</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">Fun Assignment</a></td>
+							  <td>123456</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">Fun Assignment</a></td>
+							  <td>123456</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">Fun Assignment</a></td>
+							  <td>123456</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">Fun Assignment</a></td>
+							  <td>123456</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">Fun Assignment</a></td>
+							  <td>123456</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">Fun Assignment</a></td>
+							  <td>123456</td>
+						  </tr>
+						  <tr>
+							  <td><a data-toggle="modal" href="#">Fun Assignment</a></td>
+							  <td>123456</td>
+						  </tr>
+						  
+						  
+					  </tbody>
+				  </table>
+			  </div>
+		  </div>
 	  </div>
-	    <div class="modal fade" id="workProductModal">
+	  
+	  <!-- Modals -->
+	  
+	  <!-- Add SWP Modal -->
+	    <div class="modal fade" id="add-swp-modal">
+    		<div class="modal-dialog">
+			  <div class="modal-content">
+  
+                <!-- Modal Header -->
+				<div class="modal-header">
+				    <h4 class="modal-title">Add Work Product</h4>
+				    <button type="button" class="close" data-dismiss="modal">×</button>
+				</div>
+                
+				<!-- Modal body -->
+				<div class="modal-body">
+				    <form action="/swp" class="modal-form" method="put">
+                        <label for="course_id">Select Course</label>
+                        <select id="course_id" name="course_id">
+                            {% for semester in semesters %}
+								{% for course in semester.course_list %}
+                                	<option value="">{{course}}</option>
+								{% endfor %}
+                            {% endfor %}
+                        </select>
+                        <input type="text" name="swp_name" class="form-control" placeholder="Enter SWP name" required autofocus>
+				        <button class="btn" type="submit">Submit</button>
+				    </form>
+				</div>
+	
+				<!-- Modal footer -->
+				<div class="modal-footer">
+					  <button type="button" class="btn" data-dismiss="modal">Close</button>
+				</div>
+			  </div>
+		  </div>
+  		</div>
+	  
+	  <!-- Edit SWP Modal -->
+	  <div class="modal fade" id="edit-swp-modal">
     		<div class="modal-dialog">
       			<div class="modal-content">
       
@@ -93,5 +303,68 @@
     			</div>
    			</div>
   		</div>
+	  
+	  <!-- Edit Student Modal -->
+	  <div class="modal fade" id="edit-student-modal">
+		  <div class="modal-dialog">
+			  <div class="modal-content">
+				  
+				  <!-- Modal Header -->
+				  <div class="modal-header">
+					  <h4 class="modal-title">Edit Student</h4>
+					  <button type="button" class="close" data-dismiss="modal">×</button>
+				  </div>
+        
+				  <!-- Modal body -->
+				  <div class="modal-body">
+					  <form action="" class="modal-form" method="put">
+						  
+						  <button class="btn btn-secondary" type="submit">Submit</button>
+					  </form>
+				  </div>
+        
+				  <!-- Modal footer -->
+				  <div class="modal-footer">
+					  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				  </div>
+    			</div>
+   			</div>
+	  </div>
+	  
+	  <!-- Course List Modal (modal is generated for each term)-->
+	  <!-- TODO: make links take user to respective course page (may need to add endpoint to handle link) -->
+	  {% if semesters %}
+	  		{% for semester in semesters %}
+	  			<div class="modal fade" id="{{semester.term}}{{semester.year}}course-list-modal">
+					<div class="modal-dialog">
+						<div class="modal-content">
+
+							<!-- Modal Header -->
+							<div class="modal-header">
+								<h4 class="modal-title">{{semester.term}} {{semester.year}} Courses</h4>
+								<button type="button" class="close" data-dismiss="modal">×</button>
+							</div>
+
+							<!-- Modal body -->
+							<div class="modal-body">
+								<ul class="list-group">
+									{% for course in semester.course_list %}
+										<a class="list-group-item list-group-item-action text-center" href="/courses/">{{course}}</a>
+									{% endfor %}
+								</ul>
+							</div>
+
+							<!-- Modal footer -->
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							</div>
+						</div>
+					</div>
+	  			</div>
+	  		{% endfor %}
+	  {% else  %}
+	  		
+	  {% endif %}
+	  <!-- End of Modals -->
   </body>
 </html>
