@@ -404,7 +404,7 @@ def get_one_student(student_id):
     return jsonify(results)
 
 
-@app.route('/students/<student_id>', methods=['GET', 'POST'])
+@app.route('/students/<int:student_id>', methods=['GET', 'POST'])
 #@login_required
 def update_student(student_id):
     if request.method == 'POST':
@@ -877,7 +877,7 @@ def add_swp():
     return redirect(url_for('home'))
 
 
-@app.route('/swp/<swp_id>', methods=['GET', 'DELETE'])
+@app.route('/swp/<int:swp_id>', methods=['GET', 'DELETE'])
 #@login_required
 def delete_swp(swp_id):
     if request.method == 'DELETE':
