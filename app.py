@@ -1,9 +1,10 @@
 #!/usr/bin/python3  
+import os
 from flask import Flask, render_template, jsonify, request, session, redirect, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from sqlalchemy import create_engine, distinct, func
+from sqlalchemy import create_engine, distinct, func, delete, insert, update
 from flask_mail import Mail, Message
 
 app = Flask('__name__')
@@ -13,14 +14,16 @@ db = SQLAlchemy(app)
 engine = create_engine('sqlite:///atas.sqlite3')
 login_manager = LoginManager(app)
 mail = Mail(app)
+sender = os.environ.get('sendgrid_api_key')
+sender_pass = os.environ.get('sendgrid_sender_email')
 
 app.config['SECRET_KEY'] = 'capstonefall2020'
 app.config['MAIL_SERVER'] = 'smtp.sendgrid.net'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'apikey'
-app.config['MAIL_PASSWORD'] = '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'
-app.config['MAIL_DEFAULT_SENDER'] = 'atas.mail.response@gmail.com'
+app.config['MAIL_PASSWORD'] = sender_pass
+app.config['MAIL_DEFAULT_SENDER'] = sender
 mail = Mail(app)
 
 
@@ -119,7 +122,7 @@ def register_user():
         user = Users.query.filter_by(id=add_id).first()
         email = Users.query.filter_by(email=add_email).first()
         # this still needs fixing
-        # cc_emails = Users.query(email).filter_by(account_type='admin' or 'root').all()
+        root_cc = Users.query.filter_by(account_type='root').first()
         if user:
             error = "Employee ID is already registered"
             return render_template('register.html', error=error)
@@ -138,7 +141,7 @@ def register_user():
                 new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
                 new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
                                  password=new_password, account_type='admin', sec_question=question_1, answer=answer_1)
-                msg = Message('ATAS Registration Sent', recipients=[add_email])
+                msg = Message('ATAS Registration Sent', recipients=[add_email], cc=[root_cc])
                 msg.body = 'ATAS Registration Sent'
                 msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
                            add_email + '. We will notify you when your account is ready to use'
@@ -154,7 +157,7 @@ def register_user():
                                  password=new_password, account_type='instructor', sec_question=question_1,
                                  answer=answer_1)
                 new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
-                msg = Message('ATAS Registration Sent', recipients=[add_email], cc=[cc_emails])
+                msg = Message('ATAS Registration Sent', recipients=[add_email], cc=[root_cc])
                 msg.body = 'ATAS Registration Sent'
                 msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
                            add_email + '. We will notify you when your account is ready to use'
