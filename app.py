@@ -141,7 +141,7 @@ def register_user():
                 new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
                 new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
                                  password=new_password, account_type='admin', sec_question=question_1, answer=answer_1)
-                msg = Message('ATAS Registration Sent', recipients=[add_email], cc=[root_cc])
+                msg = Message('ATAS Registration Sent', recipients=[add_email], cc=[root_cc.email])
                 msg.body = 'ATAS Registration Sent'
                 msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
                            add_email + '. We will notify you when your account is ready to use'
@@ -157,7 +157,7 @@ def register_user():
                                  password=new_password, account_type='instructor', sec_question=question_1,
                                  answer=answer_1)
                 new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
-                msg = Message('ATAS Registration Sent', recipients=[add_email], cc=[root_cc])
+                msg = Message('ATAS Registration Sent', recipients=[add_email], cc=[root_cc.email])
                 msg.body = 'ATAS Registration Sent'
                 msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
                            add_email + '. We will notify you when your account is ready to use'
