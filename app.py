@@ -14,10 +14,10 @@ db = SQLAlchemy(app)
 engine = create_engine('sqlite:///atas.sqlite3')
 login_manager = LoginManager(app)
 mail = Mail(app)
-sender = os.environ.get('sendgrid_api_key')
-sender_pass = os.environ.get('sendgrid_sender_email')
+sender_pass = os.environ.get('sendgrid_api_key')
+sender = os.environ.get('sendgrid_sender_email')
 
-app.config['SECRET_KEY'] = 'capstonefall2020'
+app.config['SECRET_KEY'] = 'capstone_project_2020'
 app.config['MAIL_SERVER'] = 'smtp.sendgrid.net'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
@@ -25,6 +25,8 @@ app.config['MAIL_USERNAME'] = 'apikey'
 app.config['MAIL_PASSWORD'] = sender_pass
 app.config['MAIL_DEFAULT_SENDER'] = sender
 mail = Mail(app)
+print(sender)
+print(sender_pass)
 
 
 # DATABASE MODELS ARE FOLLOWED DIRECTLY BY THE METHODS THAT CORRESPOND TO THOSE OPJECTS
@@ -40,8 +42,9 @@ class Users(db.Model):
     account_type = db.Column("account_type", db.String(20))
     sec_question = db.Column("question", db.Integer)
     answer = db.Column("answer", db.String(100))
+    pending = db.Column("pending", db.Integer)
 
-    def __init__(self, id, email, password, account_type, fname, lname, sec_question, answer):
+    def __init__(self, id, email, password, account_type, fname, lname, sec_question, answer, pending):
         self.email = email
         self.password = password
         self.account_type = account_type
@@ -50,6 +53,7 @@ class Users(db.Model):
         self.id = id
         self.sec_question = sec_question
         self.answer = answer
+        self.pending = pending
 
     def is_active(self):
         return True
@@ -85,18 +89,91 @@ def login():
         if not user:
             error = 'Invalid Username/Password!  Please try again.'
             return render_template('login.html', error=error)
-        elif check_password_hash(pwhash=user.password, password=password_attempt) and \
-                (user.account_type == 'admin' or user.account_type == 'root'):
-            login_user(user)
-            return redirect(url_for('home'))
-        elif check_password_hash(pwhash=user.password, password=password_attempt) and user.account_type == 'instructor':
-            login_user(user)
-            return redirect(url_for('instructor_home'))
+        elif user.pending == 1:
+            error = 'Account is unactivated, please wait for an email on when you account has been activated.'
+            return render_template('login.html', error=error)
+        elif user.pending == 0:
+            print(user.pending)
+            if check_password_hash(pwhash=user.password, password=password_attempt):
+                login_user(user)
+                return redirect(url_for('home'))
     error = 'Invalid Username/Password!  Please try again.'
     return render_template('login.html', error=error)
 
 
-# this checks db for existing username before returning
+# BASE ROUTES (INDEX/HOME/REGISTER)
+@app.route("/", methods=["POST", "GET"])
+def index():
+    user = current_user.get_id()
+    active = Users.query.filter_by(id=user).first()
+
+    if not active:
+        return render_template("login.html")
+    else:
+        return redirect(url_for('home'))
+
+
+@app.route("/home", methods=["POST", "GET"])
+@login_required
+def home():
+    user_id = current_user.get_id()
+    user = Users.query.get(user_id)
+
+    courses_group = []
+    terms = []
+    user = current_user
+    uid = current_user.get_id()
+    year = []
+    semesters_list = []
+
+    dbconnection = engine.connect()
+    terms = dbconnection.execute("select distinct term, year from course")
+    if user.account_type == 'instructor':
+        for term in terms:
+            semester_data = {}
+            courses_group = Course.query.filter_by(instructor=uid, term=term[0], year=term[1]).all()
+            # print(courses_group)
+            if courses_group:
+                semester_data['term'] = term[0]
+                semester_data['year'] = term[1]
+                courses = []
+                for course in courses_group:
+                    courses.append(course.get_id())
+                    semester_data['course_list'] = courses
+                    # print(courses)
+            else:
+                continue
+            semesters_list.append(semester_data)
+
+        if not terms:
+            dbconnection.close()
+            return render_template("inst_home.html", current_user=user)
+        else:
+            dbconnection.close()
+            return render_template("inst_home.html", current_user=user, semesters=semesters_list)
+
+    else:
+        for term in terms:
+            semester_data = {}
+            courses_group = Course.query.filter_by(term=term[0], year=term[1]).all()
+            # print(courses_group)
+            if courses_group:
+                semester_data['term'] = term[0]
+                semester_data['year'] = term[1]
+                courses = []
+                for course in courses_group:
+                    courses.append(course.get_id())
+                    semester_data['course_list'] = courses
+                    # print(courses)
+            semesters_list.append(semester_data)
+
+        print(semesters_list)
+        dbconnection.close()
+        return render_template("home.html", current_user=user, semesters=semesters_list)
+
+    # this checks db for existing username before returning
+
+
 @app.route("/register", methods=["POST", "GET"])
 def register_user():
     error = None
@@ -121,7 +198,6 @@ def register_user():
 
         user = Users.query.filter_by(id=add_id).first()
         email = Users.query.filter_by(email=add_email).first()
-        # this still needs fixing
         root_cc = Users.query.filter_by(account_type='root').first()
         if user:
             error = "Employee ID is already registered"
@@ -140,8 +216,9 @@ def register_user():
                 # set admin when sent
                 new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
                 new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
-                                 password=new_password, account_type='admin', sec_question=question_1, answer=answer_1)
-                msg = Message('ATAS Registration Sent', recipients=[add_email], cc=[root_cc.email])
+                                 password=new_password, account_type='admin',
+                                 sec_question=question_1, answer=answer_1, pending=1)
+                msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
                 msg.body = 'ATAS Registration Sent'
                 msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
                            add_email + '. We will notify you when your account is ready to use'
@@ -154,17 +231,17 @@ def register_user():
                 # set admin to 0
                 new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
                 new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
-                                 password=new_password, account_type='instructor', sec_question=question_1,
-                                 answer=answer_1)
-                new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
-                msg = Message('ATAS Registration Sent', recipients=[add_email], cc=[root_cc.email])
+                                 password=new_password, account_type='instructor',
+                                 sec_question=question_1, answer=answer_1, pending=1)
+                # new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
+                msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
                 msg.body = 'ATAS Registration Sent'
                 msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
                            add_email + '. We will notify you when your account is ready to use'
                 mail.send(msg)
                 message = 'Registration sent'
                 db.session.add(new_user)
-                db.session.add(new_instructor)
+                # db.session.add(new_instructor)
                 db.session.commit()
                 return render_template('login.html', message=message)
     else:
