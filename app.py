@@ -121,57 +121,14 @@ def index():
 def home():
     user_id = current_user.get_id()
     user = Users.query.get(user_id)
-
-    courses_group = []
-    terms = []
-    user = current_user
-    uid = current_user.get_id()
-    year = []
-    semesters_list = []
-
     dbconnection = engine.connect()
-    terms = dbconnection.execute("select distinct term, year from course")
+   
     if user.account_type == 'instructor':
-        for term in terms:
-            semester_data = {}
-            courses_group = Course.query.filter_by(instructor=uid, term=term[0], year=term[1]).all()
-            # print(courses_group)
-            if courses_group:
-                semester_data['term'] = term[0]
-                semester_data['year'] = term[1]
-                courses = []
-                for course in courses_group:
-                    courses.append(course.get_id())
-                    semester_data['course_list'] = courses
-                    # print(courses)
-            else:
-                continue
-            semesters_list.append(semester_data)
-
-        if not terms:
-            dbconnection.close()
-            return render_template("inst_home.html", current_user=user)
-        else:
-            dbconnection.close()
-            return render_template("inst_home.html", current_user=user, semesters=semesters_list)
+       semesters_list = get_instructor_courses(user_id)
+       return render_template("inst_home.html", current_user=user, semesters=semesters_list)
 
     else:
-        for term in terms:
-            semester_data = {}
-            courses_group = Course.query.filter_by(term=term[0], year=term[1]).all()
-            # print(courses_group)
-            if courses_group:
-                semester_data['term'] = term[0]
-                semester_data['year'] = term[1]
-                courses = []
-                for course in courses_group:
-                    courses.append(course.get_id())
-                    semester_data['course_list'] = courses
-                    # print(courses)
-            semesters_list.append(semester_data)
-
-        print(semesters_list)
-        dbconnection.close()
+        semesters_list = get_all_courses()
         return render_template("home.html", current_user=user, semesters=semesters_list)
 
 
@@ -528,32 +485,37 @@ class Course(db.Model):
         return self.id
 
 
-@app.route('/courses', methods=['GET'])
+@app.route('/courses/', methods=['GET'])
 #@login_required
 def get_all_courses():
-    #user_id = Users.get_id(current_user)
-    #user = Users.query.get(user_id)
-    all_courses = Course.query.all()
-    results = []
+    if request.method == "GET":
+        courses_group = []
+        terms = []
+        user = current_user
+        uid = current_user.get_id()
+        year = []
+        semesters_list = []
 
-    for course in all_courses:
-        course_info = {}
-        course_info['course_name'] = course.course_name
-        course_info['term'] = course.term
-        course_info['year'] = course.year
-        course_info['course_department'] = course.department
-        course_info['course_number'] = course.course_number
-        course_info['section'] = course.section
-        course_info['instructor_id'] = course.instructor
-        course_info['course_id'] = course.id
-        results.append(course_info)
+        dbconnection = engine.connect()
+        terms = dbconnection.execute("select distinct term, year from course")
+        for term in terms:
+            semester_data = {}
+            courses_group = Course.query.filter_by(term=term[0], year=term[1]).all()
+            print(courses_group)
+            if courses_group:
+                semester_data['term'] = term[0]
+                semester_data['year'] = term[1]
+                courses = []
+                for course in courses_group:
+                    courses.append(course.get_id())
+                    semester_data['course_list'] = courses
+                    # print(courses)
+            semesters_list.append(semester_data)
 
-   # if user.account_type == 'instructor':
-      # return redirect(url_for('get_instructor_courses', instructor_id = user_id))
-    
-    print(results)
-    return jsonify(results)
-    return render_template('courses.html', courses=results)
+        print(semesters_list)
+        dbconnection.close()    
+        print(semesters_list)
+        return semesters_list
 
 
 @app.route('/courses/<int:course_id>', methods=['GET'])
@@ -594,29 +556,41 @@ def get_one_course(course_id):
 #@login_required
 def get_instructor_courses(instructor_id):
     print('GET_INSTRUCTOR_COURSES')
-    courses = Course.query.filter_by(instructor=instructor_id).all()
-    print(courses)
     results = []
 
     if request.method == "GET":
-        if not courses:
-            print('no courses hit')
-            results = "No courses assigned"
+        courses_group = []
+        terms = []
+        user = current_user
+        uid = current_user.get_id()
+        year = []
+        semesters_list = []
+
+        dbconnection = engine.connect()
+        terms = dbconnection.execute("select distinct term, year from course")
+        for term in terms:
+            semester_data = {}
+            courses_group = Course.query.filter_by(instructor=uid, term=term[0], year=term[1]).all()
+            # print(courses_group)
+            if courses_group:
+                semester_data['term'] = term[0]
+                semester_data['year'] = term[1]
+                courses = []
+                for course in courses_group:
+                    courses.append(course.get_id())
+                    semester_data['course_list'] = courses
+                    # print(courses)
+            else:
+                continue
+            semesters_list.append(semester_data)
+
+        if not terms:
+            dbconnection.close()
+            semesters_list = None
+            return semesters_list
         else:
-            for course in courses:
-                course_info = {}
-                course_info['course_id'] = course.id
-                course_info['course_name'] = course.course_name
-                course_info['term'] = course.term
-                course_info['year'] = course.year
-                course_info['course_department'] = course.department
-                course_info['course_number'] = course.course_number
-                course_info['section'] = course.section
-                results.append(course_info)
-
-        return jsonify(results)
-        return render_template("inst_courses.html", semesters=results)
-
+            dbconnection.close()
+            return semesters_list
     else:
         return render_template("inst_courses.html")
 
