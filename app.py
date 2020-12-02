@@ -809,7 +809,7 @@ def get_one_swp(swp_id):
 
 # THIS GETS WORK PRODUCT FOR SPECIFIC COURSE
 @app.route('/swp/course/<int:course_id>', methods=["GET"])
-@login_required
+#@login_required
 def get_course_swps(course_id):
     swps = Assignments.query.filter_by(course_id=course_id).all()
     results = []
@@ -939,7 +939,7 @@ def get_all_attempts():
 #@login_required
 def get_swp_attempts(swp_id):
     attempts = Attempts.query.filter_by(swp_id = swp_id).all()
-    print(attempts)
+    #print(attempts)
     results = []
     attempt_data = {}
     swp = Assignments.query.get(swp_id)    
@@ -949,13 +949,14 @@ def get_swp_attempts(swp_id):
         so = Outcomes.query.get(attempt.so_id)
         so_data = {}
         so_data["so_name"] = so.so_name
+        so_data['so_id'] = so.so_id
         so_list.append(so_data)
 
     attempt_data['swp_name'] = swp.swp_name
     attempt_data['so_list'] = so_list
     results.append(attempt_data)
-    print(results)
-    return jsonify(results)
+    #print(results)
+    return results
 
 
 #UPDATE ONE ATTEMPT
