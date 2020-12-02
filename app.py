@@ -548,10 +548,10 @@ def get_all_courses():
 
 
 @app.route('/courses/<int:course_id>', methods=['GET'])
-#@login_required
+@login_required
 def get_one_course(course_id):
-    #user_id = Users.get_id(current_user)
-    #user = Users.query.get(user_id)
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
     course = Course.query.get(course_id)
     course_results = []
     course_info = {}
@@ -569,15 +569,18 @@ def get_one_course(course_id):
 
     swp_results = get_course_swps(course_id)
     student_results = get_course_enrolled(course_id)
+    semesters_list = get_instructor_courses(123)
 
-   # if user.account_type == 'instructor':
-      # return redirect(url_for('get_instructor_courses', instructor_id = user_id))
-    
     print(course_results)
     print(swp_results)
     print(student_results)
     #return jsonify(course_results)
-    return render_template('courses.html', courses=course_results, students=student_results, swps=swp_results)
+
+    if user.account_type =='instructor':
+      return render_template('inst_courses.html', courses=course_results, students=student_results, swps=swp_results, semesters = semesters_list)    
+    else:
+        semesters_list = get_all_courses()
+        return render_template('courses.html', courses=course_results, students=student_results, swps=swp_results, semesters = semesters_list)
   
 
 # gets all courses for specific instructor id
