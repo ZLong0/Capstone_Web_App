@@ -171,7 +171,7 @@
 							<div class="modal-body">
 								<ul class="list-group">
 									{% for course in semester.course_list %}
-										<a class="list-group-item list-group-item-action text-center" href="/courses/10">{{course}}</a>
+										<a class="list-group-item list-group-item-action text-center" href="{{ url_for('get_one_course', course_id = course.course_id)}}">{{course.department}} {{course.course_number}}: {{course.section}}</a>
 									{% endfor %}
 								</ul>
 							</div>
