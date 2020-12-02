@@ -84,15 +84,20 @@ def login():
 
         user = Users.query.filter_by(email=username_attempt).first()
         if not user:
+            print("PASSWORD/USERNAME FAILED")
             error = 'Invalid Username/Password!  Please try again.'
             return render_template('login.html', error=error)
         elif user.pending == 1:
+            print("PENDING USER REDIRECT")
             error = 'Account is unactivated, please wait for an email on when you account has been activated.'
             return render_template('login.html', error=error)
         elif user.pending == 0:
-            print(user.pending)
+            #DEBUGGING STATEMENTS
+            print(user.pending)          
             if check_password_hash(pwhash=user.password, password=password_attempt):
-                login_user(user)
+                login_user(user)  
+                print("####################################")
+                print("USER ACTIVE!  SUCCESSFULLY LOGGED IN")
                 return redirect(url_for('home'))
     error = 'Invalid Username/Password!  Please try again.'
     return render_template('login.html', error=error)
@@ -104,8 +109,10 @@ def index():
     user = current_user.get_id()
     active = Users.query.filter_by(id=user).first()
     if not active:
+        print("user not active -- redirect login")
         return render_template("login.html")
     else:
+        print("user found -- redirect home")
         return redirect(url_for('home'))
 
 
@@ -167,8 +174,6 @@ def home():
         dbconnection.close()
         return render_template("home.html", current_user=user, semesters=semesters_list)
 
-    # this checks db for existing username before returning
-
 
 @app.route("/register", methods=["POST", "GET"])
 def register_user():
@@ -194,8 +199,6 @@ def register_user():
 
         user = Users.query.filter_by(id=add_id).first()
         email = Users.query.filter_by(email=add_email).first()
-        # this still needs fixing
-        # cc_emails = Users.query(email).filter_by(account_type='admin' or 'root').all()
         root_cc = Users.query.filter_by(account_type='root').first()
         if user:
             error = "Employee ID is already registered"
@@ -266,8 +269,9 @@ class Instructor(db.Model):
         self.lname = lname
 
 
+#GET ALL INSTRUCTORS
 @app.route('/instructors', methods=['GET'])
-#@login_required
+@login_required
 def get_instructors():
     instructors = Instructor.query.all()
     results = []
@@ -282,8 +286,9 @@ def get_instructors():
     return jsonify(results)
 
 
+#GET ONE INSTRUCTORS INFO
 @app.route('/instructors/<int:instructor_id>', methods=['GET'])
-#@login_required
+@login_required
 def get_one_instructor(instructor_id):
     instructor = Instructor.query.get(instructor_id)
     results = []
@@ -296,9 +301,10 @@ def get_one_instructor(instructor_id):
     return jsonify(results)
 
 
+#UPDATE ONE INSTRUCTOR
 @app.route('/instructors/<instructor_id>', methods=['POST', 'GET'])
-#@login_required
-def update_instructors(instructor_id):
+@login_required
+def update_instructor(instructor_id):
     if request.method == 'POST':
         # check for existing instructor id first
         instructor = Instructor.query.get(instructor_id)
@@ -310,10 +316,12 @@ def update_instructors(instructor_id):
             return redirect(url_for('get_instructors'))
         else:
             print("Instructor not found. Cannot update")
+    else:
+        return redirect(url_for('get_one_instructor', instructor_id=instructor_id))
 
-
+#ADD NEW INSTRUCTOR
 @app.route('/instructors', methods=['PUT', 'GET'])
-#@login_required
+@login_required
 def add_instructor():
     if request.method == 'PUT':
         # check for existing instructor id first
@@ -350,11 +358,13 @@ def add_instructor():
             print (statement)
             dbconnection.execute(statement)
             dbconnection.close()
-            return redirect(url_for('get_instructors')) 
+            return redirect(url_for('get_instructors'))
+    else:
+        return redirect(url_for('get_instructors'))
 
-
+#DELETE ONE INSTRUCTOR
 @app.route('/instructors/<instructor_id>', methods=['DELETE', 'GET'])
-#@login_required
+@login_required
 def delete_instructor(instructor_id):
     if request.method == 'DELETE':
         # check for existing instructor id first
@@ -366,6 +376,9 @@ def delete_instructor(instructor_id):
             return redirect(url_for('get_instructors'))
         else:
             print("Instructor not found. Cannot delete")
+            return redirect(url_for('get_instructors'))
+    else:
+        return redirect(url_for('get_instructors'))
 
 
 # STUDENT CLASS
@@ -380,8 +393,9 @@ class Student(db.Model):
         self.stude_id = student_id
 
 
+#GET ALL STUDENTS
 @app.route('/students', methods=['GET'])
-#@login_required
+@login_required
 def get_all_students():
     students = Student.query.all()
     results = []
@@ -394,8 +408,9 @@ def get_all_students():
     return jsonify(results)
 
 
+#GET ONE STUDENT
 @app.route('/students/<int:student_id>', methods=['GET'])
-#@login_required
+@login_required
 def get_one_student(student_id):
     student = Student.query.get(student_id)
     if not student:
@@ -410,8 +425,9 @@ def get_one_student(student_id):
     return jsonify(results)
 
 
+#UPDATE ONE STUDENT
 @app.route('/students/<int:student_id>', methods=['GET', 'POST'])
-#@login_required
+@login_required
 def update_student(student_id):
     if request.method == 'POST':
         try:
@@ -430,14 +446,13 @@ def update_student(student_id):
         except:
             flash('Update failed!')
             return redirect(url_for('get_all_courses'))
-
-    #return render_template('/home')
-
-    return redirect(url_for('get_all_students'))
+    else:
+        return redirect(url_for('get_all_students'))
 
 
+#ADD NEW STUDENT
 @app.route('/students', methods=['GET', 'PUT'])
-#@login_required
+@login_required
 def add_students():
     if request.method == 'PUT':
         student = Student.query.get(request.form['student_id'])
@@ -472,9 +487,9 @@ def add_students():
             return redirect(url_for('get_all_students'))
       
 
-
+#DELETE ONE STUDENT
 @app.route('/students/<int:student_id>', methods=['GET', 'DELETE'])
-#@login_required
+@login_required
 def delete_students(student_id):
     if request.method == 'DELETE':
         try:
@@ -484,8 +499,9 @@ def delete_students(student_id):
             print("Student deleted" + student_id)
         except:
             print("Error:  Delete Unsuccessful")
-
-    return redirect(url_for('get_all_students'))
+        return redirect(url_for('get_all_students'))
+    else:
+        return redirect(url_for('get_all_students'))
 
 
 # COURSE CLASS
@@ -571,6 +587,7 @@ def get_one_course(course_id):
     print(student_results)
     #return jsonify(course_results)
     return render_template('courses.html', courses=course_results, students=student_results, swps=swp_results)
+
 
 # gets all courses for specific instructor id
 @app.route('/courses/inst/<int:instructor_id>', methods=['GET'])
@@ -676,7 +693,7 @@ def add_courses():
 
 @app.route('/courses/<int:course_id>', methods=['GET', 'DELETE'])
 #@login_required
-def delete_courses(course_id):
+def delete_course(course_id):
     if request.method == 'DELETE':
         course = Course.query.get(course_id)
         if course:
@@ -698,8 +715,8 @@ class Outcomes(db.Model):
         self.so_desc = so_desc
 
 
-# THIS IS STATIC -- CANNOT BE UPDATED WITHOUT ACCESS DIRECTLY TO DB
-@app.route("/outcomes", methods=["GET"])
+#GET ALL OUTCOMES
+@app.route('/outcomes', methods=["GET"])
 @login_required
 def outcomes():
     courses_group = []
@@ -775,7 +792,7 @@ class Assignments(db.Model):
 
 # THIS GETS ALL WORK PRODUCTS IN THE DATABASE
 @app.route('/swp', methods=["GET"])
-#@login_required
+@login_required
 def get_all_swp():
     swps = Assignments.query.all()
 
@@ -793,8 +810,9 @@ def get_all_swp():
     return jsonify(results)
 
 
+#GET ONE SWP
 @app.route('/swp/<int:swp_id>', methods=["GET"])
-#@login_required
+@login_required
 def get_one_swp(swp_id):
     swp = Assignments.query.get(swp_id)
 
@@ -812,7 +830,7 @@ def get_one_swp(swp_id):
 
 # THIS GETS WORK PRODUCT FOR SPECIFIC COURSE
 @app.route('/swp/course/<int:course_id>', methods=["GET"])
-#@login_required
+@login_required
 def get_course_swps(course_id):
     swps = Assignments.query.filter_by(course_id=course_id).all()
 
@@ -830,8 +848,9 @@ def get_course_swps(course_id):
     return results
 
 
+#UPDATE ONE SWP
 @app.route('/swp/<int:swp_id>', methods=['GET', 'POST'])
-#@login_required
+@login_required
 def update_swp(swp_id):
     if request.method == 'POST':
         swp = Assignments.query.get(swp_id)
@@ -852,8 +871,9 @@ def update_swp(swp_id):
     return redirect(url_for('get_all_swp'))
 
 
+#ADD NEW SWP
 @app.route('/swp', methods=['GET', 'PUT'])
-#@login_required
+@login_required
 def add_swp():
     if request.method == 'PUT':
         # instantiate new work product info based on form input
@@ -886,9 +906,9 @@ def add_swp():
 
     return redirect(url_for('home'))
 
-
+#DELETE SWP
 @app.route('/swp/<int:swp_id>', methods=['GET', 'DELETE'])
-#@login_required
+@login_required
 def delete_swp(swp_id):
     if request.method == 'DELETE':
         swp = Assignments.query.get(swp_id)
@@ -914,7 +934,7 @@ class Attempts(db.Model):
 
 # GET ALL ATTEMPTS -- UNION OF SWP AND SO
 @app.route('/attempts', methods=["GET"])
-#@login_required
+@login_required
 def get_all_attempts():
     attempts = Attempts.query.all()
 
@@ -934,7 +954,7 @@ def get_all_attempts():
 
     return jsonify(results)
 
-
+#UPDATE ONE ATTEMPT
 @app.route('/attempts/<int:attempt_id>', methods=['GET', 'POST'])
 #@login_required
 def update_attempts(attempt_id):
@@ -951,6 +971,7 @@ def update_attempts(attempt_id):
     return redirect(url_for('get_all_attempts'))
 
 
+#ADD NEW ATTEMPT
 @app.route('/attempts', methods=['GET', 'PUT'])
 #@login_required
 def add_attempts():
@@ -982,6 +1003,7 @@ def add_attempts():
     #return redirect(url_for('home'))
 
 
+#DELETE ONE ATTEMPT
 @app.route('/attempts/<int:attempt_id>', methods=['GET', 'DELETE'])
 #@login_required
 def delete_attempts(attempt_id):
@@ -1099,6 +1121,7 @@ def update_enrolled(course_id):
     return ""
 
 
+#ENROLL STUDENT IN ONE COURSE
 @app.route('/enrolled', methods=['GET', 'PUT'])
 #@login_required
 def add_enrolled():
@@ -1135,6 +1158,7 @@ def add_enrolled():
 #    return redirect(url_for('home'))
 
 
+#DELETE STUDENT FROM ALL COURSES
 @app.route('/enrolled/student/<int:student_id>', methods=['GET', 'DELETE'])
 #@login_required
 def delete_student_from_enrolled(student_id):
@@ -1152,6 +1176,7 @@ def delete_student_from_enrolled(student_id):
     #return redirect(url_for('home'))
 
 
+#DELETE STUDENT FROM ONE COURSE
 @app.route('/enrolled/<int:course_id>/<int:student_id>', methods=['GET', 'DELETE'])
 #@login_required
 def delete_student_from_course(course_id, student_id):
