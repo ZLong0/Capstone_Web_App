@@ -115,7 +115,8 @@ def index():
         print("user found -- redirect home")
         return redirect(url_for('home'))
 
-
+#HOME -- CHECKS ACCOUNT TYPE, GATHERS NECESSARY INFORMATION FOR DROP DOWNS THEN RENDERS
+#TEMPLATE BASED ON TYPE
 @app.route("/home", methods=["POST", "GET"])
 @login_required
 def home():
@@ -232,22 +233,33 @@ class Instructor(db.Model):
 def get_instructors():
     instructors = Instructor.query.all()
     results = []
+    
+    user = current_user
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
+    else:
+        for instructor in instructors:
+            instructor_data = {}
+            instructor_data['instructor_id'] = instructor.inst_id
+            instructor_data['first_name'] = instructor.fname
+            instructor_data['last_name'] = instructor.lname
+            results.append(instructor_data)
 
-    for instructor in instructors:
-        instructor_data = {}
-        instructor_data['instructor_id'] = instructor.inst_id
-        instructor_data['first_name'] = instructor.fname
-        instructor_data['last_name'] = instructor.lname
-        results.append(instructor_data)
-
-    return jsonify(results)
+        return jsonify(results)
 
 
 #GET ONE INSTRUCTORS INFO
 @app.route('/instructors/<int:instructor_id>', methods=['GET'])
 @login_required
 def get_one_instructor(instructor_id):
-    instructor = Instructor.query.get(instructor_id)
+    user = current_user
+    id = instructor_id
+    if user.account_type == 'instructor':
+        id = user.get_id()
+    else:
+        id = instructor_id
+
+    instructor = Instructor.query.get(id)
     results = []
     instructor_data = {}
     instructor_data['instructor_id'] = instructor.inst_id
@@ -262,62 +274,70 @@ def get_one_instructor(instructor_id):
 @app.route('/instructors/<instructor_id>', methods=['POST', 'GET'])
 @login_required
 def update_instructor(instructor_id):
-    if request.method == 'POST':
-        # check for existing instructor id first
-        instructor = Instructor.query.get(instructor_id)
-        if instructor:         
-            instructor.fname = request.form['first_name']
-            instructor.lname = request.form['last_name']
-            db.session.commit()
-            print('Instructor Updated!')
-            return redirect(url_for('get_instructors'))
-        else:
-            print("Instructor not found. Cannot update")
+    user = current_user
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
     else:
-        return redirect(url_for('get_one_instructor', instructor_id=instructor_id))
+        if request.method=='POST':   
+            # check for existing instructor id first
+            instructor = Instructor.query.get(instructor_id)
+            if instructor:         
+                instructor.fname = request.form['first_name']
+                instructor.lname = request.form['last_name']
+                db.session.commit()
+                print('Instructor Updated!')
+                return redirect(url_for('get_instructors'))
+            else:
+                print("Instructor not found. Cannot update")
+        else:
+            return redirect(url_for('get_one_instructor', instructor_id=instructor_id))
 
 #ADD NEW INSTRUCTOR
 @app.route('/instructors', methods=['PUT', 'GET'])
 @login_required
 def add_instructor():
-    if request.method == 'PUT':
-        # check for existing instructor id first
-        try:
-            instructor = Instructor.query.get(request.form['id'])
-        except:
-            print("EXCEPTION ERROR")
-            return redirect(url_for('get_instructors')) 
-        
-        if instructor:         
-            print("instructor found")
-            return redirect(url_for('get_instructors'))
-        else:
-            print("instructor not found -- add")            
-            id = request.form['id']
-            print(id)
-            fname = request.form['first_name']
-            print(fname)
-            lname = request.form['last_name']
-            print(lname)
-            instructor = Instructor(id, fname, lname)
-            
-            if instructor: 
-                print("instructor created")
-                instructor_data={}
-                result =[]
-                instructor_data['first'] = fname
-                instructor_data['last'] = lname
-                instructor_data['id'] = id
-                result.append(instructor_data)
-                print (result)
-            dbconnection = engine.connect()                
-            statement = f"INSERT INTO instructor(id, fname, lname) VALUES ({id}, '{fname}','{lname}');"
-            print (statement)
-            dbconnection.execute(statement)
-            dbconnection.close()
-            return redirect(url_for('get_instructors'))
+    user = current_user
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
     else:
-        return redirect(url_for('get_instructors'))
+        if request.method == 'PUT':
+            # check for existing instructor id first
+            try:
+                instructor = Instructor.query.get(request.form['id'])
+            except:
+                print("EXCEPTION ERROR")
+                return redirect(url_for('get_instructors')) 
+            
+            if instructor:         
+                print("instructor found")
+                return redirect(url_for('get_instructors'))
+            else:
+                print("instructor not found -- add")            
+                id = request.form['id']
+                print(id)
+                fname = request.form['first_name']
+                print(fname)
+                lname = request.form['last_name']
+                print(lname)
+                instructor = Instructor(id, fname, lname)
+                
+                if instructor: 
+                    print("instructor created")
+                    instructor_data={}
+                    result =[]
+                    instructor_data['first'] = fname
+                    instructor_data['last'] = lname
+                    instructor_data['id'] = id
+                    result.append(instructor_data)
+                    print (result)
+                dbconnection = engine.connect()                
+                statement = f"INSERT INTO instructor(id, fname, lname) VALUES ({id}, '{fname}','{lname}');"
+                print (statement)
+                dbconnection.execute(statement)
+                dbconnection.close()
+                return redirect(url_for('get_instructors'))
+        else:
+            return redirect(url_for('get_instructors'))
 
 #DELETE ONE INSTRUCTOR
 @app.route('/instructors/<instructor_id>', methods=['DELETE', 'GET'])
@@ -522,8 +542,6 @@ def get_all_courses():
                     semester_data['course_list'] = courses
                     # print(courses)
             semesters_list.append(semester_data)
-
-        print(semesters_list)
         dbconnection.close()    
         print(semesters_list)
         return semesters_list
@@ -719,65 +737,26 @@ class Outcomes(db.Model):
 #GET ALL OUTCOMES
 @app.route('/outcomes', methods=["GET"])
 @login_required
-def outcomes():
-    courses_group = []
-    terms = []
+def outcomes():   
     user = current_user
     uid = current_user.get_id()
-    year = []
+  
     semesters_list = []
     outcomes = Outcomes.query.all()
-
-    results = []
+    outcomes_list = []
     courses = Course.query.all()
     for outcome in outcomes:
         outcome_data = {}
         outcome_data['so_name'] = outcome.so_name
         outcome_data['so_desc'] = outcome.so_desc
-        results.append(outcome_data)
-    
-    dbconnection = engine.connect()
-    terms = dbconnection.execute("select distinct term, year from course")
-
+        outcomes_list.append(outcome_data)
+   
     if user.account_type =='instructor':
-        for term in terms:
-            semester_data={}
-            courses_group  = Course.query.filter_by(instructor=uid, term = term[0], year=term[1]).all()
-            if courses_group:            
-                semester_data['term'] = term[0]
-                semester_data['year'] = term[1]
-                courses = []     
-                for course in courses_group:                       
-                    courses.append(course.get_id())
-                    semester_data['course_list'] = courses  
-                # print(courses)          
-            else:
-                continue      
-            semesters_list.append(semester_data)
-            print(semesters_list)       
-        dbconnection.close()
-        return render_template('inst_outcomes.html', outcomes=results, semesters=semesters_list)
+        semesters_list = get_instructor_courses(uid)
+        return render_template('inst_outcomes.html', outcomes=outcomes_list, semesters=semesters_list)
     else:
-        for term in terms:
-            semester_data={}
-            courses_group  = Course.query.filter_by(term = term[0], year=term[1]).all()
-            print(courses_group)
-            if courses_group:            
-                semester_data['term'] = term[0]
-                semester_data['year'] = term[1]
-                courses = []
-                for course in courses_group:                            
-                    courses.append(course.get_id())
-                    semester_data['course_list'] = courses  
-                # print(courses)          
-            else:
-                continue
-        
-            semesters_list.append(semester_data)
-            print(semesters_list) 
-
-        dbconnection.close()
-        return render_template('outcomes.html', outcomes=results, semesters = semesters_list)
+        semesters_list = get_all_courses()
+        return render_template('outcomes.html', outcomes=outcomes_list, semesters = semesters_list)
 
 
 # ASSIGNMENTS (SWP) CLASS
@@ -800,7 +779,7 @@ def get_all_swp():
     results = []
 
     for swp in swps:
-        swp_data = {}
+        swp_data = {}        
         course = Course.query.get(swp.course_id)
         swp_data['swp_id'] = swp.swp_id
         swp_data['swp_name'] = swp.swp_name
@@ -809,7 +788,6 @@ def get_all_swp():
         results.append(swp_data)
 
     return jsonify(results)
-
 
 #GET ONE SWP
 @app.route('/swp/<int:swp_id>', methods=["GET"])
@@ -834,12 +812,12 @@ def get_one_swp(swp_id):
 @login_required
 def get_course_swps(course_id):
     swps = Assignments.query.filter_by(course_id=course_id).all()
-
     results = []
 
     for swp in swps:
         swp_data = {}
         course = Course.query.get(swp.course_id)
+        attempts = get_swp_attempts(swp.swp_id)
         swp_data['swp_id'] = swp.swp_id
         swp_data['swp_name'] = swp.swp_name
         swp_data['course_id'] = course.id
@@ -954,6 +932,31 @@ def get_all_attempts():
         results.append(attempt_data)
 
     return jsonify(results)
+
+
+# GET SWP ATTEMPTS 
+@app.route('/attempts/swp/<int:swp_id>', methods=["GET"])
+#@login_required
+def get_swp_attempts(swp_id):
+    attempts = Attempts.query.filter_by(swp_id = swp_id).all()
+    print(attempts)
+    results = []
+    attempt_data = {}
+    swp = Assignments.query.get(swp_id)    
+
+    so_list = []  
+    for attempt in attempts:              
+        so = Outcomes.query.get(attempt.so_id)
+        so_data = {}
+        so_data["so_name"] = so.so_name
+        so_list.append(so_data)
+
+    attempt_data['swp_name'] = swp.swp_name
+    attempt_data['so_list'] = so_list
+    results.append(attempt_data)
+    print(results)
+    return jsonify(results)
+
 
 #UPDATE ONE ATTEMPT
 @app.route('/attempts/<int:attempt_id>', methods=['GET', 'POST'])
