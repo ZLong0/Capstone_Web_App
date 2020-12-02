@@ -540,7 +540,7 @@ def get_one_course(course_id):
     #user_id = Users.get_id(current_user)
     #user = Users.query.get(user_id)
     course = Course.query.get(course_id)
-    results = []
+    course_results = []
     course_info = {}
     if not course:
         return ("Course not found")
@@ -552,15 +552,19 @@ def get_one_course(course_id):
     course_info['section'] = course.section
     course_info['instructor_id'] = course.instructor
     course_info['course_id'] = course.id
-    results.append(course_info)
+    course_results.append(course_info)
+
+    swp_results = get_course_swps(course_id)
+    student_results = get_course_enrolled(course_id)
 
    # if user.account_type == 'instructor':
       # return redirect(url_for('get_instructor_courses', instructor_id = user_id))
     
-    print(results)
-    return jsonify(results)
-    return render_template('courses.html', courses=results)
-
+    print(course_results)
+    print(swp_results)
+    print(student_results)
+    #return jsonify(course_results)
+    return render_template('courses.html', courses=course_results, students=student_results, swps=swp_results)
 
 # gets all courses for specific instructor id
 @app.route('/courses/inst/<int:instructor_id>', methods=['GET'])
@@ -817,7 +821,7 @@ def get_course_swps(course_id):
         swp_data['course name'] = course.course_name
         results.append(swp_data)
 
-    return jsonify(results)
+    return results
 
 
 @app.route('/swp/<int:swp_id>', methods=['GET', 'POST'])
@@ -1057,10 +1061,11 @@ def get_course_enrolled(course_id):
             enrollment_data['swp_name'] = 'Test'
             enrollment_data['score'] = None
         else:
-            enrollment_data['swp_id'] = results.swp_id
-            swp = Assignments.query.filter_by(swp_id = results.swp_id).first()
-            enrollment_data['swp_name'] = swp.swp_name
-            enrollment_data['score'] = results.value
+            for result in results:
+                enrollment_data['swp_id'] = result.swp_id
+                swp = Assignments.query.filter_by(swp_id = result.swp_id).first()
+                enrollment_data['swp_name'] = swp.swp_name
+                enrollment_data['score'] = result.value
         if student:
             enrollment_data['student_id'] = student.student_id
             enrollment_data['student_first'] = student.fname
@@ -1070,7 +1075,7 @@ def get_course_enrolled(course_id):
         results_list.append(enrollment_data)
     
     sorted_results = sorted(results_list, key=lambda i:i['student_last'])
-    return jsonify(sorted_results)
+    return sorted_results
     #user_id = current_user.get_id()
     #user = Users.query.get(user_id)
     #if user.account_type == 'instructor':
