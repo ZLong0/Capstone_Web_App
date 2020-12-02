@@ -560,7 +560,7 @@ def get_one_course(course_id):
     course_info['course_name'] = course.course_name
     course_info['term'] = course.term
     course_info['year'] = course.year
-    course_info['course_department'] = course.department
+    course_info['course_department'] = course.department    
     course_info['course_number'] = course.course_number
     course_info['section'] = course.section
     course_info['instructor_id'] = course.instructor
@@ -578,7 +578,7 @@ def get_one_course(course_id):
     print(student_results)
     #return jsonify(course_results)
     return render_template('courses.html', courses=course_results, students=student_results, swps=swp_results)
-
+  
 
 # gets all courses for specific instructor id
 @app.route('/courses/inst/<int:instructor_id>', methods=['GET'])
