@@ -493,8 +493,12 @@ def get_all_courses():
         terms = []
         user = current_user
         uid = current_user.get_id()
+        print(uid)
         year = []
         semesters_list = []
+
+        if user.account_type == 'instructor':
+            return redirect(url_for('home'))
 
         dbconnection = engine.connect()
         terms = dbconnection.execute("select distinct term, year from course")
@@ -507,7 +511,14 @@ def get_all_courses():
                 semester_data['year'] = term[1]
                 courses = []
                 for course in courses_group:
-                    courses.append(course.get_id())
+                    course_data = {}
+                    course_data['course_id'] = course.get_id()
+                    course_data['department'] = course.department
+                    course_data['course_number'] = course.course_number
+                    course_data['section'] = course.section
+                    course_data['course_name'] = course.course_name
+                    course_data['instructor_id'] = course.instructor
+                    courses.append(course_data)
                     semester_data['course_list'] = courses
                     # print(courses)
             semesters_list.append(semester_data)
@@ -553,16 +564,26 @@ def get_one_course(course_id):
 
 # gets all courses for specific instructor id
 @app.route('/courses/inst/<int:instructor_id>', methods=['GET'])
-#@login_required
+@login_required
 def get_instructor_courses(instructor_id):
     print('GET_INSTRUCTOR_COURSES')
     results = []
+    user = current_user
+    print(instructor_id)
+    uid = current_user.get_id()
 
+    #ATTEMPTING TO KEEP OTHER INSTRUCTORS FROM ACCESSING OTHER INST COURSES 
+    #WHILE ALLOWING ADMING TO SELECT COURSES SPECIFIC TO ONE INSTRUCTOR
+    if uid != instructor_id:
+        if user.account_type=='admin':
+            pass
+        else:
+            return redirect(url_for('home'))
+        
     if request.method == "GET":
         courses_group = []
-        terms = []
-        user = current_user
-        uid = current_user.get_id()
+        terms = []        
+        print(uid)
         year = []
         semesters_list = []
 
@@ -570,16 +591,22 @@ def get_instructor_courses(instructor_id):
         terms = dbconnection.execute("select distinct term, year from course")
         for term in terms:
             semester_data = {}
-            courses_group = Course.query.filter_by(instructor=uid, term=term[0], year=term[1]).all()
-            # print(courses_group)
+            courses_group = Course.query.filter_by(instructor=instructor_id, term=term[0], year=term[1]).all()
+            #print(courses_group)
             if courses_group:
                 semester_data['term'] = term[0]
                 semester_data['year'] = term[1]
                 courses = []
                 for course in courses_group:
-                    courses.append(course.get_id())
+                    course_data = {}
+                    course_data['course_id'] = course.get_id()
+                    course_data['department'] = course.department
+                    course_data['course_number'] = course.course_number
+                    course_data['section'] = course.section
+                    course_data['course_name'] = course.course_name
+                    courses.append(course_data)
                     semester_data['course_list'] = courses
-                    # print(courses)
+                    #print(courses)
             else:
                 continue
             semesters_list.append(semester_data)
