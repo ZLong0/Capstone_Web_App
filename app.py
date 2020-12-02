@@ -25,8 +25,6 @@ app.config['MAIL_USERNAME'] = 'apikey'
 app.config['MAIL_PASSWORD'] = sender_pass
 app.config['MAIL_DEFAULT_SENDER'] = sender
 mail = Mail(app)
-print(sender)
-print(sender_pass)
 
 
 # DATABASE MODELS ARE FOLLOWED DIRECTLY BY THE METHODS THAT CORRESPOND TO THOSE OPJECTS
