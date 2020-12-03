@@ -59,194 +59,204 @@
       		</div> 
     	</div><!--END NAV CONTAINER-->
       </nav>
-      <div class="main_content">
-		  <h2 class="text-center">{{courses[0].course_department}} {{courses[0].course_number}} {{courses[0].course_name}}</h2>
-		  
-		  <!-- TODO: update tables to pull real information from database and create related modals -->
-		  <!-- Collapsable table views -->
-		  <div id="collapse-container">
-			  <div class="text-center mb-2">
-				  <button type="button" class="btn btn-sm btn-secondary" data-toggle="collapse" data-target="#student-view">View Students</button>
+	  <div class="main_content">
+		<h2 class="text-center">{{courses[0].course_department}} {{courses[0].course_number}} {{courses[0].course_name}}</h2>
+		
+		<!-- TODO: update tables to pull real information from database and create related modals -->
+		<!-- Collapsable table views -->
+		<div id="collapse-container">
+			<div class="text-center mb-2">
+				<button type="button" class="btn btn-sm btn-secondary" data-toggle="collapse" data-target="#student-view">View Students</button>
 
-				  <button type="button" class="btn btn-sm btn-secondary" data-toggle="collapse" data-target="#swp-view">View Work Products</button>
-			  </div>
-			  
-			  <!-- Student View -->
-			  <div class="collapse" id="student-view" data-parent="#collapse-container">
-				  <h4 class="text-center">Students</h4>
-				  <table class="table table-bordered text-center">
-					  <thead>
-						  <tr>
-							  <th scope="col">Student Name</th>
-							  <th scope="col">Student ID</th>
-							  <th scope="col">SWP 1</th>
-							  <th scope="col">SWP 2</th>
-							  <th scope="col">SWP 3</th>
-						  </tr>
-					  </thead>
-					  <tbody>
-						  {% for student in students %}
-							  <tr>
-								  <td><a data-toggle="modal" href="#edit-student-modal">{{student.student_first}} {{student.student_last}}</a></td>
-								  <td>{{student.student_id}}</td>
-								  <td>score</td>
-								  <td>score</td>
-								  <td>score</td>
-							  </tr>
-						  {% endfor %}
-					  </tbody>
-				  </table>
-			  </div>
-			  
-			  <!-- SWP View -->
-			  <div class="collapse" id="swp-view" data-parent="#collapse-container">
-				  <h4 class="text-center">Student Work Products</h4>
-				  <table class="table table-bordered text-center">
-					  <thead>
-						  <tr>
-							  <th scope="col">SWP Name</th>
-							  <th scope="col">SWP ID</th>
-						  </tr>
-					  </thead>
-					  <tbody>
-						  {% for assignment in assignments %}
-							  <tr>
-								  <td><a data-toggle="modal" href="#">{{assignment.swp_name}}</a></td>
-								  <td>{{assignment.swp_id}}</td>
-							  </tr>
-						  {% endfor %}
-					  </tbody>
-				  </table>
-			  </div>
-		  </div>
-	  </div>
-	  
-	  <!-- Modals -->
-	  
-	  <!-- Add SWP Modal -->
-	    <div class="modal fade" id="add-swp-modal">
-    		<div class="modal-dialog">
-			  <div class="modal-content">
-  
-                <!-- Modal Header -->
-				<div class="modal-header">
-				    <h4 class="modal-title">Add Work Product</h4>
-				    <button type="button" class="close" data-dismiss="modal">×</button>
-				</div>
-                
-				<!-- Modal body -->
-				<div class="modal-body">
-				    <form action="/swp" class="modal-form" method="put">
-                        <label for="course_id">Select Course</label>
-                        <select id="course_id" name="course_id">
-                            {% for semester in semesters %}
-								{% for course in semester.course_list %}
-                                	<option value="">{{course}}</option>
+				<button type="button" class="btn btn-sm btn-secondary" data-toggle="collapse" data-target="#swp-view">View Work Products</button>
+			</div>
+			
+			<!-- Student View -->
+			<div class="collapse" id="student-view" data-parent="#collapse-container">
+				<h4 class="text-center">Students</h4>
+				<table class="table table-bordered text-center">
+					<thead>
+						<tr>
+							<th scope="col">Student Name</th>
+							<th scope="col">Student ID</th>
+							{% if swps %}
+								{% for swp in swps %}
+								<th scope="col">{{swp.swp_name}}</th>
 								{% endfor %}
-                            {% endfor %}
-                        </select>
-                        <input type="text" name="swp_name" class="form-control" placeholder="Enter SWP name" required autofocus>
-				        <button class="btn btn-secondary" type="submit">Submit</button>
-				    </form>
-				</div>
+							{% endif %}
+						</tr>
+					</thead>
+					<tbody>
+						{% for student in students %}
+							<tr>
+								<td><a data-toggle="modal" href="#edit-student-modal">{{student.student_first}} {{student.student_last}}</a></td>
+								<td>{{student.student_id}}</td>
+								{% if student.student_scores %}
+									{% for score in student.student_scores %}
+										<td>{{score.score}}</td>
+									{% endfor%}
+								{% endif %}
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			
+			<!-- SWP View -->
+			<div class="collapse" id="swp-view" data-parent="#collapse-container">
+				<h4 class="text-center">Student Work Products</h4>
+				<table class="table table-bordered text-center">
+					<thead>
+						<tr>
+							<th scope="col">SWP Name</th>
+							<th scope="col">SWP ID</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% if swps %}				
+							{% for swp in swps %}
+								<tr>
+									<td><a data-toggle="modal" href="#">{{swp.swp_name}}</a></td>
+									<td>{{swp.swp_id}}</td>
+								</tr>
+							{% endfor %}
+							{% else %}
+							<tr>
+								<td>None ADD BUTTON HERE</td>
+							</tr>
+						{% endif %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
 	
-				<!-- Modal footer -->
-				<div class="modal-footer">
-					  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-				</div>
-			  </div>
-		  </div>
-  		</div>
-	  
-	  <!-- Edit SWP Modal -->
-	  <div class="modal fade" id="edit-swp-modal">
-    		<div class="modal-dialog">
-      			<div class="modal-content">
-      
-        			<!-- Modal Header -->
-        			<div class="modal-header">
-        	 			<h4 class="modal-title">Add Work Product</h4>
-        	  			<button type="button" class="close" data-dismiss="modal">×</button>
-        			</div>
-        
-      		  		<!-- Modal body -->
-      		  		<div class="modal-body">
-      		  			<form action="/swp" class="modal-form" method="put">
-							  CREATE FORM HERE							 
-							  <button type="submit">Submit</button>
-        				</form>
-        			</div>
-        
-        			<!-- Modal footer -->
-        			<div class="modal-footer">
-          				<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-        			</div>
-        
-    			</div>
-   			</div>
-  		</div>
-	  
-	  <!-- Edit Student Modal -->
-	  <div class="modal fade" id="edit-student-modal">
+	<!-- Modals -->
+	
+	<!-- Add SWP Modal -->
+	  <div class="modal fade" id="add-swp-modal">
 		  <div class="modal-dialog">
-			  <div class="modal-content">
-				  
+			<div class="modal-content">
+
+			  <!-- Modal Header -->
+			  <div class="modal-header">
+				  <h4 class="modal-title">Add Work Product</h4>
+				  <button type="button" class="close" data-dismiss="modal">×</button>
+			  </div>
+			  
+			  <!-- Modal body -->
+			  <div class="modal-body">
+				  <form action="/swp" class="modal-form" method="put">
+					  <label for="course_id">Select Course</label>
+					  <select id="course_id" name="course_id">
+						  {% for semester in semesters %}
+							  {% for course in semester.course_list %}
+								  <option value="">{{course}}</option>
+							  {% endfor %}
+						  {% endfor %}
+					  </select>
+					  <input type="text" name="swp_name" class="form-control" placeholder="Enter SWP name" required autofocus>
+					  <button class="btn btn-secondary" type="submit">Submit</button>
+				  </form>
+			  </div>
+  
+			  <!-- Modal footer -->
+			  <div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+			  </div>
+			</div>
+		</div>
+		</div>
+	
+	<!-- Edit SWP Modal -->
+	<div class="modal fade" id="edit-swp-modal">
+		  <div class="modal-dialog">
+				<div class="modal-content">
+	
 				  <!-- Modal Header -->
 				  <div class="modal-header">
-					  <h4 class="modal-title">Edit Student</h4>
-					  <button type="button" class="close" data-dismiss="modal">×</button>
+					   <h4 class="modal-title">Add Work Product</h4>
+						<button type="button" class="close" data-dismiss="modal">×</button>
 				  </div>
-        
-				  <!-- Modal body -->
-				  <div class="modal-body">
-					  <form action="" class="modal-form" method="put">
-						  
-						  <button class="btn btn-secondary" type="submit">Submit</button>
+	  
+					  <!-- Modal body -->
+					  <div class="modal-body">
+						  <form action="/swp" class="modal-form" method="put">
+							CREATE FORM HERE							 
+							<button type="submit">Submit</button>
 					  </form>
 				  </div>
-        
+	  
 				  <!-- Modal footer -->
 				  <div class="modal-footer">
-					  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
 				  </div>
-    			</div>
-   			</div>
-	  </div>
 	  
-	  <!-- Course List Modal (modal is generated for each term)-->
-	  <!-- TODO: make links take user to respective course page (may need to add endpoint to handle link) -->
-	  {% if semesters %}
-	  	{% for semester in semesters %}
-		 	 <div class="modal fade" id="{{semester.term}}{{semester.year}}course-list-modal">
-				<div class="modal-dialog">
-					<div class="modal-content">
-
-						<!-- Modal Header -->
-						<div class="modal-header">
-							<h4 class="modal-title">{{semester.term}} {{semester.year}} Courses</h4>
-							<button type="button" class="close" data-dismiss="modal">×</button>
-						</div>
-
-						<!-- Modal body -->
-						<div class="modal-body">
-							<ul class="list-group">
-								{% for course in semester.course_list %}
-									<a class="list-group-item list-group-item-action text-center" href="{{ url_for('get_one_course', course_id = course.course_id)}}">{{course.department}} {{course.course_number}}: {{course.section}}</a>
-								{% endfor %}
-							</ul>
-						</div>
-
-						<!-- Modal footer -->
-						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-						</div>
-					</div>
+			  </div>
+			 </div>
+		</div>
+	
+	<!-- Edit Student Modal -->
+	<div class="modal fade" id="edit-student-modal">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				
+				<!-- Modal Header -->
+				<div class="modal-header">
+					<h4 class="modal-title">Edit Student</h4>
+					<button type="button" class="close" data-dismiss="modal">×</button>
+				</div>
+	  
+				<!-- Modal body -->
+				<div class="modal-body">
+					<form action="" class="modal-form" method="put">
+						
+						<button class="btn btn-secondary" type="submit">Submit</button>
+					</form>
+				</div>
+	  
+				<!-- Modal footer -->
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 				</div>
 			  </div>
-		  {% endfor %}
-	{% else  %}
-			  
-	{% endif %}
-	  <!-- End of Modals -->
+			 </div>
+	</div>
+	
+	<!-- Course List Modal (modal is generated for each term)-->
+	<!-- TODO: make links take user to respective course page (may need to add endpoint to handle link) -->
+	{% if semesters %}
+		{% for semester in semesters %}
+			<div class="modal fade" id="{{semester.term}}{{semester.year}}course-list-modal">
+			  <div class="modal-dialog">
+				  <div class="modal-content">
+
+					  <!-- Modal Header -->
+					  <div class="modal-header">
+						  <h4 class="modal-title">{{semester.term}} {{semester.year}} Courses</h4>
+						  <button type="button" class="close" data-dismiss="modal">×</button>
+					  </div>
+
+					  <!-- Modal body -->
+					  <div class="modal-body">
+						  <ul class="list-group">
+							  {% for course in semester.course_list %}
+								  <a class="list-group-item list-group-item-action text-center" href="{{ url_for('get_one_course', course_id = course.course_id)}}">{{course.department}} {{course.course_number}}: {{course.section}}</a>
+							  {% endfor %}
+						  </ul>
+					  </div>
+
+					  <!-- Modal footer -->
+					  <div class="modal-footer">
+						  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					  </div>
+				  </div>
+			  </div>
+			</div>
+		{% endfor %}
+  {% else  %}
+			
+  {% endif %}
+	<!-- End of Modals -->
   </body>
 </html>

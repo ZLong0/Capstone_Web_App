@@ -605,15 +605,15 @@ def get_one_course(course_id):
     course_results.append(course_info)
 
     swp_results = get_course_swps(course_id)
-    student_results = get_course_enrolled(course_id)
-    semesters_list = get_instructor_courses(123)
+    student_results = get_course_results(course_id)  
 
-    print(course_results)
-    print(swp_results)
-    print(student_results)
+    #print(course_results)
+    #print(swp_results)
+    #print(student_results)
     # return jsonify(course_results)
 
     if user.account_type == 'instructor':
+        semesters_list = get_instructor_courses(user_id)
         return render_template('inst_courses.html', courses=course_results, students=student_results, swps=swp_results,
                                semesters=semesters_list)
     else:
@@ -867,7 +867,8 @@ def get_course_swps(course_id):
         swp_data['course name'] = course.course_name
         results.append(swp_data)
 
-    return results
+    sorted_results = sorted(results, key=lambda i:i['swp_id'])
+    return sorted_results
 
 
 # UPDATE ONE SWP
@@ -1117,32 +1118,13 @@ def get_course_enrolled(course_id):
     results_list = []
     swp_list = []
     user = current_user
-    swps = Assignments.query.filter_by(course_id=course_id).all()
-    for swp in swps:
-        swp_data = {}
-        swp_name = swp.swp_name
-        swp_data['swp_name'] = swp_name
-        swp_data['swp_id'] = swp.swp_id
-        swp_list.append(swp_data)
-
+   
     for enroll in enrolled:
         enrollment_data = {}
         student_id = enroll.student_id
-        print(student_id)
+        #print(student_id)
         student = Student.query.get(student_id)
-        print(student)
-        results = Results.query.filter_by(student_id=student_id).all()
-        # print(results)
-        if not results:
-            enrollment_data['swp_id'] = None
-            enrollment_data['swp_name'] = 'Test'
-            enrollment_data['score'] = None
-        else:
-            for result in results:
-                enrollment_data['swp_id'] = result.swp_id
-                swp = Assignments.query.filter_by(swp_id=result.swp_id).first()
-                enrollment_data['swp_name'] = swp.swp_name
-                enrollment_data['score'] = result.value
+        #print(student)
         if student:
             enrollment_data['student_id'] = student.student_id
             enrollment_data['student_first'] = student.fname
@@ -1153,14 +1135,7 @@ def get_course_enrolled(course_id):
 
     sorted_results = sorted(results_list, key=lambda i: i['student_last'])
     return sorted_results
-    # user_id = current_user.get_id()
-    # user = Users.query.get(user_id)
-    # if user.account_type == 'instructor':
-    #   courses = Course.query.filter_by(instructor=user.id).all()
-    #  return render_template('inst_courses.html', enrolled=sorted_results, courses=courses, swps=swp_list)
-    # else:
-    #   courses = Course.query.all()
-    #  return render_template('courses.html', enrolled=sorted_results, courses=courses)
+
 
 
 # TODO -- NOT SURE IF WE NEED THIS METHOD OR NOT
@@ -1282,38 +1257,52 @@ def get_all_results():
 # @login_required
 def get_course_results(course_id):
     assignments = Assignments.query.filter_by(course_id=course_id).all()
-    print(assignments)
+    #print(assignments)
     output = []
 
-    for assignment in assignments:
-        print(assignment.swp_id)
-        swp_id = assignment.swp_id
-        swp = Assignments.query.filter_by(swp_id=swp_id).all()
-        if not swp:
-            continue
-        else:
-            for swp in swp:
-                print(swp.swp_name)
-        results = Results.query.filter_by(swp_id=swp_id).all()
-        print(results)
-        if not results:
-            print("no swp for this course")
-        else:
-            result_data = {}
-            for result in results:
-                result_data['result_id'] = result.id
-                result_data['value'] = result.value
-                student = Student.query.get(result.student_id)
-                result_data['student_id'] = result.student_id
-                result_data['student_first'] = student.fname
-                result_data['student_last'] = student.lname
-                if not swp:
-                    continue
-                else:
-                    result_data['swp_name'] = swp.swp_name
-                output.append(result_data)
-    print(output)
-    return jsonify(output)
+    sorted_students = get_course_enrolled(course_id)
+    #print(sorted_students)
+
+    for student in sorted_students:
+        #print("OUTER LOOP")
+        result_data = {}
+        student_id = student['student_id']
+        result_data['student_id'] = student['student_id']
+        result_data['student_first'] = student['student_first']
+        result_data['student_last'] = student['student_last']
+            
+        assignments = get_course_swps(course_id)
+        #print(assignments)
+        scores_list = []
+       
+        for assignment in assignments:
+            #FOR EACH ASSIGNMENT GET RESULTS BY STUDENT_ID                   
+            student_scores = Results.query.filter_by(swp_id = assignment['swp_id'],student_id = student_id).first()
+            scores_data = {}
+            if student_scores == None:
+                scores_data['swp_id'] = assignment['swp_id']
+                scores_data['score'] = "-"
+            else:
+                scores_data['swp_id'] = assignment['swp_id']
+                scores_data['score'] = student_scores.value
+            
+            scores_list.append(scores_data)
+        
+        sorted_scores = sorted(scores_list, key=lambda i:i['swp_id'])
+
+        result_data['student_scores'] = scores_list
+        output.append(result_data)
+
+    for student in output:
+        print(student['student_id'])
+        print(student['student_first'])
+        print(student['student_last'])
+        print(student['student_scores'])
+        scores = student['student_scores']
+        for score in scores:
+            print(score['score'])
+        
+    return output
 
 
 @app.route('/results/student/<int:student_id>/<int:swp_id>', methods=['GET', 'POST'])
