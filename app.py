@@ -26,6 +26,7 @@ app.config['MAIL_PASSWORD'] = sender_pass
 app.config['MAIL_DEFAULT_SENDER'] = sender
 mail = Mail(app)
 
+
 # DATABASE MODELS ARE FOLLOWED DIRECTLY BY THE METHODS THAT CORRESPOND TO THOSE OPJECTS
 # IF TIME ALLOWS - MOVE MODELS TO THEIR OWN MODELS.PY FILE
 
@@ -92,10 +93,10 @@ def login():
             error = 'Account is unactivated, please wait for an email on when you account has been activated.'
             return render_template('login.html', error=error)
         elif user.pending == 0:
-            #DEBUGGING STATEMENTS
-            print(user.pending)          
+            # DEBUGGING STATEMENTS
+            print(user.pending)
             if check_password_hash(pwhash=user.password, password=password_attempt):
-                login_user(user)  
+                login_user(user)
                 print("####################################")
                 print("USER ACTIVE!  SUCCESSFULLY LOGGED IN")
                 return redirect(url_for('home'))
@@ -115,19 +116,22 @@ def index():
         print("user found -- redirect home")
         return redirect(url_for('home'))
 
-#HOME -- CHECKS ACCOUNT TYPE, GATHERS NECESSARY INFORMATION FOR DROP DOWNS THEN RENDERS
-#TEMPLATE BASED ON TYPE
+
+# HOME -- CHECKS ACCOUNT TYPE, GATHERS NECESSARY INFORMATION FOR DROP DOWNS THEN RENDERS
+# TEMPLATE BASED ON TYPE
 @app.route("/home", methods=["POST", "GET"])
 @login_required
 def home():
     user_id = current_user.get_id()
     user = Users.query.get(user_id)
+    user_list = Users.query.all()
     dbconnection = engine.connect()
-   
-    if user.account_type == 'instructor':
-       semesters_list = get_instructor_courses(user_id)
-       return render_template("inst_home.html", current_user=user, semesters=semesters_list)
 
+    if user.account_type == 'instructor':
+        semesters_list = get_instructor_courses(user_id)
+        return render_template("inst_home.html", current_user=user, semesters=semesters_list)
+    elif user.account_type == 'root':
+        return render_template("root_home.html", current_user=user, user_list=user_list)
     else:
         semesters_list = get_all_courses()
         return render_template("home.html", current_user=user, semesters=semesters_list)
@@ -167,7 +171,7 @@ def register_user():
             msg = Message('ATAS Registration Attempt', recipients=[add_email])
             msg.body = 'ATAS Registration Attempt'
             msg.html = '<p>There was an attempt to register a new account in ATAS using the email ' + \
-                       add_email + ', if this was not you, make sure to secure your ATAS account'
+                       add_email + ', if this was not you, make sure to secure your ATAS account</p>'
             mail.send(msg)
             return render_template('register.html', error=error)
         else:
@@ -180,7 +184,7 @@ def register_user():
                 msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
                 msg.body = 'ATAS Registration Sent'
                 msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
-                           add_email + '. We will notify you when your account is ready to use'
+                           add_email + '. We will notify you when your account is ready to use</p>'
                 mail.send(msg)
                 db.session.add(new_user)
                 db.session.commit()
@@ -196,7 +200,7 @@ def register_user():
                 msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
                 msg.body = 'ATAS Registration Sent'
                 msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
-                           add_email + '. We will notify you when your account is ready to use'
+                           add_email + '. We will notify you when your account is ready to use</p>'
                 mail.send(msg)
                 message = 'Registration sent'
                 db.session.add(new_user)
@@ -215,6 +219,37 @@ def logout():
     return render_template("login.html", message=message)
 
 
+@app.route("/root_pending", methods=["POST", "GET"])
+@login_required
+def pending_list_update():
+    user_list = Users.query.all()
+    if request.method == "POST":
+        user_pending = request.form['user_pending']
+        selected_user = Users.query.filter_by(email=request.form['user_select']).first()
+        root_cc = Users.query.filter_by(account_type='root').first()
+        if user_pending == 'approved':
+            selected_user = Users.query.filter_by(email=selected_user.email).first()
+            selected_user.pending = 0
+            msg = Message('ATAS Registration Approved', recipients=[selected_user.email], bcc=[root_cc.email])
+            msg.body = 'ATAS Registration Approved'
+            msg.html = '<p>Your account with the username/email of ' + selected_user.email + \
+                       ' has been approved and is ready to use. Thank you for using ATAS.</p>'
+            db.session.commit()
+            mail.send(msg)
+            message = "User " + selected_user.email + " approved successfully!"
+            return redirect(url_for('home', message=message, user_list=user_list))
+            # return render_template("root_home.html", message=message, user_list=user_list)
+        elif user_pending == 'denied':
+            selected_user = Users.query.filter_by(email=selected_user.email).delete()
+            db.session.commit()
+            message = "User deleted successfully!"
+            return redirect(url_for('home', message=message, user_list=user_list))
+            # return render_template("root_home.html", message=message, user_list=user_list)
+    # message = "User list updated successfully"
+    return redirect(url_for('home', user_list=user_list))
+    # return render_template("root_home.html", user_list=user_list)
+
+
 # INSTRUCTORS CLASS
 class Instructor(db.Model):
     inst_id = db.Column("id", db.Integer, primary_key=True, autoincrement=False)
@@ -227,13 +262,13 @@ class Instructor(db.Model):
         self.lname = lname
 
 
-#GET ALL INSTRUCTORS
+# GET ALL INSTRUCTORS
 @app.route('/instructors', methods=['GET'])
 @login_required
 def get_instructors():
     instructors = Instructor.query.all()
     results = []
-    
+
     user = current_user
     if user.account_type == 'instructor':
         return redirect(url_for('home'))
@@ -248,7 +283,7 @@ def get_instructors():
         return jsonify(results)
 
 
-#GET ONE INSTRUCTORS INFO
+# GET ONE INSTRUCTORS INFO
 @app.route('/instructors/<int:instructor_id>', methods=['GET'])
 @login_required
 def get_one_instructor(instructor_id):
@@ -270,7 +305,7 @@ def get_one_instructor(instructor_id):
     return jsonify(results)
 
 
-#UPDATE ONE INSTRUCTOR
+# UPDATE ONE INSTRUCTOR
 @app.route('/instructors/<instructor_id>', methods=['POST', 'GET'])
 @login_required
 def update_instructor(instructor_id):
@@ -278,10 +313,10 @@ def update_instructor(instructor_id):
     if user.account_type == 'instructor':
         return redirect(url_for('home'))
     else:
-        if request.method=='POST':   
+        if request.method == 'POST':
             # check for existing instructor id first
             instructor = Instructor.query.get(instructor_id)
-            if instructor:         
+            if instructor:
                 instructor.fname = request.form['first_name']
                 instructor.lname = request.form['last_name']
                 db.session.commit()
@@ -292,7 +327,8 @@ def update_instructor(instructor_id):
         else:
             return redirect(url_for('get_one_instructor', instructor_id=instructor_id))
 
-#ADD NEW INSTRUCTOR
+
+# ADD NEW INSTRUCTOR
 @app.route('/instructors', methods=['PUT', 'GET'])
 @login_required
 def add_instructor():
@@ -306,13 +342,13 @@ def add_instructor():
                 instructor = Instructor.query.get(request.form['id'])
             except:
                 print("EXCEPTION ERROR")
-                return redirect(url_for('get_instructors')) 
-            
-            if instructor:         
+                return redirect(url_for('get_instructors'))
+
+            if instructor:
                 print("instructor found")
                 return redirect(url_for('get_instructors'))
             else:
-                print("instructor not found -- add")            
+                print("instructor not found -- add")
                 id = request.form['id']
                 print(id)
                 fname = request.form['first_name']
@@ -320,33 +356,34 @@ def add_instructor():
                 lname = request.form['last_name']
                 print(lname)
                 instructor = Instructor(id, fname, lname)
-                
-                if instructor: 
+
+                if instructor:
                     print("instructor created")
-                    instructor_data={}
-                    result =[]
+                    instructor_data = {}
+                    result = []
                     instructor_data['first'] = fname
                     instructor_data['last'] = lname
                     instructor_data['id'] = id
                     result.append(instructor_data)
-                    print (result)
-                dbconnection = engine.connect()                
+                    print(result)
+                dbconnection = engine.connect()
                 statement = f"INSERT INTO instructor(id, fname, lname) VALUES ({id}, '{fname}','{lname}');"
-                print (statement)
+                print(statement)
                 dbconnection.execute(statement)
                 dbconnection.close()
                 return redirect(url_for('get_instructors'))
         else:
             return redirect(url_for('get_instructors'))
 
-#DELETE ONE INSTRUCTOR
+
+# DELETE ONE INSTRUCTOR
 @app.route('/instructors/<instructor_id>', methods=['DELETE', 'GET'])
 @login_required
 def delete_instructor(instructor_id):
     if request.method == 'DELETE':
         # check for existing instructor id first
         instructor = Instructor.query.get(instructor_id)
-        if instructor:         
+        if instructor:
             db.session.delete(instructor)
             db.session.commit()
             print("Instructor deleted " + instructor_id)
@@ -370,7 +407,7 @@ class Student(db.Model):
         self.stude_id = student_id
 
 
-#GET ALL STUDENTS
+# GET ALL STUDENTS
 @app.route('/students', methods=['GET'])
 @login_required
 def get_all_students():
@@ -385,7 +422,7 @@ def get_all_students():
     return jsonify(results)
 
 
-#GET ONE STUDENT
+# GET ONE STUDENT
 @app.route('/students/<int:student_id>', methods=['GET'])
 @login_required
 def get_one_student(student_id):
@@ -402,7 +439,7 @@ def get_one_student(student_id):
     return jsonify(results)
 
 
-#UPDATE ONE STUDENT
+# UPDATE ONE STUDENT
 @app.route('/students/<int:student_id>', methods=['GET', 'POST'])
 @login_required
 def update_student(student_id):
@@ -418,7 +455,7 @@ def update_student(student_id):
             # commit changes to db
             db.session.commit()
             flash('Student Updated!')
-            #return redirect(url_for('home'))
+            # return redirect(url_for('home'))
             return redirect(url_for('get_all_students'))
         except:
             flash('Update failed!')
@@ -427,7 +464,7 @@ def update_student(student_id):
         return redirect(url_for('get_all_students'))
 
 
-#ADD NEW STUDENT
+# ADD NEW STUDENT
 @app.route('/students', methods=['GET', 'PUT'])
 @login_required
 def add_students():
@@ -437,7 +474,7 @@ def add_students():
             print("student found")
             return redirect(url_for('get_all_students'))
         else:
-            print("student not found -- add student")            
+            print("student not found -- add student")
             student_id = request.form['id']
             print(student_id)
             fname = request.form['first_name']
@@ -445,26 +482,26 @@ def add_students():
             lname = request.form['last_name']
             print(lname)
             student = Student(student_id, fname, lname)
-            
-            if student: 
+
+            if student:
                 print("student created")
-                student_data={}
-                result =[]
+                student_data = {}
+                result = []
                 student_data['first'] = fname
                 student_data['last'] = lname
                 student_data['id'] = student_id
                 result.append(student_data)
-                print (result)
+                print(result)
             print("work you stupid thing")
-            dbconnection = engine.connect()                
+            dbconnection = engine.connect()
             statement = f"INSERT INTO student(student_id, fname, lname) VALUES ({student_id}, '{fname}','{lname}');"
-            print (statement)
+            print(statement)
             dbconnection.execute(statement)
             dbconnection.close()
             return redirect(url_for('get_all_students'))
-      
 
-#DELETE ONE STUDENT
+
+# DELETE ONE STUDENT
 @app.route('/students/<int:student_id>', methods=['GET', 'DELETE'])
 @login_required
 def delete_students(student_id):
@@ -506,7 +543,7 @@ class Course(db.Model):
 
 
 @app.route('/courses/', methods=['GET'])
-#@login_required
+# @login_required
 def get_all_courses():
     if request.method == "GET":
         courses_group = []
@@ -542,7 +579,7 @@ def get_all_courses():
                     semester_data['course_list'] = courses
                     # print(courses)
             semesters_list.append(semester_data)
-        dbconnection.close()    
+        dbconnection.close()
         print(semesters_list)
         return semesters_list
 
@@ -560,7 +597,7 @@ def get_one_course(course_id):
     course_info['course_name'] = course.course_name
     course_info['term'] = course.term
     course_info['year'] = course.year
-    course_info['course_department'] = course.department    
+    course_info['course_department'] = course.department
     course_info['course_number'] = course.course_number
     course_info['section'] = course.section
     course_info['instructor_id'] = course.instructor
@@ -574,14 +611,16 @@ def get_one_course(course_id):
     print(course_results)
     print(swp_results)
     print(student_results)
-    #return jsonify(course_results)
+    # return jsonify(course_results)
 
-    if user.account_type =='instructor':
-      return render_template('inst_courses.html', courses=course_results, students=student_results, swps=swp_results, semesters = semesters_list)    
+    if user.account_type == 'instructor':
+        return render_template('inst_courses.html', courses=course_results, students=student_results, swps=swp_results,
+                               semesters=semesters_list)
     else:
         semesters_list = get_all_courses()
-        return render_template('courses.html', courses=course_results, students=student_results, swps=swp_results, semesters = semesters_list)
-  
+        return render_template('courses.html', courses=course_results, students=student_results, swps=swp_results,
+                               semesters=semesters_list)
+
 
 # gets all courses for specific instructor id
 @app.route('/courses/inst/<int:instructor_id>', methods=['GET'])
@@ -593,17 +632,17 @@ def get_instructor_courses(instructor_id):
     print(instructor_id)
     uid = current_user.get_id()
 
-    #ATTEMPTING TO KEEP OTHER INSTRUCTORS FROM ACCESSING OTHER INST COURSES 
-    #WHILE ALLOWING ADMING TO SELECT COURSES SPECIFIC TO ONE INSTRUCTOR
+    # ATTEMPTING TO KEEP OTHER INSTRUCTORS FROM ACCESSING OTHER INST COURSES
+    # WHILE ALLOWING ADMING TO SELECT COURSES SPECIFIC TO ONE INSTRUCTOR
     if uid != instructor_id:
-        if user.account_type=='admin':
+        if user.account_type == 'admin':
             pass
         else:
             return redirect(url_for('home'))
-        
+
     if request.method == "GET":
         courses_group = []
-        terms = []        
+        terms = []
         print(uid)
         year = []
         semesters_list = []
@@ -613,7 +652,7 @@ def get_instructor_courses(instructor_id):
         for term in terms:
             semester_data = {}
             courses_group = Course.query.filter_by(instructor=instructor_id, term=term[0], year=term[1]).all()
-            #print(courses_group)
+            # print(courses_group)
             if courses_group:
                 semester_data['term'] = term[0]
                 semester_data['year'] = term[1]
@@ -627,7 +666,7 @@ def get_instructor_courses(instructor_id):
                     course_data['course_name'] = course.course_name
                     courses.append(course_data)
                     semester_data['course_list'] = courses
-                    #print(courses)
+                    # print(courses)
             else:
                 continue
             semesters_list.append(semester_data)
@@ -644,7 +683,7 @@ def get_instructor_courses(instructor_id):
 
 
 @app.route('/courses/<int:course_id>', methods=['GET', 'POST'])
-#@login_required
+# @login_required
 def update_courses(course_id):
     if request.method == 'POST':
         # get course to update by ID save in var
@@ -659,18 +698,18 @@ def update_courses(course_id):
             course.section = request.form['section']
             course.instructor = request.form['instructor_id']
             db.session.commit()
-            print(course.instructor)      
+            print(course.instructor)
         else:
             return ("update course failed")
-            #return render_template('/home')
-        
+            # return render_template('/home')
+
         print('Course Updated!')
         return redirect(url_for('get_all_courses'))
-        #return redirect(url_for('home'))
+        # return redirect(url_for('home'))
 
 
 @app.route('/courses', methods=['GET', 'PUT'])
-#@login_required
+# @login_required
 def add_courses():
     if request.method == 'PUT':
         # instantiate new course info based on form input
@@ -699,22 +738,22 @@ def add_courses():
         else:
             # commit changes to db
             print("ADD NEW COURSE TO DB")
-            dbconnection = engine.connect()                
+            dbconnection = engine.connect()
             statement = f"INSERT INTO course(course_name, term, year, department, course_number, section, instructor)\
                     VALUES ('{new_course.course_name}','{new_course.term}', '{new_course.year}', \
                         '{new_course.department}','{new_course.course_number}','{new_course.section}', {new_course.instructor} );"
-            print (statement)
+            print(statement)
             dbconnection.execute(statement)
             dbconnection.close()
             print("course added!")
             return redirect(url_for('get_all_courses'))
-            #return redirect(url_for('home'))
+            # return redirect(url_for('home'))
 
     return ("course add failed")
 
 
 @app.route('/courses/<int:course_id>', methods=['GET', 'DELETE'])
-#@login_required
+# @login_required
 def delete_course(course_id):
     if request.method == 'DELETE':
         course = Course.query.get(course_id)
@@ -737,13 +776,13 @@ class Outcomes(db.Model):
         self.so_desc = so_desc
 
 
-#GET ALL OUTCOMES
+# GET ALL OUTCOMES
 @app.route('/outcomes', methods=["GET"])
 @login_required
-def outcomes():   
+def outcomes():
     user = current_user
     uid = current_user.get_id()
-  
+
     semesters_list = []
     outcomes = Outcomes.query.all()
     outcomes_list = []
@@ -753,13 +792,13 @@ def outcomes():
         outcome_data['so_name'] = outcome.so_name
         outcome_data['so_desc'] = outcome.so_desc
         outcomes_list.append(outcome_data)
-   
-    if user.account_type =='instructor':
+
+    if user.account_type == 'instructor':
         semesters_list = get_instructor_courses(uid)
         return render_template('inst_outcomes.html', outcomes=outcomes_list, semesters=semesters_list)
     else:
         semesters_list = get_all_courses()
-        return render_template('outcomes.html', outcomes=outcomes_list, semesters = semesters_list)
+        return render_template('outcomes.html', outcomes=outcomes_list, semesters=semesters_list)
 
 
 # ASSIGNMENTS (SWP) CLASS
@@ -782,7 +821,7 @@ def get_all_swp():
     results = []
 
     for swp in swps:
-        swp_data = {}        
+        swp_data = {}
         course = Course.query.get(swp.course_id)
         swp_data['swp_id'] = swp.swp_id
         swp_data['swp_name'] = swp.swp_name
@@ -792,7 +831,8 @@ def get_all_swp():
 
     return jsonify(results)
 
-#GET ONE SWP
+
+# GET ONE SWP
 @app.route('/swp/<int:swp_id>', methods=["GET"])
 @login_required
 def get_one_swp(swp_id):
@@ -812,7 +852,7 @@ def get_one_swp(swp_id):
 
 # THIS GETS WORK PRODUCT FOR SPECIFIC COURSE
 @app.route('/swp/course/<int:course_id>', methods=["GET"])
-#@login_required
+# @login_required
 def get_course_swps(course_id):
     swps = Assignments.query.filter_by(course_id=course_id).all()
     results = []
@@ -830,7 +870,7 @@ def get_course_swps(course_id):
     return results
 
 
-#UPDATE ONE SWP
+# UPDATE ONE SWP
 @app.route('/swp/<int:swp_id>', methods=['GET', 'POST'])
 @login_required
 def update_swp(swp_id):
@@ -838,7 +878,7 @@ def update_swp(swp_id):
         swp = Assignments.query.get(swp_id)
         print(swp)
         if swp:
-            #swp.course_id = request.form('course_id')            
+            # swp.course_id = request.form('course_id')
             course_id = request.form['course_id']
             name = request.form['swp_name']
             name = name.upper()
@@ -846,14 +886,14 @@ def update_swp(swp_id):
             db.session.commit()
             print("Student Work Product succesfully updated!")
             return redirect(url_for('get_all_swp'))
-            #return redirect(url_for('home'))
+            # return redirect(url_for('home'))
         else:
             return "Error:  Student Work Product not found"
-            #return redirect(url_for('home'))
+            # return redirect(url_for('home'))
     return redirect(url_for('get_all_swp'))
 
 
-#ADD NEW SWP
+# ADD NEW SWP
 @app.route('/swp', methods=['GET', 'PUT'])
 @login_required
 def add_swp():
@@ -866,18 +906,18 @@ def add_swp():
         swp_name = swp_name.upper()
         new_swp = Assignments(course_id, swp_name)
         # check database for existing  overlap
-        existing_swp = Assignments.query.filter_by(swp_name=swp_name,course_id=course_id).all()
+        existing_swp = Assignments.query.filter_by(swp_name=swp_name, course_id=course_id).all()
 
         # return error if existing info returns true -- otherwise add course
         if existing_swp:
-            return("Student Work Product already exists in current course.  Please pick a unique name")
+            return ("Student Work Product already exists in current course.  Please pick a unique name")
             return redirect(url_for('home'))
         else:
             # commit changes to db
-            dbconnection = engine.connect()                
+            dbconnection = engine.connect()
             statement = f"INSERT INTO Assignments(course_id, swp_name)\
                     VALUES ({new_swp.course_id},'{new_swp.swp_name}');"
-            print (statement)
+            print(statement)
             dbconnection.execute(statement)
             dbconnection.close()
             print("SWP added!")
@@ -888,7 +928,8 @@ def add_swp():
 
     return redirect(url_for('home'))
 
-#DELETE SWP
+
+# DELETE SWP
 @app.route('/swp/<int:swp_id>', methods=['GET', 'DELETE'])
 @login_required
 def delete_swp(swp_id):
@@ -939,16 +980,16 @@ def get_all_attempts():
 
 # GET SWP ATTEMPTS 
 @app.route('/attempts/swp/<int:swp_id>', methods=["GET"])
-#@login_required
+# @login_required
 def get_swp_attempts(swp_id):
-    attempts = Attempts.query.filter_by(swp_id = swp_id).all()
-    #print(attempts)
+    attempts = Attempts.query.filter_by(swp_id=swp_id).all()
+    # print(attempts)
     results = []
     attempt_data = {}
-    swp = Assignments.query.get(swp_id)    
+    swp = Assignments.query.get(swp_id)
 
-    so_list = []  
-    for attempt in attempts:              
+    so_list = []
+    for attempt in attempts:
         so = Outcomes.query.get(attempt.so_id)
         so_data = {}
         so_data["so_name"] = so.so_name
@@ -958,13 +999,13 @@ def get_swp_attempts(swp_id):
     attempt_data['swp_name'] = swp.swp_name
     attempt_data['so_list'] = so_list
     results.append(attempt_data)
-    #print(results)
+    # print(results)
     return results
 
 
-#UPDATE ONE ATTEMPT
+# UPDATE ONE ATTEMPT
 @app.route('/attempts/<int:attempt_id>', methods=['GET', 'POST'])
-#@login_required
+# @login_required
 def update_attempts(attempt_id):
     if request.method == 'POST':
         try:
@@ -975,31 +1016,31 @@ def update_attempts(attempt_id):
             print("Attempt record succesfully updated!")
             return redirect(url_for('get_all_attempts'))
         except:
-            return("ERROR OCCURED ON UPDATE")
+            return ("ERROR OCCURED ON UPDATE")
     return redirect(url_for('get_all_attempts'))
 
 
-#ADD NEW ATTEMPT
+# ADD NEW ATTEMPT
 @app.route('/attempts', methods=['GET', 'PUT'])
-#@login_required
+# @login_required
 def add_attempts():
     if request.method == 'PUT':
-        try:       
+        try:
             # instantiate new  info based on form input
             swp_id = request.form['swp_id']
-            so_id = request.form['so_id']           
+            so_id = request.form['so_id']
             # check database for existing course overlap
-            existing_attempt = Attempts.query.filter_by(swp_id=swp_id,so_id=so_id).all()        
+            existing_attempt = Attempts.query.filter_by(swp_id=swp_id, so_id=so_id).all()
             # return error if existing course returns true otherwise add course
             if existing_attempt:
                 print('Info already exists!')
-                #return redirect(url_for('home'))
+                # return redirect(url_for('home'))
                 return redirect(url_for('get_all_attempts'))
             else:
                 print('New SO/SWP combination FOUND!')
-                dbconnection = engine.connect()                
+                dbconnection = engine.connect()
                 statement = f"INSERT INTO attempts(swp_id, so_id) VALUES ({swp_id}, {so_id});"
-                print (statement)
+                print(statement)
                 dbconnection.execute(statement)
                 dbconnection.close()
                 return redirect(url_for('get_all_attempts'))
@@ -1008,12 +1049,12 @@ def add_attempts():
             print('EXCEPTION: Add failed!')
             return redirect(url_for('get_all_attempts'))
 
-    #return redirect(url_for('home'))
+    # return redirect(url_for('home'))
 
 
-#DELETE ONE ATTEMPT
+# DELETE ONE ATTEMPT
 @app.route('/attempts/<int:attempt_id>', methods=['GET', 'DELETE'])
-#@login_required
+# @login_required
 def delete_attempts(attempt_id):
     if request.method == 'DELETE':
         try:
@@ -1041,7 +1082,7 @@ class Enrolled(db.Model):
 
 # GET ENROLLMENTS FOR A SPECIFIC COURSE
 @app.route('/enrolled', methods=['GET'])
-#@login_required
+# @login_required
 def get_all_enrolled():
     print("GET_ALL_ENROLLED_")
     enrolled = Enrolled.query.all()
@@ -1050,13 +1091,13 @@ def get_all_enrolled():
     user = current_user
 
     for enroll in enrolled:
-        enrollment_data = {} 
+        enrollment_data = {}
         student_id = enroll.student_id
         print(student_id)
         student = Student.query.get(student_id)
         print(student)
-        results = Results.query.filter_by(student_id = student_id).all()
-        #print(results)
+        results = Results.query.filter_by(student_id=student_id).all()
+        # print(results)
         if student:
             enrollment_data['student_id'] = student.student_id
             enrollment_data['student_first'] = student.fname
@@ -1069,7 +1110,7 @@ def get_all_enrolled():
 
 # GET ENROLLMENTS FOR A SPECIFIC COURSE
 @app.route('/enrolled/<int:course_id>', methods=['GET'])
-#@login_required
+# @login_required
 def get_course_enrolled(course_id):
     print("GET_COURSE_ENROLLED")
     enrolled = Enrolled.query.filter_by(course_id=course_id)
@@ -1080,18 +1121,18 @@ def get_course_enrolled(course_id):
     for swp in swps:
         swp_data = {}
         swp_name = swp.swp_name
-        swp_data['swp_name']= swp_name
+        swp_data['swp_name'] = swp_name
         swp_data['swp_id'] = swp.swp_id
-        swp_list.append(swp_data)              
+        swp_list.append(swp_data)
 
     for enroll in enrolled:
-        enrollment_data = {} 
+        enrollment_data = {}
         student_id = enroll.student_id
         print(student_id)
         student = Student.query.get(student_id)
         print(student)
-        results = Results.query.filter_by(student_id = student_id).all()
-        #print(results)
+        results = Results.query.filter_by(student_id=student_id).all()
+        # print(results)
         if not results:
             enrollment_data['swp_id'] = None
             enrollment_data['swp_name'] = 'Test'
@@ -1099,7 +1140,7 @@ def get_course_enrolled(course_id):
         else:
             for result in results:
                 enrollment_data['swp_id'] = result.swp_id
-                swp = Assignments.query.filter_by(swp_id = result.swp_id).first()
+                swp = Assignments.query.filter_by(swp_id=result.swp_id).first()
                 enrollment_data['swp_name'] = swp.swp_name
                 enrollment_data['score'] = result.value
         if student:
@@ -1109,36 +1150,36 @@ def get_course_enrolled(course_id):
 
         enrollment_data['course_id'] = enroll.course_id
         results_list.append(enrollment_data)
-    
-    sorted_results = sorted(results_list, key=lambda i:i['student_last'])
+
+    sorted_results = sorted(results_list, key=lambda i: i['student_last'])
     return sorted_results
-    #user_id = current_user.get_id()
-    #user = Users.query.get(user_id)
-    #if user.account_type == 'instructor':
-     #   courses = Course.query.filter_by(instructor=user.id).all()
-      #  return render_template('inst_courses.html', enrolled=sorted_results, courses=courses, swps=swp_list)
-    #else:
-     #   courses = Course.query.all()
-      #  return render_template('courses.html', enrolled=sorted_results, courses=courses)
+    # user_id = current_user.get_id()
+    # user = Users.query.get(user_id)
+    # if user.account_type == 'instructor':
+    #   courses = Course.query.filter_by(instructor=user.id).all()
+    #  return render_template('inst_courses.html', enrolled=sorted_results, courses=courses, swps=swp_list)
+    # else:
+    #   courses = Course.query.all()
+    #  return render_template('courses.html', enrolled=sorted_results, courses=courses)
 
 
 # TODO -- NOT SURE IF WE NEED THIS METHOD OR NOT
 @app.route('/enrolled/<int:course_id>', methods=['GET', 'POST'])
-#@login_required
+# @login_required
 def update_enrolled(course_id):
     return ""
 
 
-#ENROLL STUDENT IN ONE COURSE
+# ENROLL STUDENT IN ONE COURSE
 @app.route('/enrolled', methods=['GET', 'PUT'])
-#@login_required
+# @login_required
 def add_enrolled():
     if request.method == 'PUT':
         print("ADD_NEW_ENROLLMENT")
         # instantiate new  info based on form input
         student_id = request.form['student_id']
         course_id = request.form['course_id']
-        
+
         # IF emrollment EXISTS RETURN INVALID ENTRY
         new_enrollment = Enrolled(student_id, course_id)
 
@@ -1150,30 +1191,32 @@ def add_enrolled():
         # return error if existing enrollment returns true -- otherwise add enrollment
         if existing_enrollment:
             return "Student already enrolled in this course!"
-            #return redirect(url_for('home'))
+            # return redirect(url_for('home'))
 
         else:
             # commit changes to db
-            dbconnection = engine.connect()                
+            dbconnection = engine.connect()
             statement = f"INSERT INTO enrolled(student_id, course_id) VALUES ({student_id}, {course_id});"
-            print (statement)
+            print(statement)
             dbconnection.execute(statement)
             dbconnection.close()
             print("Student successfully enrolled in course!")
-            return redirect(url_for('get_enrolled', course_id = course_id))
+            return redirect(url_for('get_enrolled', course_id=course_id))
+
+
 #           return redirect(url_for('home'))
 
 #    return redirect(url_for('home'))
 
 
-#DELETE STUDENT FROM ALL COURSES
+# DELETE STUDENT FROM ALL COURSES
 @app.route('/enrolled/student/<int:student_id>', methods=['GET', 'DELETE'])
-#@login_required
+# @login_required
 def delete_student_from_enrolled(student_id):
     if request.method == 'DELETE':
         print("delete student enrollments")
         try:
-            enrollment = Enrolled.query.filter_by(student_id = student_id).all()
+            enrollment = Enrolled.query.filter_by(student_id=student_id).all()
             for enroll in enrollment:
                 db.session.delete(enroll)
                 db.session.commit()
@@ -1181,23 +1224,23 @@ def delete_student_from_enrolled(student_id):
         except:
             print("Error:  Delete Unsuccessful")
     return redirect(url_for('get_all_enrolled'))
-    #return redirect(url_for('home'))
+    # return redirect(url_for('home'))
 
 
-#DELETE STUDENT FROM ONE COURSE
+# DELETE STUDENT FROM ONE COURSE
 @app.route('/enrolled/<int:course_id>/<int:student_id>', methods=['GET', 'DELETE'])
-#@login_required
+# @login_required
 def delete_student_from_course(course_id, student_id):
     if request.method == 'DELETE':
         print("DELETE STUDENT FROM ONE COURSE")
-        enrollment = Enrolled.query.filter_by(student_id = student_id, course_id =course_id).first()
+        enrollment = Enrolled.query.filter_by(student_id=student_id, course_id=course_id).first()
         print(enrollment)
         db.session.delete(enrollment)
         db.session.commit()
 
         print("Enrollment Deleted")
     return redirect(url_for('get_all_enrolled'))
-    #return redirect(url_for('home'))
+    # return redirect(url_for('home'))
 
 
 # RESULTS CLASS
@@ -1214,7 +1257,7 @@ class Results(db.Model):
 
 
 @app.route('/results', methods=['GET'])
-#@login_required
+# @login_required
 def get_all_results():
     results = Results.query.all()
     print(results)
@@ -1236,12 +1279,12 @@ def get_all_results():
 
 
 @app.route('/results/course/<int:course_id>', methods=['GET'])
-#@login_required
+# @login_required
 def get_course_results(course_id):
     assignments = Assignments.query.filter_by(course_id=course_id).all()
     print(assignments)
     output = []
-    
+
     for assignment in assignments:
         print(assignment.swp_id)
         swp_id = assignment.swp_id
@@ -1268,13 +1311,13 @@ def get_course_results(course_id):
                     continue
                 else:
                     result_data['swp_name'] = swp.swp_name
-                output.append(result_data)    
+                output.append(result_data)
     print(output)
     return jsonify(output)
 
 
-@app.route('/results/student/<int:student_id>/<int:swp_id>', methods=['GET','POST'])
-#@login_required
+@app.route('/results/student/<int:student_id>/<int:swp_id>', methods=['GET', 'POST'])
+# @login_required
 def update_student_result(student_id, swp_id):
     if request.method == "POST":
         results = Results.query.filter_by(student_id=student_id, swp_id=swp_id).all()
@@ -1284,7 +1327,7 @@ def update_student_result(student_id, swp_id):
                 db.session.commit()
         else:
             return ("no assignments found")
-        #return url_for('get_course_results')
+        # return url_for('get_course_results')
         return redirect(url_for('get_all_results'))
 
     return redirect(url_for('get_all_results'))
@@ -1292,21 +1335,21 @@ def update_student_result(student_id, swp_id):
 
 # TODO -- complete put results endpoint
 @app.route('/results', methods=['PUT', 'GET'])
-#@login_required
+# @login_required
 def add_results():
     if request.method == "PUT":
         try:
             student_id = request.form['student_id']
             swp_id = request.form['swp_id']
-            if Results.query.filter_by(swp_id = swp_id, student_id= student_id ).all():
-                return redirect(url_for('update_student_result', student_id = student_id, swp_id=swp_id, method='POST'))
+            if Results.query.filter_by(swp_id=swp_id, student_id=student_id).all():
+                return redirect(url_for('update_student_result', student_id=student_id, swp_id=swp_id, method='POST'))
             else:
                 print("NEW RESULT FOUND -- INSERT INTO DB")
                 value = request.form['score']
-                dbconnection = engine.connect()                
+                dbconnection = engine.connect()
                 statement = f"INSERT INTO Results(student_id, swp_id, value)\
                         VALUES ({student_id},{swp_id}, {value});"
-                print (statement)
+                print(statement)
                 dbconnection.execute(statement)
                 dbconnection.close()
                 print("RESULT added!")
@@ -1316,7 +1359,7 @@ def add_results():
 
 
 @app.route('/results/<int:result_id>', methods=['DELETE', 'GET'])
-#@login_required
+# @login_required
 def delete_one_result(result_id):
     if request.method == "DELETE":
         print("DELETE RESULT CALLED")
@@ -1328,7 +1371,7 @@ def delete_one_result(result_id):
             db.session.commit()
             print("Result Deleted")
             return redirect(url_for('get_all_results'))
-    
+
     return redirect(url_for('get_all_results'))
 
 
