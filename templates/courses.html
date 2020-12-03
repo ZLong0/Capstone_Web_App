@@ -113,12 +113,18 @@
 						</tr>
 					</thead>
 					<tbody>
-						{% for assignment in assignments %}
+						{% if swps %}				
+							{% for swp in swps %}
+								<tr>
+									<td><a data-toggle="modal" href="#">{{swp.swp_name}}</a></td>
+									<td>{{swp.swp_id}}</td>
+								</tr>
+							{% endfor %}
+							{% else %}
 							<tr>
-								<td><a data-toggle="modal" href="#">{{assignment.swp_name}}</a></td>
-								<td>{{assignment.swp_id}}</td>
+								<td>None ADD BUTTON HERE</td>
 							</tr>
-						{% endfor %}
+						{% endif %}
 					</tbody>
 				</table>
 			</div>

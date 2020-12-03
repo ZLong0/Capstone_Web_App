@@ -608,7 +608,7 @@ def get_one_course(course_id):
     student_results = get_course_results(course_id)  
 
     #print(course_results)
-    print(swp_results)
+    #print(swp_results)
     #print(student_results)
     # return jsonify(course_results)
 
@@ -1122,9 +1122,9 @@ def get_course_enrolled(course_id):
     for enroll in enrolled:
         enrollment_data = {}
         student_id = enroll.student_id
-        print(student_id)
+        #print(student_id)
         student = Student.query.get(student_id)
-        print(student)
+        #print(student)
         if student:
             enrollment_data['student_id'] = student.student_id
             enrollment_data['student_first'] = student.fname
