@@ -78,9 +78,11 @@
 						<tr>
 							<th scope="col">Student Name</th>
 							<th scope="col">Student ID</th>
-							<th scope="col">SWP 1</th>
-							<th scope="col">SWP 2</th>
-							<th scope="col">SWP 3</th>
+							{% if swps %}
+								{% for swp in swps %}
+								<th scope="col">{{swp.swp_name}}</th>
+								{% endfor %}
+							{% endif %}
 						</tr>
 					</thead>
 					<tbody>
@@ -88,9 +90,11 @@
 							<tr>
 								<td><a data-toggle="modal" href="#edit-student-modal">{{student.student_first}} {{student.student_last}}</a></td>
 								<td>{{student.student_id}}</td>
-								<td>score</td>
-								<td>score</td>
-								<td>score</td>
+								{% if student.student_scores %}
+									{% for score in student.student_scores %}
+										<td>{{score.score}}</td>
+									{% endfor%}
+								{% endif %}
 							</tr>
 						{% endfor %}
 					</tbody>
@@ -108,12 +112,18 @@
 						</tr>
 					</thead>
 					<tbody>
-						{% for assignment in assignments %}
+						{% if swps %}				
+							{% for swp in swps %}
+								<tr>
+									<td><a data-toggle="modal" href="#">{{swp.swp_name}}</a></td>
+									<td>{{swp.swp_id}}</td>
+								</tr>
+								{% endfor %}
+						{% else %}
 							<tr>
-								<td><a data-toggle="modal" href="#">{{assignment.swp_name}}</a></td>
-								<td>{{assignment.swp_id}}</td>
+								<td>None ADD BUTTON HERE</td>
 							</tr>
-						{% endfor %}
+						{% endif %}
 					</tbody>
 				</table>
 			</div>
@@ -145,12 +155,13 @@
 						  {% endfor %}
 					  </select>
 					  <input type="text" name="swp_name" class="form-control" placeholder="Enter SWP name" required autofocus>
-					  <button class="btn btn-secondary" type="submit">Submit</button>
+					 
 				  </form>
 			  </div>
   
 			  <!-- Modal footer -->
-			  <div class="modal-footer">
+			  <div class="modal-footer"> 
+				    <button class="btn btn-secondary" type="submit">Submit</button>
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 			  </div>
 			</div>
@@ -199,14 +210,15 @@
 				<!-- Modal body -->
 				<div class="modal-body">
 					<form action="" class="modal-form" method="put">
+
 						
-						<button class="btn btn-secondary" type="submit">Submit</button>
 					</form>
 				</div>
 	  
 				<!-- Modal footer -->
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button class="btn btn-secondary" type="submit">Submit</button>
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
 				</div>
 			  </div>
 			 </div>
