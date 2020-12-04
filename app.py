@@ -358,14 +358,14 @@ def update_instructor(instructor_id):
 
 
 # ADD NEW INSTRUCTOR
-@app.route('/instructors', methods=['PUT', 'GET'])
+@app.route('/instructors', methods=['POST', 'GET'])
 @login_required
 def add_instructor():
     user = current_user
     if user.account_type == 'instructor':
         return redirect(url_for('home'))
     else:
-        if request.method == 'PUT':
+        if request.method == 'POST':
             # check for existing instructor id first
             try:
                 instructor = Instructor.query.get(request.form['id'])
@@ -494,10 +494,10 @@ def update_student(student_id):
 
 
 # ADD NEW STUDENT
-@app.route('/students', methods=['GET', 'PUT'])
+@app.route('/students', methods=['GET', 'POST'])
 @login_required
 def add_students():
-    if request.method == 'PUT':
+    if request.method == 'POST':
         student = Student.query.get(request.form['student_id'])
         if student:
             print("student found")
@@ -740,10 +740,10 @@ def update_courses(course_id):
         # return redirect(url_for('home'))
 
 
-@app.route('/courses', methods=['GET', 'PUT'])
+@app.route('/courses', methods=['GET', 'POST'])
 # @login_required
 def add_courses():
-    if request.method == 'PUT':
+    if request.method == 'POST':
         # instantiate new course info based on form input
         term = request.form['term']
         year = request.form['year']
@@ -912,18 +912,18 @@ def update_swp(swp_id):
         print(swp)
         if swp:
             # swp.course_id = request.form('course_id')
-            course_id = request.form['course_id']
             name = request.form['swp_name']
             name = name.upper()
             swp.swp_name = name
             db.session.commit()
             print("Student Work Product succesfully updated!")
-            return redirect(url_for('get_all_swp'))
+            return redirect(url_for('get_one_course', course_id = swp.course_id))
             # return redirect(url_for('home'))
         else:
             return "Error:  Student Work Product not found"
             # return redirect(url_for('home'))
-    return redirect(url_for('get_all_swp'))
+
+    return redirect(url_for('get_one_course', course_id = swp.course_id))
 
 
 # ADD NEW SWP
@@ -1053,10 +1053,10 @@ def update_attempts(attempt_id):
 
 
 # ADD NEW ATTEMPT
-@app.route('/attempts', methods=['GET', 'PUT'])
+@app.route('/attempts', methods=['GET', 'POST'])
 # @login_required
 def add_attempts():
-    if request.method == 'PUT':
+    if request.method == 'POST':
         try:
             # instantiate new  info based on form input
             swp_id = request.form['swp_id']
@@ -1177,10 +1177,10 @@ def update_enrolled(course_id):
 
 
 # ENROLL STUDENT IN ONE COURSE
-@app.route('/enrolled', methods=['GET', 'PUT'])
+@app.route('/enrolled', methods=['GET', 'POST'])
 # @login_required
 def add_enrolled():
-    if request.method == 'PUT':
+    if request.method == 'POST':
         print("ADD_NEW_ENROLLMENT")
         # instantiate new  info based on form input
         student_id = request.form['student_id']
@@ -1354,10 +1354,10 @@ def update_student_result(student_id, swp_id):
 
 
 # TODO -- complete put results endpoint
-@app.route('/results', methods=['PUT', 'GET'])
+@app.route('/results', methods=['POST', 'GET'])
 # @login_required
 def add_results():
-    if request.method == "PUT":
+    if request.method == "post":
         try:
             student_id = request.form['student_id']
             swp_id = request.form['swp_id']

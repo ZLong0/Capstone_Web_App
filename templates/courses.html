@@ -81,7 +81,7 @@
 								<th scope="col">Student ID</th>
 								{% if swps %}
 									{% for swp in swps %}
-									<th scope="col">{{swp.swp_name}}</th>
+										<th><a data-toggle="modal" href="#edit-swp-modal{{swp.swp_id}}">{{swp.swp_name}}</a></th>
 									{% endfor %}
 								{% endif %}
 							</tr>
@@ -169,24 +169,27 @@
 				</div>
 			  </div>
 		  </div>
-  		</div>
-	<!-- Edit SWP Modal -->
-	<div class="modal fade" id="edit-swp-modal">
+		  </div>
+		 
+	<!-- Edit SWP Modal (generated for each swp)-->
+	{% if swps %}
+		{% for swp in swps %}
+		<div class="modal fade" id="edit-swp-modal{{swp.swp_id}}">
 		  <div class="modal-dialog">
 				<div class="modal-content">
 	
 				  <!-- Modal Header -->
 				  <div class="modal-header">
-					   <h4 class="modal-title">Add Work Product</h4>
+					   <h4 class="modal-title">{{swp.swp_name}}</h4>
 						<button type="button" class="close" data-dismiss="modal">×</button>
 				  </div>
 	  
 					  <!-- Modal body -->
 					  <div class="modal-body">
-						  <form action="/swp" class="modal-form" method="put">
-							CREATE FORM HERE							 
-							<button type="submit">Submit</button>
-					  </form>
+						<form action="/swp/{{swp.swp_id}}" class="modal-form" method="post">
+							<input type="text" name="swp_name" class="form-control" placeholder="Enter new SWP name" required autofocus>
+							<button class="btn btn-secondary" type="submit">Submit</button>
+						</form>
 				  </div>
 	  
 				  <!-- Modal footer -->
@@ -197,6 +200,8 @@
 			  </div>
 			 </div>
 		</div>
+	  	{% endfor %}
+	{% endif %}
 	
 	<!-- Edit Student Modal (generated for each student) -->
 	{% if students %}
