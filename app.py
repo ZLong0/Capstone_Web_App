@@ -605,7 +605,8 @@ def get_all_courses():
                     course_data['course_name'] = course.course_name
                     course_data['instructor_id'] = course.instructor
                     courses.append(course_data)
-                    semester_data['course_list'] = courses
+                    sorted_courses = sorted(courses, key=lambda i:i['course_number'])
+                    semester_data['course_list'] = sorted_courses
                     # print(courses)
             semesters_list.append(semester_data)
         dbconnection.close()
@@ -695,7 +696,8 @@ def get_instructor_courses(instructor_id):
                     course_data['section'] = course.section
                     course_data['course_name'] = course.course_name
                     courses.append(course_data)
-                    semester_data['course_list'] = courses
+                    sorted_courses = sorted(courses, key=lambda i:i['course_number'])
+                    semester_data['course_list'] = sorted_courses
                     # print(courses)
             else:
                 continue
