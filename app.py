@@ -623,8 +623,6 @@ def edit_courses():
         return render_template('edit_courses.html', courses = all_courses, semesters=all_courses)
 
 
-
-
 @app.route('/courses/<int:course_id>', methods=['GET'])
 @login_required
 def get_one_course(course_id):
@@ -775,9 +773,8 @@ def add_courses():
 
         # return error if existing course returns true otherwise add course
         if existing_course:
-            print('Course already exists in selected semester/year!')
-            return redirect(url_for('edit_courses'))
-
+             print("Error:  Course already exists in selected semester/year!")
+             return redirect(url_for('edit_courses'))
         else:
             # commit changes to db
             print("ADD NEW COURSE TO DB")
@@ -790,7 +787,6 @@ def add_courses():
             dbconnection.close()
             print("course added!")
             return redirect(url_for('edit_courses'))
-            # return redirect(url_for('home'))
 
     return ("course add failed")
 

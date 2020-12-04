@@ -59,12 +59,12 @@
 	  </nav>
 	  <div>
       {% if courses %}
-        <h2>Edit Courses</h2>        
+        <h2>Edit Courses</h2><button bclass="btn btn-primary btn-lg" data-toggle="modal" data-target="#add-course-modal">Add New Course</button>
         <table class="table table-bordered mx-auto w-auto text-center">
           {% for course in courses %}
             <thead>
                 <tr>
-                    <th colspan = "6" scope="col">{{course.term}} {{course.year}}<button bclass="btn btn-primary btn-lg" data-toggle="modal" data-target="#add-course-modal">Add New Course</button></th>
+                    <th colspan = "6" scope="col">{{course.term}} {{course.year}}</th>
                 </tr>
                 <tr>
                     <th>Department</th>
