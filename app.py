@@ -927,10 +927,10 @@ def update_swp(swp_id):
 
 
 # ADD NEW SWP
-@app.route('/swp', methods=['GET', 'PUT'])
+@app.route('/swp', methods=['GET', 'POST'])
 @login_required
 def add_swp():
-    if request.method == 'PUT':
+    if request.method == 'POST':
         # instantiate new work product info based on form input
         course_id = request.form['course_id']
         swp_name = request.form['swp_name']
@@ -943,8 +943,7 @@ def add_swp():
 
         # return error if existing info returns true -- otherwise add course
         if existing_swp:
-            return ("Student Work Product already exists in current course.  Please pick a unique name")
-            return redirect(url_for('home'))
+            message = "Student Work Product already exists in current course.  Please pick a unique name"
         else:
             # commit changes to db
             dbconnection = engine.connect()
@@ -954,12 +953,12 @@ def add_swp():
             dbconnection.execute(statement)
             dbconnection.close()
             print("SWP added!")
-            return redirect(url_for('get_all_swp'))
+            return redirect(url_for('get_one_course', course_id = course_id))
 
     else:
-        return render_template('/home')
+        return redirect(url_for('get_one_course', course_id = course_id))
 
-    return redirect(url_for('home'))
+    return redirect(url_for('get_one_course', course_id = course_id))
 
 
 # DELETE SWP

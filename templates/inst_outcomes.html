@@ -86,12 +86,12 @@
                 
 				<!-- Modal body -->
 				<div class="modal-body">
-				    <form action="/swp" class="modal-form" method="put">
+				    <form action="/swp" class="modal-form" method="post">
                         <label for="course_id">Select Course</label>
                         <select id="course_id" name="course_id">
-                            {% for semester in semesters %}
+							{% for semester in semesters %}							
 								{% for course in semester.course_list %}
-                                	<option value="">{{course}}</option>
+                                	<option value="{{course.course_id}}">{{semester.term}} {{semester.year}} {{course.department}} {{course.course_number}}:  {{course.section}}</option>
 								{% endfor %}
                             {% endfor %}
                         </select>
