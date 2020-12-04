@@ -34,7 +34,7 @@
 					   <div class="dropdown-menu">
 						   {% if semesters %}
 								   {% if semesters|length == 1 %}
-										<a class="dropdown-item" data-toggle="modal" href="#course-list-modal{{semester.term}}{{semester.year}}">{{semesters.term}} {{semesters.year}}</a>
+										<a class="dropdown-item" data-toggle="modal" href="#course-list-modal{{semesters.term}}{{semesters.year}}">{{semesters.term}} {{semesters.year}}</a>
 								   {% else %}
 						   				{% for semester in semesters %}
 											<a class="dropdown-item" data-toggle="modal" href="#course-list-modal{{semester.term}}{{semester.year}}">{{semester.term}} {{semester.year}}</a>
