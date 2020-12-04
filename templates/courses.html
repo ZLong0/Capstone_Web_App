@@ -123,9 +123,9 @@
 									</tr>
 									{% endfor %}
 							{% else %}
-								<tr>
-									<td>None ADD BUTTON HERE</td>
-								</tr>
+							<tr>
+								<td><a data-toggle="modal" href="#add-swp-modal">Add Work Product</a></td>
+							</tr>
 							{% endif %}
 						</tbody>
 					</table>
@@ -135,8 +135,8 @@
 	</div>
 	
 	<!-- Modals -->
-	
-		  <!-- Add SWP Modal -->
+
+  <!-- Add SWP Modal -->
 		  <div class="modal fade" id="add-swp-modal">
     		<div class="modal-dialog">
 			  <div class="modal-content">
@@ -169,8 +169,8 @@
 				</div>
 			  </div>
 		  </div>
-		  </div>
-		 
+	</div>
+
 	<!-- Edit SWP Modal (generated for each swp)-->
 	{% if swps %}
 		{% for swp in swps %}
@@ -193,7 +193,7 @@
 				  </div>
 	  
 				  <!-- Modal footer -->
-				  <div class="modal-footer">
+				  <div class="modal-footer">					    
 						<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
 				  </div>
 	  
