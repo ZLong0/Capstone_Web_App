@@ -614,6 +614,17 @@ def get_all_courses():
         return semesters_list
 
 
+@app.route('/courses/edit', methods=['GET'])
+# @login_required
+def edit_courses():
+    if request.method == "GET":
+        all_courses = get_all_courses()
+        print(all_courses)
+        return render_template('edit_courses.html', courses = all_courses, semesters=all_courses)
+
+
+
+
 @app.route('/courses/<int:course_id>', methods=['GET'])
 @login_required
 def get_one_course(course_id):

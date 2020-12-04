@@ -58,7 +58,38 @@
     	</div>
 	  </nav>
 	  <div>
-		<h2 class="text-center">Welcome Admin!</h2>
+      {% if courses %}
+        <h2>Edit Courses</h2>
+        <table class="table table-bordered mx-auto w-auto text-center">
+          {% for course in courses %}
+            <thead>
+                <tr>
+                    <th colspan = "5" scope="col">{{course.term}} {{course.year}}</th>
+                </tr>
+                <tr>
+                    <th>Department</th>
+                    <th>Course Number</th>
+                    <th>Section</th>
+                    <th>Course Name</th>
+                    <th>Instructor</th>
+                </tr>
+            </thead>
+            {% if course.course_list %}
+            <tbody>
+                {%for course in course.course_list%}
+                <tr>
+                    <td>{{course.department}}</td>
+                    <td>{{course.course_number}}</td>
+                    <td>{{course.section}}</td>
+                    <td>{{course.course_name}}</td>
+                    <td>{{course.instructor}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            {% endif %}
+          {% endfor %}
+        </table>
+        {% endif %}
 	  </div>
 	  <!-- Modals -->
 
