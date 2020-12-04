@@ -138,41 +138,40 @@
 	
 	<!-- Modals -->
 	
-	<!-- Add SWP Modal -->
-	  <div class="modal fade" id="add-swp-modal">
-		  <div class="modal-dialog">
-			<div class="modal-content">
-
-			  <!-- Modal Header -->
-			  <div class="modal-header">
-				  <h4 class="modal-title">Add Work Product</h4>
-				  <button type="button" class="close" data-dismiss="modal">×</button>
-			  </div>
-			  
-			  <!-- Modal body -->
-			  <div class="modal-body">
-				  <form action="/swp" class="modal-form" method="put">
-					  <label for="course_id">Select Course</label>
-					  <select id="course_id" name="course_id">
-						  {% for semester in semesters %}
-							  {% for course in semesters.course_list %}
-								  <option value="">{{course}}</option>
-							  {% endfor %}
-						  {% endfor %}
-					  </select>
-					  <input type="text" name="swp_name" class="form-control" placeholder="Enter SWP name" required autofocus>
-					 
-				  </form>
-			  </div>
+		  <!-- Add SWP Modal -->
+		  <div class="modal fade" id="add-swp-modal">
+    		<div class="modal-dialog">
+			  <div class="modal-content">
   
-			  <!-- Modal footer -->
-			  <div class="modal-footer"> 
-				    <button class="btn btn-secondary" type="submit">Submit</button>
-					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <!-- Modal Header -->
+				<div class="modal-header">
+				    <h4 class="modal-title">Add Work Product</h4>
+				    <button type="button" class="close" data-dismiss="modal">×</button>
+				</div>
+                
+				<!-- Modal body -->
+				<div class="modal-body">
+				    <form action="/swp" class="modal-form" method="post">
+                        <label for="course_id">Select Course</label>
+                        <select id="course_id" name="course_id">
+							{% for semester in semesters %}							
+								{% for course in semester.course_list %}
+                                	<option value="{{course.course_id}}">{{semester.term}} {{semester.year}} {{course.department}} {{course.course_number}}:  {{course.section}}</option>
+								{% endfor %}
+                            {% endfor %}
+                        </select>
+                        <input type="text" name="swp_name" class="form-control" placeholder="Enter SWP name" required autofocus>
+				        <button class="btn btn-secondary" type="submit">Submit</button>
+				    </form>
+				</div>
+	
+				<!-- Modal footer -->
+				<div class="modal-footer">
+					  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
 			  </div>
-			</div>
-		</div>
-		</div>
+		  </div>
+  		</div>
 	
 	<!-- Edit SWP Modal (generated for each swp)-->
 	{% if swps %}
