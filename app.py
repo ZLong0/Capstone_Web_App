@@ -610,10 +610,11 @@ def get_one_course(course_id):
     #print(course_results)
     #print(swp_results)
     #print(student_results)
-    # return jsonify(course_results)
+    #return jsonify(student_results)
 
     if user.account_type == 'instructor':
         semesters_list = get_instructor_courses(user_id)
+        print(semesters_list)
         return render_template('inst_courses.html', courses=course_results, students=student_results, swps=swp_results,
                                semesters=semesters_list)
     else:
