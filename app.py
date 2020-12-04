@@ -140,6 +140,7 @@ def home():
 @app.route("/register", methods=["POST", "GET"])
 def register_user():
     error = None
+    dbempty = db.session.query(Users).count()
     if request.method == "POST":
         add_id = request.form['employee_id']
         add_email = request.form["email"]
@@ -159,54 +160,65 @@ def register_user():
         print("question_1=" + question_1)
         print("answer_1=" + answer_1)
 
-        user = Users.query.filter_by(id=add_id).first()
-        email = Users.query.filter_by(email=add_email).first()
-        root_cc = Users.query.filter_by(account_type='root').first()
-        if user:
-            error = "Employee ID is already registered"
-            return render_template('register.html', error=error)
-            # will remove auto commit later. using for testing currently
-        elif email:
-            error = "This email is already registered.  Please try again."
-            msg = Message('ATAS Registration Attempt', recipients=[add_email])
-            msg.body = 'ATAS Registration Attempt'
-            msg.html = '<p>There was an attempt to register a new account in ATAS using the email ' + \
-                       add_email + ', if this was not you, make sure to secure your ATAS account</p>'
+        if dbempty == 0:
+            new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+            new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
+                             password=new_password, account_type='root',
+                             sec_question=question_1, answer=answer_1, pending=0)
+            msg = Message('ATAS Root Account Registration', recipients=[add_email])
+            msg.body = 'ATAS Root Account Registration'
+            msg.html = '<p>Thank you for registering a root account for ATAS ' + \
+                       add_email + '. ATAS is now ready to be used by other users.</p>'
             mail.send(msg)
-            return render_template('register.html', error=error)
-        else:
-            if account_type == 'admin':
-                # set admin when sent
-                new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
-                new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
-                                 password=new_password, account_type='admin',
-                                 sec_question=question_1, answer=answer_1, pending=1)
-                msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
-                msg.body = 'ATAS Registration Sent'
-                msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
-                           add_email + '. We will notify you when your account is ready to use</p>'
+            db.session.add(new_user)
+            db.session.commit()
+            message = 'Application Ready'
+            return render_template('login.html')
+        elif dbempty != 0:
+            user = Users.query.filter_by(id=add_id).first()
+            email = Users.query.filter_by(email=add_email).first()
+            root_cc = Users.query.filter_by(account_type='root').first()
+            if user:
+                error = "Employee ID is already registered"
+                return render_template('register.html', error=error)
+            elif email:
+                error = "This email is already registered.  Please try again."
+                msg = Message('ATAS Registration Attempt', recipients=[add_email])
+                msg.body = 'ATAS Registration Attempt'
+                msg.html = '<p>There was an attempt to register a new account in ATAS using the email ' + \
+                           add_email + ', if this was not you, make sure to secure your ATAS account</p>'
                 mail.send(msg)
-                db.session.add(new_user)
-                db.session.commit()
-                message = 'Registration sent'
-                return render_template('login.html')
+                return render_template('register.html', error=error)
             else:
-                # set admin to 0
-                new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
-                new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
-                                 password=new_password, account_type='instructor',
-                                 sec_question=question_1, answer=answer_1, pending=1)
-                # new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
-                msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
-                msg.body = 'ATAS Registration Sent'
-                msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
-                           add_email + '. We will notify you when your account is ready to use</p>'
-                mail.send(msg)
-                message = 'Registration sent'
-                db.session.add(new_user)
-                # db.session.add(new_instructor)
-                db.session.commit()
-                return render_template('login.html', message=message)
+                if account_type == 'admin':
+                    new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+                    new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
+                                     password=new_password, account_type='admin',
+                                     sec_question=question_1, answer=answer_1, pending=1)
+                    msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
+                    msg.body = 'ATAS Registration Sent'
+                    msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
+                               add_email + '. We will notify you when your account is ready to use</p>'
+                    mail.send(msg)
+                    db.session.add(new_user)
+                    db.session.commit()
+                    message = 'Registration sent'
+                    return render_template('login.html')
+                else:
+                    new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+                    new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
+                                     password=new_password, account_type='instructor',
+                                     sec_question=question_1, answer=answer_1, pending=1)
+                    # new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
+                    msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
+                    msg.body = 'ATAS Registration Sent'
+                    msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
+                               add_email + '. We will notify you when your account is ready to use</p>'
+                    mail.send(msg)
+                    message = 'Registration sent'
+                    db.session.add(new_user)
+                    db.session.commit()
+                    return render_template('login.html', message=message)
     else:
         return render_template('register.html')
 
@@ -227,9 +239,14 @@ def pending_list_update():
         user_pending = request.form['user_pending']
         selected_user = Users.query.filter_by(email=request.form['user_select']).first()
         root_cc = Users.query.filter_by(account_type='root').first()
+        instructor_check = Instructor.query.filter_by(inst_id=selected_user.id).first()
         if user_pending == 'approved':
             selected_user = Users.query.filter_by(email=selected_user.email).first()
             selected_user.pending = 0
+            if selected_user.account_type == 'instructor':
+                new_instructor = Instructor(inst_id=selected_user.id,
+                                            fname=selected_user.fname, lname=selected_user.lname)
+                db.session.add(new_instructor)
             msg = Message('ATAS Registration Approved', recipients=[selected_user.email], bcc=[root_cc.email])
             msg.body = 'ATAS Registration Approved'
             msg.html = '<p>Your account with the username/email of ' + selected_user.email + \
@@ -238,16 +255,28 @@ def pending_list_update():
             mail.send(msg)
             message = "User " + selected_user.email + " approved successfully!"
             return redirect(url_for('home', message=message, user_list=user_list))
-            # return render_template("root_home.html", message=message, user_list=user_list)
+        elif user_pending == 'revoked':
+            selected_user = Users.query.filter_by(email=selected_user.email).first()
+            selected_user.pending = 1
+            if selected_user.account_type == 'instructor' and instructor_check:
+                instructor_check.delete()
+            msg = Message('ATAS Account Suspended', recipients=[selected_user.email], bcc=[root_cc.email])
+            msg.body = 'ATAS Account Suspended'
+            msg.html = '<p>Your account with the username/email of ' + selected_user.email + \
+                       ' has been suspended and can no longer be used. Please contact an administrator' \
+                       ' to begin the process of account reactivation.</p>'
+            db.session.commit()
+            mail.send(msg)
+            message = "User " + selected_user.email + " suspended successfully!"
+            return redirect(url_for('home', message=message, user_list=user_list))
         elif user_pending == 'denied':
-            selected_user = Users.query.filter_by(email=selected_user.email).delete()
+            if selected_user.account_type == 'instructor':
+                instructor_check.delete()
+            Users.query.filter_by(email=selected_user.email).delete()
             db.session.commit()
             message = "User deleted successfully!"
             return redirect(url_for('home', message=message, user_list=user_list))
-            # return render_template("root_home.html", message=message, user_list=user_list)
-    # message = "User list updated successfully"
     return redirect(url_for('home', user_list=user_list))
-    # return render_template("root_home.html", user_list=user_list)
 
 
 # INSTRUCTORS CLASS
