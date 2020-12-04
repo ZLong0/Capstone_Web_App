@@ -59,12 +59,12 @@
 	  </nav>
 	  <div>
       {% if courses %}
-        <h2>Edit Courses</h2>
+        <h2>Edit Courses</h2>        
         <table class="table table-bordered mx-auto w-auto text-center">
           {% for course in courses %}
             <thead>
                 <tr>
-                    <th colspan = "5" scope="col">{{course.term}} {{course.year}}</th>
+                    <th colspan = "6" scope="col">{{course.term}} {{course.year}}<button bclass="btn btn-primary btn-lg" data-toggle="modal" data-target="#add-course-modal">Add New Course</button></th>
                 </tr>
                 <tr>
                     <th>Department</th>
@@ -72,6 +72,7 @@
                     <th>Section</th>
                     <th>Course Name</th>
                     <th>Instructor</th>
+                    <th></th>
                 </tr>
             </thead>
             {% if course.course_list %}
@@ -83,6 +84,7 @@
                     <td>{{course.section}}</td>
                     <td>{{course.course_name}}</td>
                     <td>{{course.instructor}}</td>
+                    <td><button >Edit </button><button>Delete</button></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -93,6 +95,74 @@
 	  </div>
 	  <!-- Modals -->
 
+
+      	  <!-- Add Course Modal -->
+	  <div class="modal fade" id="add-course-modal">
+		<div class="modal-dialog">
+		  <div class="modal-content">
+
+			<!-- Modal Header -->
+			<div class="modal-header">
+				<h4 class="modal-title">Add Course</h4>
+				<button type="button" class="close" data-dismiss="modal">×</button>
+			</div>
+			
+			<!-- Modal body -->
+            <div class="modal-lg">.
+				<form action="{{url_for('add_courses')}}" class="modal-form" method="post">
+                        <div class="text-center">    
+                             <div class="form-row">
+                                <div class="form-group col">
+                                    <label for="course_name">Term</label>
+                                    <input type="text" class="form-control" id="term" name="term" placeholder="ex: SPRING" required="true">
+                                </div>
+                
+                                <div class="form-group col">
+                                    <label for="instructor">Year</label>
+                                    <input type="text" class="form-control" id="year" name="year" placeholder="YYYY" required="true">
+                                </div>
+                            </div>             
+                            <div class="form-row">
+                                <div class="form-group col">
+                                    <label for="deparment">Department</label>
+                                    <input type="text" class="form-control" id="department" name="department" placeholder="ex. CPSC" required="true">
+                                </div>
+                
+                                <div class="form-group col">
+                                    <label for="course_number">Course Number</label>
+                                    <input type="text" class="form-control" id="course_number" name="course_number" placeholder="ex. 1310" required="true">
+                                </div>
+                
+                                <div class="form-group col">
+                                    <label for="section">Section</label>
+                                    <input type="test" class="form-control" id="section" name="section" placeholder="ex. 1" required="true">
+                                </div>
+                            </div>
+                
+                            <div class="form-row">
+                                <div class="form-group col">
+                                    <label for="course_name">Course Name</label>
+                                    <input type="text" class="form-control" id="course_name" name="course_name" placeholder="Course Name" required="true">
+                                </div>
+                
+                                <div class="form-group col">
+                                    <label for="instructor_id">Instructor ID</label>
+                                    <input type="text" class="form-control" id="instructor_id" name="instructor_id" placeholder="Instructor ID" required="true">
+                                </div>
+                            </div>                            
+                            <button class="btn btn-secondary btn-lg btn-block" type="submit">Save</button>
+                        </div>
+                    </form>
+			</div>
+
+			<!-- Modal footer -->
+			<div class="modal-footer">                
+                  <button onclick="location.href='/courses/edit'" class="btn btn-secondary">Cancel</button>
+				  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+			</div>
+		  </div>
+	  </div>
+	  </div>
 	  <!-- Add SWP Modal -->
 	  <div class="modal fade" id="add-swp-modal">
 		<div class="modal-dialog">
