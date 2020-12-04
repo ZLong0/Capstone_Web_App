@@ -776,7 +776,7 @@ def add_courses():
         # return error if existing course returns true otherwise add course
         if existing_course:
             print('Course already exists in selected semester/year!')
-            return redirect(url_for('home'))
+            return redirect(url_for('edit_courses'))
 
         else:
             # commit changes to db
@@ -789,7 +789,7 @@ def add_courses():
             dbconnection.execute(statement)
             dbconnection.close()
             print("course added!")
-            return redirect(url_for('get_all_courses'))
+            return redirect(url_for('edit_courses'))
             # return redirect(url_for('home'))
 
     return ("course add failed")
