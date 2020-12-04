@@ -35,7 +35,7 @@
 					   <div class="dropdown-menu">
 						   {% if semesters %}
 						   		{% for semester in semesters %}
-									<a class="dropdown-item" data-toggle="modal" href="#{{semester.term}}{{semester.year}}course-list-modal">{{semester.term}} {{semester.year}}</a>
+									<a class="dropdown-item" data-toggle="modal" href="#course-list-modal{{semester.term}}{{semester.year}}">{{semester.term}} {{semester.year}}</a>
 							{% endfor %}
 						   {% else  %}
 								<a class="dropdown-item" href="">No Courses Assigned</a>
@@ -58,7 +58,7 @@
     	</div><!--END NAV CONTAINER-->
       </nav>
 	  <div class="main_content">
-		  <h2>Welcome Professor!</h2>
+		  <h2 class="text-center">Welcome Professor!</h2>
 	  </div>
 	  
 	  <!-- Modals -->
@@ -157,7 +157,7 @@
 	  <!-- TODO: make links take user to respective course page (may need to add endpoint to handle link) -->
 	  {% if semesters %}
 	  		{% for semester in semesters %}
-	  			<div class="modal fade" id="{{semester.term}}{{semester.year}}course-list-modal">
+	  			<div class="modal fade" id="course-list-modal{{semester.term}}{{semester.year}}">
 					<div class="modal-dialog">
 						<div class="modal-content">
 
@@ -184,8 +184,6 @@
 					</div>
 	  			</div>
 	  		{% endfor %}
-	  {% else  %}
-	  		
 	  {% endif %}
 	  <!-- End of Modals -->
   </body>

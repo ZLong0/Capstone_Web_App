@@ -34,7 +34,7 @@
 					   <div class="dropdown-menu">
 						   {% if semesters %}
 						   		{% for semester in semesters %}
-									<a class="dropdown-item" data-toggle="modal" href="#{{semester.term}}{{semester.year}}course-list-modal">{{semester.term}} {{semester.year}}</a>
+									<a class="dropdown-item" data-toggle="modal" href="#course-list-modal{{semester.term}}{{semester.year}}">{{semester.term}} {{semester.year}}</a>
 
 								{% endfor %}
 						   {% else  %}
@@ -45,7 +45,7 @@
 					   </div>
 				   </div>
 					
-					<a class="nav-item nav-link" href="/outcomes">Student Outcomes</a>
+					<a class="nav-item nav-link active" href="/outcomes">Student Outcomes</a>
 					<div class="nav-item dropdown">
 						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown">Tasks</a>
 						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
@@ -56,14 +56,21 @@
 				</div>
       		</div> 
     	</div><!--END NAV CONTAINER-->
-      </nav>      
-      <ul>
-        <h4>Student Outcomes</h4> 
-        {% for outcome in outcomes %}        
-            <p>{{ outcome.so_name }} -- {{outcome.so_desc}}</p>
-        {% endfor %}
-	  </ul>
+      </nav>
 	  
+	  <h2 class="text-center">Student Outcomes</h2>
+	  <div class="table-responsive">
+		  <table id="so-table" class="table table-bordered mx-auto w-auto">
+			  <tbody>
+				  {% for outcome in outcomes %}
+				  <tr>
+					  <th>{{outcome.so_name}}</th>
+					  <td>{{outcome.so_desc}}</td>
+				  </tr>
+				  {% endfor %}
+			  </tbody>
+		  </table>
+	  </div>
 	  <!-- Modals -->
 	  
 	  <!-- Add SWP Modal -->
@@ -160,7 +167,7 @@
 	  <!-- TODO: make links take user to respective course page (may need to add endpoint to handle link) -->
 	  {% if semesters %}
 	  		{% for semester in semesters %}
-	  			<div class="modal fade" id="{{semester.term}}{{semester.year}}course-list-modal">
+	  			<div class="modal fade" id="course-list-modal{{semester.term}}{{semester.year}}">
 					<div class="modal-dialog">
 						<div class="modal-content">
 
@@ -186,9 +193,7 @@
 						</div>
 					</div>
 	  			</div>
-	  		{% endfor %}
-	  {% else  %}
-	  		
+	  		{% endfor %}	
 	  {% endif %}
 	  <!-- End of Modals -->
   </body>
