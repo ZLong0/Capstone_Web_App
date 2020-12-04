@@ -140,6 +140,7 @@ def home():
 @app.route("/register", methods=["POST", "GET"])
 def register_user():
     error = None
+    dbempty = db.session.query(Users).count()
     if request.method == "POST":
         add_id = request.form['employee_id']
         add_email = request.form["email"]
@@ -159,54 +160,65 @@ def register_user():
         print("question_1=" + question_1)
         print("answer_1=" + answer_1)
 
-        user = Users.query.filter_by(id=add_id).first()
-        email = Users.query.filter_by(email=add_email).first()
-        root_cc = Users.query.filter_by(account_type='root').first()
-        if user:
-            error = "Employee ID is already registered"
-            return render_template('register.html', error=error)
-            # will remove auto commit later. using for testing currently
-        elif email:
-            error = "This email is already registered.  Please try again."
-            msg = Message('ATAS Registration Attempt', recipients=[add_email])
-            msg.body = 'ATAS Registration Attempt'
-            msg.html = '<p>There was an attempt to register a new account in ATAS using the email ' + \
-                       add_email + ', if this was not you, make sure to secure your ATAS account</p>'
+        if dbempty == 0:
+            new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+            new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
+                             password=new_password, account_type='root',
+                             sec_question=question_1, answer=answer_1, pending=0)
+            msg = Message('ATAS Root Account Registration', recipients=[add_email])
+            msg.body = 'ATAS Root Account Registration'
+            msg.html = '<p>Thank you for registering a root account for ATAS ' + \
+                       add_email + '. ATAS is now ready to be used by other users.</p>'
             mail.send(msg)
-            return render_template('register.html', error=error)
-        else:
-            if account_type == 'admin':
-                # set admin when sent
-                new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
-                new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
-                                 password=new_password, account_type='admin',
-                                 sec_question=question_1, answer=answer_1, pending=1)
-                msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
-                msg.body = 'ATAS Registration Sent'
-                msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
-                           add_email + '. We will notify you when your account is ready to use</p>'
+            db.session.add(new_user)
+            db.session.commit()
+            message = 'Application Ready'
+            return render_template('login.html')
+        elif dbempty != 0:
+            user = Users.query.filter_by(id=add_id).first()
+            email = Users.query.filter_by(email=add_email).first()
+            root_cc = Users.query.filter_by(account_type='root').first()
+            if user:
+                error = "Employee ID is already registered"
+                return render_template('register.html', error=error)
+            elif email:
+                error = "This email is already registered.  Please try again."
+                msg = Message('ATAS Registration Attempt', recipients=[add_email])
+                msg.body = 'ATAS Registration Attempt'
+                msg.html = '<p>There was an attempt to register a new account in ATAS using the email ' + \
+                           add_email + ', if this was not you, make sure to secure your ATAS account</p>'
                 mail.send(msg)
-                db.session.add(new_user)
-                db.session.commit()
-                message = 'Registration sent'
-                return render_template('login.html')
+                return render_template('register.html', error=error)
             else:
-                # set admin to 0
-                new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
-                new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
-                                 password=new_password, account_type='instructor',
-                                 sec_question=question_1, answer=answer_1, pending=1)
-                # new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
-                msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
-                msg.body = 'ATAS Registration Sent'
-                msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
-                           add_email + '. We will notify you when your account is ready to use</p>'
-                mail.send(msg)
-                message = 'Registration sent'
-                db.session.add(new_user)
-                # db.session.add(new_instructor)
-                db.session.commit()
-                return render_template('login.html', message=message)
+                if account_type == 'admin':
+                    new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+                    new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
+                                     password=new_password, account_type='admin',
+                                     sec_question=question_1, answer=answer_1, pending=1)
+                    msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
+                    msg.body = 'ATAS Registration Sent'
+                    msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
+                               add_email + '. We will notify you when your account is ready to use</p>'
+                    mail.send(msg)
+                    db.session.add(new_user)
+                    db.session.commit()
+                    message = 'Registration sent'
+                    return render_template('login.html')
+                else:
+                    new_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+                    new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
+                                     password=new_password, account_type='instructor',
+                                     sec_question=question_1, answer=answer_1, pending=1)
+                    # new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
+                    msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
+                    msg.body = 'ATAS Registration Sent'
+                    msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
+                               add_email + '. We will notify you when your account is ready to use</p>'
+                    mail.send(msg)
+                    message = 'Registration sent'
+                    db.session.add(new_user)
+                    db.session.commit()
+                    return render_template('login.html', message=message)
     else:
         return render_template('register.html')
 
@@ -227,9 +239,14 @@ def pending_list_update():
         user_pending = request.form['user_pending']
         selected_user = Users.query.filter_by(email=request.form['user_select']).first()
         root_cc = Users.query.filter_by(account_type='root').first()
+        instructor_check = Instructor.query.filter_by(inst_id=selected_user.id).first()
         if user_pending == 'approved':
             selected_user = Users.query.filter_by(email=selected_user.email).first()
             selected_user.pending = 0
+            if selected_user.account_type == 'instructor':
+                new_instructor = Instructor(inst_id=selected_user.id,
+                                            fname=selected_user.fname, lname=selected_user.lname)
+                db.session.add(new_instructor)
             msg = Message('ATAS Registration Approved', recipients=[selected_user.email], bcc=[root_cc.email])
             msg.body = 'ATAS Registration Approved'
             msg.html = '<p>Your account with the username/email of ' + selected_user.email + \
@@ -238,16 +255,28 @@ def pending_list_update():
             mail.send(msg)
             message = "User " + selected_user.email + " approved successfully!"
             return redirect(url_for('home', message=message, user_list=user_list))
-            # return render_template("root_home.html", message=message, user_list=user_list)
+        elif user_pending == 'revoked':
+            selected_user = Users.query.filter_by(email=selected_user.email).first()
+            selected_user.pending = 1
+            if selected_user.account_type == 'instructor' and instructor_check:
+                instructor_check.delete()
+            msg = Message('ATAS Account Suspended', recipients=[selected_user.email], bcc=[root_cc.email])
+            msg.body = 'ATAS Account Suspended'
+            msg.html = '<p>Your account with the username/email of ' + selected_user.email + \
+                       ' has been suspended and can no longer be used. Please contact an administrator' \
+                       ' to begin the process of account reactivation.</p>'
+            db.session.commit()
+            mail.send(msg)
+            message = "User " + selected_user.email + " suspended successfully!"
+            return redirect(url_for('home', message=message, user_list=user_list))
         elif user_pending == 'denied':
-            selected_user = Users.query.filter_by(email=selected_user.email).delete()
+            if selected_user.account_type == 'instructor':
+                instructor_check.delete()
+            Users.query.filter_by(email=selected_user.email).delete()
             db.session.commit()
             message = "User deleted successfully!"
             return redirect(url_for('home', message=message, user_list=user_list))
-            # return render_template("root_home.html", message=message, user_list=user_list)
-    # message = "User list updated successfully"
     return redirect(url_for('home', user_list=user_list))
-    # return render_template("root_home.html", user_list=user_list)
 
 
 # INSTRUCTORS CLASS
@@ -605,15 +634,16 @@ def get_one_course(course_id):
     course_results.append(course_info)
 
     swp_results = get_course_swps(course_id)
-    student_results = get_course_enrolled(course_id)
-    semesters_list = get_instructor_courses(123)
+    student_results = get_course_results(course_id)  
 
-    print(course_results)
-    print(swp_results)
-    print(student_results)
-    # return jsonify(course_results)
+    #print(course_results)
+    #print(swp_results)
+    #print(student_results)
+    #return jsonify(student_results)
 
     if user.account_type == 'instructor':
+        semesters_list = get_instructor_courses(user_id)
+        print(semesters_list)
         return render_template('inst_courses.html', courses=course_results, students=student_results, swps=swp_results,
                                semesters=semesters_list)
     else:
@@ -867,7 +897,8 @@ def get_course_swps(course_id):
         swp_data['course name'] = course.course_name
         results.append(swp_data)
 
-    return results
+    sorted_results = sorted(results, key=lambda i:i['swp_id'])
+    return sorted_results
 
 
 # UPDATE ONE SWP
@@ -1117,32 +1148,13 @@ def get_course_enrolled(course_id):
     results_list = []
     swp_list = []
     user = current_user
-    swps = Assignments.query.filter_by(course_id=course_id).all()
-    for swp in swps:
-        swp_data = {}
-        swp_name = swp.swp_name
-        swp_data['swp_name'] = swp_name
-        swp_data['swp_id'] = swp.swp_id
-        swp_list.append(swp_data)
-
+   
     for enroll in enrolled:
         enrollment_data = {}
         student_id = enroll.student_id
-        print(student_id)
+        #print(student_id)
         student = Student.query.get(student_id)
-        print(student)
-        results = Results.query.filter_by(student_id=student_id).all()
-        # print(results)
-        if not results:
-            enrollment_data['swp_id'] = None
-            enrollment_data['swp_name'] = 'Test'
-            enrollment_data['score'] = None
-        else:
-            for result in results:
-                enrollment_data['swp_id'] = result.swp_id
-                swp = Assignments.query.filter_by(swp_id=result.swp_id).first()
-                enrollment_data['swp_name'] = swp.swp_name
-                enrollment_data['score'] = result.value
+        #print(student)
         if student:
             enrollment_data['student_id'] = student.student_id
             enrollment_data['student_first'] = student.fname
@@ -1153,14 +1165,7 @@ def get_course_enrolled(course_id):
 
     sorted_results = sorted(results_list, key=lambda i: i['student_last'])
     return sorted_results
-    # user_id = current_user.get_id()
-    # user = Users.query.get(user_id)
-    # if user.account_type == 'instructor':
-    #   courses = Course.query.filter_by(instructor=user.id).all()
-    #  return render_template('inst_courses.html', enrolled=sorted_results, courses=courses, swps=swp_list)
-    # else:
-    #   courses = Course.query.all()
-    #  return render_template('courses.html', enrolled=sorted_results, courses=courses)
+
 
 
 # TODO -- NOT SURE IF WE NEED THIS METHOD OR NOT
@@ -1282,38 +1287,52 @@ def get_all_results():
 # @login_required
 def get_course_results(course_id):
     assignments = Assignments.query.filter_by(course_id=course_id).all()
-    print(assignments)
+    #print(assignments)
     output = []
 
-    for assignment in assignments:
-        print(assignment.swp_id)
-        swp_id = assignment.swp_id
-        swp = Assignments.query.filter_by(swp_id=swp_id).all()
-        if not swp:
-            continue
-        else:
-            for swp in swp:
-                print(swp.swp_name)
-        results = Results.query.filter_by(swp_id=swp_id).all()
-        print(results)
-        if not results:
-            print("no swp for this course")
-        else:
-            result_data = {}
-            for result in results:
-                result_data['result_id'] = result.id
-                result_data['value'] = result.value
-                student = Student.query.get(result.student_id)
-                result_data['student_id'] = result.student_id
-                result_data['student_first'] = student.fname
-                result_data['student_last'] = student.lname
-                if not swp:
-                    continue
-                else:
-                    result_data['swp_name'] = swp.swp_name
-                output.append(result_data)
-    print(output)
-    return jsonify(output)
+    sorted_students = get_course_enrolled(course_id)
+    #print(sorted_students)
+
+    for student in sorted_students:
+        #print("OUTER LOOP")
+        result_data = {}
+        student_id = student['student_id']
+        result_data['student_id'] = student['student_id']
+        result_data['student_first'] = student['student_first']
+        result_data['student_last'] = student['student_last']
+            
+        assignments = get_course_swps(course_id)
+        #print(assignments)
+        scores_list = []
+       
+        for assignment in assignments:
+            #FOR EACH ASSIGNMENT GET RESULTS BY STUDENT_ID                   
+            student_scores = Results.query.filter_by(swp_id = assignment['swp_id'],student_id = student_id).first()
+            scores_data = {}
+            if student_scores == None:
+                scores_data['swp_id'] = assignment['swp_id']
+                scores_data['score'] = "-"
+            else:
+                scores_data['swp_id'] = assignment['swp_id']
+                scores_data['score'] = student_scores.value
+            
+            scores_list.append(scores_data)
+        
+        sorted_scores = sorted(scores_list, key=lambda i:i['swp_id'])
+
+        result_data['student_scores'] = scores_list
+        output.append(result_data)
+
+    for student in output:
+        print(student['student_id'])
+        print(student['student_first'])
+        print(student['student_last'])
+        print(student['student_scores'])
+        scores = student['student_scores']
+        for score in scores:
+            print(score['score'])
+        
+    return output
 
 
 @app.route('/results/student/<int:student_id>/<int:swp_id>', methods=['GET', 'POST'])
