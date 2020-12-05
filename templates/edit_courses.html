@@ -26,7 +26,7 @@
       		</button>
       		<div class="collapse navbar-collapse" id="navbarResponsive">
 				<div class="navbar-nav ml-auto">
-					<a class="nav-item nav-link active" href="/home">Home</a>
+					<a class="nav-item nav-link" href="/home">Home</a>
 					<!--COURSES DROPDOWN-->   
 					<div class="nav-item dropdown">
 					   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
@@ -44,7 +44,7 @@
 				   </div>
 					<a class="nav-item nav-link" href="/outcomes">Student Outcomes</a>
 					<div class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Administrative Tasks</a>
+						<a class="nav-link dropdown-toggle active" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Administrative Tasks</a>
 						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
 							<a class="dropdown-item" href="/courses/edit">Edit Courses</a>							
 							<a class="dropdown-item" data-toggle="modal" href="#add-swp-modal">Add Student Work Products</a>
@@ -59,38 +59,42 @@
 	  </nav>
 	  <div>
       {% if courses %}
-        <h2>Edit Courses</h2><button bclass="btn btn-primary btn-lg" data-toggle="modal" data-target="#add-course-modal">Add New Course</button>
-        <table class="table table-bordered mx-auto w-auto text-center">
-          {% for course in courses %}
-            <thead>
-                <tr>
-                    <th colspan = "6" scope="col">{{course.term}} {{course.year}}</th>
-                </tr>
-                <tr>
-                    <th>Department</th>
-                    <th>Course Number</th>
-                    <th>Section</th>
-                    <th>Course Name</th>
-                    <th>Instructor</th>
-                    <th></th>
-                </tr>
-            </thead>
-            {% if course.course_list %}
-            <tbody>
-                {%for course in course.course_list%}
-                <tr>
-                    <td>{{course.department}}</td>
-                    <td>{{course.course_number}}</td>
-                    <td>{{course.section}}</td>
-                    <td>{{course.course_name}}</td>
-                    <td>{{course.instructor_id}}</td>
-                    <td><button >Edit </button><button>Delete</button></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-            {% endif %}
-          {% endfor %}
-        </table>
+        <div class="text-center mb-1">
+            <h2>Edit Courses</h2><button class="btn btn-secondary" data-toggle="modal" data-target="#add-course-modal">Add New Course</button>
+        </div>
+		<div class="table-responsive">
+			<table class="table table-bordered mx-auto w-auto text-center">
+			  {% for course in courses %}
+				<thead>
+					<tr>
+						<th colspan = "6" scope="col">{{course.term}} {{course.year}}</th>
+					</tr>
+					<tr>
+						<th>Department</th>
+						<th>Course Number</th>
+						<th>Section</th>
+						<th>Course Name</th>
+						<th>Instructor</th>
+						<th></th>
+					</tr>
+				</thead>
+				{% if course.course_list %}
+				<tbody>
+					{%for course in course.course_list%}
+					<tr>
+						<td>{{course.department}}</td>
+						<td>{{course.course_number}}</td>
+						<td>{{course.section}}</td>
+						<td>{{course.course_name}}</td>
+						<td>{{course.instructor_id}}</td>
+						<td><button class="btn btn-secondary" data-toggle="modal" data-target="#edit-course-modal{{course.course_id}}">Edit</button><button class="btn btn-secondary" data-toggle="modal" data-target="#delete-course-modal{{course.course_id}}">Delete</button></td>
+					</tr>
+					{% endfor %}
+				</tbody>
+				{% endif %}
+			  {% endfor %}
+			</table>
+		</div>
         {% endif %}
 	  </div>
 	  <!-- Modals -->
@@ -108,17 +112,20 @@
 			</div>
 			
 			<!-- Modal body -->
-            <div class="modal-lg">.
-				<form action="{{url_for('add_courses')}}" class="modal-form" method="post">
+            <div class="modal-lg">
+				<form action="{{url_for('add_courses')}}" class="modal-form m-2" method="post">
                         <div class="text-center">    
                              <div class="form-row">
                                 <div class="form-group col">
-                                    <label for="course_name">Term</label>
-                                    <input type="text" class="form-control" id="term" name="term" placeholder="ex: SPRING" required="true">
+                                    <label for="term">Term</label>
+                                    <select class="form-control" id="term" name="term" required="true">
+                                        <option value="FALL">FALL</option>
+                                        <option value="SPRING">SPRING</option>
+                                    </select>
                                 </div>
                 
                                 <div class="form-group col">
-                                    <label for="instructor">Year</label>
+                                    <label for="year">Year</label>
                                     <input type="text" class="form-control" id="year" name="year" placeholder="YYYY" required="true">
                                 </div>
                             </div>             
@@ -146,8 +153,14 @@
                                 </div>
                 
                                 <div class="form-group col">
-                                    <label for="instructor_id">Instructor ID</label>
-                                    <input type="text" class="form-control" id="instructor_id" name="instructor_id" placeholder="Instructor ID" required="true">
+                                    <label for="instructor_id">Instructor</label>
+                                    <select class="form-control" id="instructor_id" name="instructor_id" required="true">
+                                        {% if instructors %}
+                                            {% for instructor in instructors %}
+                                                <option value="{{instructor.instructor_id}}">{{instructor.last_name}}, {{instructor.first_name}} ({{instructor.instructor_id}})</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
                                 </div>
                             </div>                            
                             <button class="btn btn-secondary btn-lg btn-block" type="submit">Save</button>
@@ -157,12 +170,136 @@
 
 			<!-- Modal footer -->
 			<div class="modal-footer">                
-                  <button onclick="location.href='/courses/edit'" class="btn btn-secondary">Cancel</button>
-				  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
 			</div>
 		  </div>
 	  </div>
 	  </div>
+	  
+	  <!-- Edit Course Modal(generated for every course) -->
+	  {% if courses %}
+	  		{% for course in courses %}
+	  			{% if course.course_list %}
+	  				{% for course in course.course_list %}
+						  <div class="modal fade" id="edit-course-modal{{course.course_id}}">
+							<div class="modal-dialog">
+							  <div class="modal-content">
+
+								<!-- Modal Header -->
+								<div class="modal-header">
+									<h4 class="modal-title">Edit {{course.department}} {{course.course_number}}: {{course.section}}</h4>
+									<button type="button" class="close" data-dismiss="modal">×</button>
+								</div>
+
+								<!-- Modal body -->
+								<div class="modal-lg">
+									<form action="{{url_for('update_courses', course_id=course.course_id)}}" class="modal-form m-2" method="post">
+											<div class="text-center">    
+												 <div class="form-row">
+													<div class="form-group col">
+														<label for="course_name">Term</label>
+														<select class="form-control" id="instructor_id" name="term" required="true">
+															{% if course.term == "FALL" %}
+															<option value="FALL" selected>FALL</option>
+															<option value="SPRING">SPRING</option>
+															{% else %}
+															<option value="FALL">FALL</option>
+															<option value="SPRING" selected>SPRING</option>
+															{% endif %}
+														</select>
+													</div>
+
+													<div class="form-group col">
+														<label for="year">Year</label>
+														<input type="text" class="form-control" id="year" name="year" placeholder="YYYY" value="{{course.year}}" required="true">
+													</div>
+												</div>             
+												<div class="form-row">
+													<div class="form-group col">
+														<label for="deparment">Department</label>
+														<input type="text" class="form-control" id="department" name="department" placeholder="ex. CPSC" value="{{course.department}}" required="true">
+													</div>
+
+													<div class="form-group col">
+														<label for="course_number">Course Number</label>
+														<input type="text" class="form-control" id="course_number" name="course_number" placeholder="ex. 1310" value="{{course.course_number}}" required="true">
+													</div>
+
+													<div class="form-group col">
+														<label for="section">Section</label>
+														<input type="test" class="form-control" id="section" name="section" placeholder="ex. 1" value="{{course.section}}" required="true">
+													</div>
+												</div>
+
+												<div class="form-row">
+													<div class="form-group col">
+														<label for="course_name">Course Name</label>
+														<input type="text" class="form-control" id="course_name" name="course_name" placeholder="Course Name" value="{{course.course_name}}" required="true">
+													</div>
+
+													<div class="form-group col">
+														<label for="instructor_id">Instructor</label>
+														<select class="form-control" id="instructor_id" name="instructor_id" required="true">
+															{% if instructors %}
+																{% for instructor in instructors %}
+																	{% if instructor.instructor_id == course.instructor_id %} <!-- if current course instructor, apply selected attr to option -->
+																	<option value="{{instructor.instructor_id}}" selected>{{instructor.last_name}}, {{instructor.first_name}} ({{instructor.instructor_id}})</option>
+																	{% else %}
+																	<option value="{{instructor.instructor_id}}">{{instructor.last_name}}, {{instructor.first_name}} ({{instructor.instructor_id}})</option>
+																	{% endif %}
+																{% endfor %}
+															{% endif %}
+														</select>
+													</div>
+												</div>                            
+												<button class="btn btn-secondary btn-lg btn-block" type="submit">Save</button>
+											</div>
+										</form>
+								</div>
+					<!-- Modal footer -->
+					<div class="modal-footer">                
+						  <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+					</div>
+				  </div>
+			  </div>
+			  </div>
+	  			{% endfor %}
+	  		{% endif %}
+	  		{% endfor %}
+	  {% endif %}
+	  
+	  <!-- Delete Course Modal(generated for every course) -->
+	  {% if courses %}
+	  		{% for course in courses %}
+	  			{% if course.course_list %}
+	  				{% for course in course.course_list %}
+						  <div class="modal fade" id="delete-course-modal{{course.course_id}}">
+							<div class="modal-dialog">
+							  <div class="modal-content">
+
+								<!-- Modal Header -->
+								<div class="modal-header">
+									<h4 class="modal-title">Delete {{course.department}} {{course.course_number}}: {{course.section}}?</h4>
+									<button type="button" class="close" data-dismiss="modal">×</button>
+								</div>
+
+								<!-- Modal body -->
+								<div class="modal-lg">
+									<h5 class="text-center m-2">Are you sure you want to delete this course? All course information will be lost!</h5>
+								</div>
+					<!-- Modal footer -->
+					<div class="modal-footer">                
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+						<button onclick="location.href='{{ url_for('delete_course', course_id = course.course_id)}}'" class="btn btn-secondary">DELETE</button>
+					</div>
+				  </div>
+			  </div>
+			  </div>
+	  			{% endfor %}
+	  		{% endif %}
+	  		{% endfor %}
+	  {% endif %}
+	  
 	  <!-- Add SWP Modal -->
 	  <div class="modal fade" id="add-swp-modal">
 		<div class="modal-dialog">
