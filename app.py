@@ -795,7 +795,7 @@ def add_courses():
 
     return ("course add failed")
 
-
+#new branch cleanup
 @app.route('/courses/<int:course_id>', methods=['GET', 'DELETE'])
 # @login_required
 def delete_course(course_id):
