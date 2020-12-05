@@ -715,7 +715,7 @@ def add_courses():
 
     return ("course add failed")
 
-#new branch cleanup
+
 @app.route('/courses/<int:course_id>/delete', methods=['GET', 'POST'])
 # @login_required
 def delete_course(course_id):
@@ -845,7 +845,7 @@ def get_one_swp(swp_id):
     swp_data['course name'] = course.course_name
     results.append(swp_data)
 
-    return jsonify(results)
+    return results
 
 
 # THIS GETS WORK PRODUCT FOR SPECIFIC COURSE
@@ -899,10 +899,8 @@ def update_swp(swp_id):
             db.session.commit()
             print("Student Work Product succesfully updated!")
             return redirect(url_for('get_one_course', course_id = swp.course_id))
-            # return redirect(url_for('home'))
         else:
             return "Error:  Student Work Product not found"
-            # return redirect(url_for('home'))
 
     return redirect(url_for('get_one_course', course_id = swp.course_id))
 
@@ -913,14 +911,44 @@ def update_swp(swp_id):
 def add_swp():
     if request.method == 'POST':
         # instantiate new work product info based on form input
+        so1 = 0
+        so2 = 0
+        so3 =0
+        so4 =0
+        so5 =0
+        so6 = 0
         course_id = request.form['course_id']
-        swp_name = request.form['swp_name']        
-        so1 = request.form['SO1']
-        so2 = request.form['SO2']
-        so3 = request.form['SO3']
-        so4 = request.form['SO4']
-        so5 = request.form['SO5']
-        so6 = request.form['so6']
+        swp_name = request.form['swp_name'] 
+        if request.form.get("SO1"):
+            so1 = 1
+        else:
+            so1 = 0
+        print("so1")
+        print(so1)
+        if request.form.get("SO2"):
+            so2 = 1
+        else:
+            so2 = 0
+
+        if request.form.get("SO3"):
+            so3 = 1
+        else:
+            so3 = 0
+        if request.form.get("SO4"):
+            so4 = 1
+        else:
+            so4 = 0
+
+        if request.form.get("SO5"):
+            so5 = 1
+        else:
+            so5 = 0
+
+        if request.form.get("SO6"):
+            so6 = 1
+        else:
+            so6 = 0
+       
         print(swp_name)
         print(course_id)
         swp_name = swp_name.upper()
@@ -930,16 +958,16 @@ def add_swp():
 
         # return error if existing info returns true -- otherwise add course
         if existing_swp:
-            message = "Student Work Product already exists in current course.  Please pick a unique name"
+            error = "Student Work Product already exists in current course.  Please pick a unique name"
         else:
-            # commit changes to db
-            add_attempts(swp_name,course_id, so1, so2, so3, so4, so5, so6)
+            # commit changes to db            
             dbconnection = engine.connect()
             statement = f"INSERT INTO Assignments(course_id, swp_name)\
                     VALUES ({new_swp.course_id},'{new_swp.swp_name}');"
             print(statement)
             dbconnection.execute(statement)
             dbconnection.close()
+            add_attempts(swp_name, course_id, so1, so2, so3, so4, so5, so6)
             print("SWP added!")
             return redirect(url_for('get_one_course', course_id = course_id))
 
@@ -1113,21 +1141,21 @@ def add_attempts():
 
 def add_attempts(swp_name, course_id, so1, so2, so3, so4, so5, so6):
         swp = Assignments.query.filter_by(swp_name = swp_name, course_id=course_id).all()
-
-        existing_attempt = Attempts.query.filter_by(swp_id=swp.swp_id).all()
-            # return error if existing course returns true otherwise add course
-        if existing_attempt:
-            print('Info already exists!')
-            #update_attempts(swp_id)
-        else:
-            print('New SO/SWP combination FOUND!')
-            dbconnection = engine.connect()
-            statement = f"INSERT INTO attempts(swp_id, so1, so2, so3, so4, so5, so6) VALUES ({swp.swp_id}, {so1}, {so2}, {so3}, {so4}, {so5}, {so6});"
-            print(statement)
-            dbconnection.execute(statement)
-            dbconnection.close()
-            return redirect(url_for('get_all_attempts'))
-        # IF TRY FAILS -- RETURN FAILURE MESSAGE
+        for swp in swp:
+            existing_attempt = Attempts.query.filter_by(swp_id=swp.swp_id).all()
+                # return error if existing course returns true otherwise add course
+            if existing_attempt:
+                print('Info already exists!')
+                #update_attempts(swp_id)
+            else:
+                print('New SO/SWP combination FOUND!')
+                dbconnection = engine.connect()
+                statement = f"INSERT INTO attempts(swp_id, so1, so2, so3, so4, so5, so6) VALUES ({swp.swp_id}, {so1}, {so2}, {so3}, {so4}, {so5}, {so6});"
+                print(statement)
+                dbconnection.execute(statement)
+                dbconnection.close()
+                return redirect(url_for('get_all_attempts'))
+            # IF TRY FAILS -- RETURN FAILURE MESSAGE
 
     # return redirect(url_for('home'))
 
@@ -1256,7 +1284,6 @@ def add_enrolled():
             dbconnection.close()
             print("Student successfully enrolled in course!")
             return redirect(url_for('get_enrolled', course_id=course_id))
-
 
 #           return redirect(url_for('home'))
 
