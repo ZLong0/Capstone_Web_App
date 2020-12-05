@@ -353,64 +353,24 @@ def update_instructor(instructor_id):
                 print('Instructor Updated!')
                 return redirect(url_for('get_instructors'))
             else:
-                print("Instructor not found. Cannot update")
-        else:
-            return redirect(url_for('get_one_instructor', instructor_id=instructor_id))
-
-
-# ADD NEW INSTRUCTOR
-@app.route('/instructors', methods=['POST', 'GET'])
-@login_required
-def add_instructor():
-    user = current_user
-    if user.account_type == 'instructor':
-        return redirect(url_for('home'))
-    else:
-        if request.method == 'POST':
-            # check for existing instructor id first
-            try:
-                instructor = Instructor.query.get(request.form['id'])
-            except:
-                print("EXCEPTION ERROR")
-                return redirect(url_for('get_instructors'))
-
-            if instructor:
-                print("instructor found")
-                return redirect(url_for('get_instructors'))
-            else:
                 print("instructor not found -- add")
                 id = request.form['id']
                 print(id)
                 fname = request.form['first_name']
                 print(fname)
                 lname = request.form['last_name']
-                print(lname)
-                instructor = Instructor(id, fname, lname)
-
-                if instructor:
-                    print("instructor created")
-                    instructor_data = {}
-                    result = []
-                    instructor_data['first'] = fname
-                    instructor_data['last'] = lname
-                    instructor_data['id'] = id
-                    result.append(instructor_data)
-                    print(result)
                 dbconnection = engine.connect()
                 statement = f"INSERT INTO instructor(id, fname, lname) VALUES ({id}, '{fname}','{lname}');"
                 print(statement)
                 dbconnection.execute(statement)
                 dbconnection.close()
-                return redirect(url_for('get_instructors'))
-        else:
-            return redirect(url_for('get_instructors'))
 
 
 # DELETE ONE INSTRUCTOR
-@app.route('/instructors/<instructor_id>', methods=['DELETE', 'GET'])
+@app.route('/instructors/<instructor_id>/delete', methods=['POST', 'GET'])
 @login_required
 def delete_instructor(instructor_id):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
         # check for existing instructor id first
         instructor = Instructor.query.get(instructor_id)
         if instructor:
@@ -1112,17 +1072,30 @@ def update_attempts(swp_id):
     if request.method == 'POST':
         try:
             attempt = Attempts.query.get(swp_id)
+            so1 = request.form['SO1']
+            so2 = request.form['SO2']
+            so3 = request.form['SO3']
+            so4 = request.form['SO4']
+            so5 = request.form['SO5']
+            so6 = request.form['SO6']
             if not attempt:
-                add_attempts()
-            attempt.so1 = request.form['SO1']
-            attempt.so2 = request.form['SO2']
-            attempt.so3 = request.form['SO3']
-            attempt.so4 = request.form['SO4']
-            attempt.so5 = request.form['SO5']
-            attempt.so6 = request.form['SO6']
-            db.session.commit()
-            print("Attempt record succesfully updated!")
-            return redirect(url_for('get_all_attempts'))
+                print('New SO/SWP combination FOUND!')
+                dbconnection = engine.connect()
+                statement = f"INSERT INTO attempts(swp_id, so1, so2, so3, so4, so5, so6) VALUES ({swp_id}, {so1}, {so2}, {so3}, {so4}, {so5}, {so6});"
+                print(statement)
+                dbconnection.execute(statement)
+                dbconnection.close()
+                return redirect(url_for('get_all_attempts'))
+            else:
+                attempt.so1 = so1
+                attempt.so2 = so2
+                attempt.so3 = so3
+                attempt.so4 = so4
+                attempt.so5 = so5
+                attempt.so6 = so6
+                db.session.commit()
+                print("Attempt record succesfully updated!")
+                return redirect(url_for('get_all_attempts'))
         except:
             return ("ERROR OCCURED ON UPDATE")
     return redirect(url_for('get_all_attempts'))
