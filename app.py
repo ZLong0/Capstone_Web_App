@@ -716,16 +716,33 @@ def add_courses():
     return ("course add failed")
 
 #new branch cleanup
-@app.route('/courses/<int:course_id>', methods=['GET', 'DELETE'])
+@app.route('/courses/<int:course_id>/delete', methods=['GET', 'POST'])
 # @login_required
 def delete_course(course_id):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
         course = Course.query.get(course_id)
         if course:
+            swps = get_course_swps(course_id)
+            if swps:
+                for swp in swps:
+                    attempt = get_swp_attempts(swp['swp_id'])
+                    print(attempt)
+                    if attempt:
+                        delete_attempts(swp['swp_id'])
+                    else:
+                        delete_swp(swp['swp_id'])
+            
+            enrolled = get_course_enrolled(course_id)
+            if len(enrolled) > 0:
+                for student in enrolled:
+                    delete_student_from_course(course_id, student['student_id'])
+
             db.session.delete(course)
             db.session.commit()
-            return redirect(url_for('get_all_courses'))
+            #return redirect(url_for('get_all_courses'))
             return ("course found")
+        else:
+            print("Course not found")
         return ("please stop getting mad")
 
 
@@ -933,10 +950,10 @@ def add_swp():
 
 
 # DELETE SWP
-@app.route('/swp/<int:swp_id>', methods=['GET', 'DELETE'])
-@login_required
+@app.route('/swp/<int:swp_id>/delete', methods=['GET', 'POST'])
+#@login_required
 def delete_swp(swp_id):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
         swp = Assignments.query.get(swp_id)
         delete_attempts(swp_id)
         db.session.delete(swp)
@@ -1116,10 +1133,10 @@ def add_attempts(swp_name, course_id, so1, so2, so3, so4, so5, so6):
 
 
 # DELETE ONE ATTEMPT
-@app.route('/attempts/<int:swp_id>', methods=['GET', 'DELETE'])
+@app.route('/attempts/<int:swp_id>/delete', methods=['GET', 'POST'])
 # @login_required
 def delete_attempts(swp_id):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
         try:
             attempt = Attempts.query.filter_by(swp_id = swp_id)
             print(attempt)
@@ -1247,10 +1264,10 @@ def add_enrolled():
 
 
 # DELETE STUDENT FROM ALL COURSES
-@app.route('/enrolled/student/<int:student_id>', methods=['GET', 'DELETE'])
+@app.route('/enrolled/student/<int:student_id>', methods=['GET', 'POST'])
 # @login_required
 def delete_student_from_enrolled(student_id):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
         print("delete student enrollments")
         try:
             enrollment = Enrolled.query.filter_by(student_id=student_id).all()
@@ -1265,10 +1282,10 @@ def delete_student_from_enrolled(student_id):
 
 
 # DELETE STUDENT FROM ONE COURSE
-@app.route('/enrolled/<int:course_id>/<int:student_id>', methods=['GET', 'DELETE'])
+@app.route('/enrolled/<int:course_id>/<int:student_id>', methods=['GET', 'POST'])
 # @login_required
 def delete_student_from_course(course_id, student_id):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
         print("DELETE STUDENT FROM ONE COURSE")
         enrollment = Enrolled.query.filter_by(student_id=student_id, course_id=course_id).first()
         print(enrollment)
@@ -1409,10 +1426,10 @@ def add_results():
             return "test failed"
 
 
-@app.route('/results/<int:result_id>', methods=['DELETE', 'GET'])
+@app.route('/results/<int:result_id>/delete', methods=['POST', 'GET'])
 # @login_required
 def delete_one_result(result_id):
-    if request.method == "DELETE":
+    if request.method == "POST":
         print("DELETE RESULT CALLED")
         result = Results.query.get(result_id)
         if not result:
