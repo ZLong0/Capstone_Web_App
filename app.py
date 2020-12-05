@@ -578,11 +578,6 @@ def get_one_course(course_id):
     swp_results = get_course_swps(course_id)
     student_results = get_course_results(course_id)  
 
-    #print(course_results)
-    #print(swp_results)
-    #print(student_results)
-    #return jsonify(student_results)
-
     if user.account_type == 'instructor':
         semesters_list = get_instructor_courses(user_id)
         print(semesters_list)
@@ -603,9 +598,6 @@ def get_instructor_courses(instructor_id):
     user = current_user
     print(instructor_id)
     uid = current_user.get_id()
-
-    # ATTEMPTING TO KEEP OTHER INSTRUCTORS FROM ACCESSING OTHER INST COURSES
-    # WHILE ALLOWING ADMING TO SELECT COURSES SPECIFIC TO ONE INSTRUCTOR
     if uid != instructor_id:
         if user.account_type == 'admin':
             pass
@@ -872,7 +864,7 @@ def get_course_swps(course_id):
         results.append(swp_data)
 
     sorted_results = sorted(results, key=lambda i:i['swp_id'])
-    return jsonify(sorted_results)
+    return sorted_results
 
 
 # UPDATE ONE SWP
