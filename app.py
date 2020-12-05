@@ -867,10 +867,19 @@ def get_all_swp():
     for swp in swps:
         swp_data = {}
         course = Course.query.get(swp.course_id)
+        attempts_list = get_swp_attempts(swp.swp_id)
+        for attempt in attempts_list:
+            swp_data['SO1'] = attempt['SO1']
+            swp_data['SO2'] = attempt['SO2']
+            swp_data['SO3'] = attempt['SO3']
+            swp_data['SO4'] = attempt['SO4']
+            swp_data['SO5'] = attempt['SO5']
+            swp_data['SO6'] = attempt['SO6']
         swp_data['swp_id'] = swp.swp_id
         swp_data['swp_name'] = swp.swp_name
         swp_data['course_id'] = course.id
         swp_data['course name'] = course.course_name
+
         results.append(swp_data)
 
     return jsonify(results)
@@ -884,6 +893,14 @@ def get_one_swp(swp_id):
 
     results = []
     swp_data = {}
+    attempts_list = get_swp_attempts(swp.swp_id)
+    for attempt in attempts_list:
+        swp_data['SO1'] = attempt['SO1']
+        swp_data['SO2'] = attempt['SO2']
+        swp_data['SO3'] = attempt['SO3']
+        swp_data['SO4'] = attempt['SO4']
+        swp_data['SO5'] = attempt['SO5']
+        swp_data['SO6'] = attempt['SO6']
     swp_data['swp_id'] = swp.swp_id
     swp_data['swp_name'] = swp.swp_name
     swp_data['course_id'] = swp.course_id
@@ -904,7 +921,22 @@ def get_course_swps(course_id):
     for swp in swps:
         swp_data = {}
         course = Course.query.get(swp.course_id)
-        attempts = get_swp_attempts(swp.swp_id)
+        attempts_list = get_swp_attempts(swp.swp_id)
+        if len(attempts_list)==0:
+            swp_data['SO1'] = 0
+            swp_data['SO2'] = 0
+            swp_data['SO3'] = 0
+            swp_data['SO4'] = 0
+            swp_data['SO5'] = 0
+            swp_data['SO6'] = 0
+        else:
+            for attempt in attempts_list:
+                swp_data['SO1'] = attempt['SO1']
+                swp_data['SO2'] = attempt['SO2']
+                swp_data['SO3'] = attempt['SO3']
+                swp_data['SO4'] = attempt['SO4']
+                swp_data['SO5'] = attempt['SO5']
+                swp_data['SO6'] = attempt['SO6']
         swp_data['swp_id'] = swp.swp_id
         swp_data['swp_name'] = swp.swp_name
         swp_data['course_id'] = course.id
@@ -912,7 +944,7 @@ def get_course_swps(course_id):
         results.append(swp_data)
 
     sorted_results = sorted(results, key=lambda i:i['swp_id'])
-    return sorted_results
+    return jsonify(sorted_results)
 
 
 # UPDATE ONE SWP
@@ -945,7 +977,13 @@ def add_swp():
     if request.method == 'POST':
         # instantiate new work product info based on form input
         course_id = request.form['course_id']
-        swp_name = request.form['swp_name']
+        swp_name = request.form['swp_name']        
+        so1 = request.form['SO1']
+        so2 = request.form['SO2']
+        so3 = request.form['SO3']
+        so4 = request.form['SO4']
+        so5 = request.form['SO5']
+        so6 = request.form['so6']
         print(swp_name)
         print(course_id)
         swp_name = swp_name.upper()
@@ -958,6 +996,7 @@ def add_swp():
             message = "Student Work Product already exists in current course.  Please pick a unique name"
         else:
             # commit changes to db
+            add_attempts(swp_name,course_id, so1, so2, so3, so4, so5, so6)
             dbconnection = engine.connect()
             statement = f"INSERT INTO Assignments(course_id, swp_name)\
                     VALUES ({new_swp.course_id},'{new_swp.swp_name}');"
@@ -979,6 +1018,7 @@ def add_swp():
 def delete_swp(swp_id):
     if request.method == 'DELETE':
         swp = Assignments.query.get(swp_id)
+        delete_attempts(swp_id)
         db.session.delete(swp)
         db.session.commit()
 
@@ -990,18 +1030,28 @@ def delete_swp(swp_id):
 
 # ATTEMPTS CLASS
 class Attempts(db.Model):
-    attempt_id = db.Column("id", db.Integer, primary_key=True)
+    id = db.Column("id", db.Integer, primary_key=True, autoincrement=False)
     swp_id = db.Column(db.Integer, db.ForeignKey('assignments.swp_id'))
-    so_id = db.Column(db.Integer, db.ForeignKey('outcomes.so_id'))
+    so1 = db.Column("SO1", db.Integer)
+    so2 = db.Column("SO2", db.Integer)
+    so3 = db.Column("SO3", db.Integer)
+    so4 = db.Column("SO4", db.Integer)
+    so5 = db.Column("SO5", db.Integer)
+    so6 = db.Column("SO6", db.Integer)
 
-    def __init__(self, swp_id, so_id):
+    def __init__(self, swp_id, so1, so2, so3, so4, so5, so6):
         self.swp_id = swp_id
-        self.so_id = so_id
+        self.so1 = so1
+        self.so2 = so2
+        self.so3 = so3
+        self.so4 = so4
+        self.so5 = so5
+        self.so6 =so6
 
 
 # GET ALL ATTEMPTS -- UNION OF SWP AND SO
 @app.route('/attempts', methods=["GET"])
-@login_required
+#@login_required
 def get_all_attempts():
     attempts = Attempts.query.all()
 
@@ -1010,13 +1060,17 @@ def get_all_attempts():
     for attempt in attempts:
         attempt_data = {}
         swp = Assignments.query.get(attempt.swp_id)
-        so = Outcomes.query.get(attempt.so_id)
         course = Course.query.get(swp.course_id)
 
-        attempt_data['attempt_id'] = attempt.attempt_id
+        attempt_data['attempt_id'] = attempt.id
         attempt_data['course_name'] = course.course_name
         attempt_data['swp'] = swp.swp_name
-        attempt_data['so'] = so.so_name
+        attempt_data['SO1'] = attempt.so1
+        attempt_data['SO2'] = attempt.so2
+        attempt_data['SO3'] = attempt.so3
+        attempt_data['SO4'] = attempt.so4
+        attempt_data['SO5'] = attempt.so5
+        attempt_data['SO6'] = attempt.so6
         results.append(attempt_data)
 
     return jsonify(results)
@@ -1030,32 +1084,42 @@ def get_swp_attempts(swp_id):
     # print(attempts)
     results = []
     attempt_data = {}
+
+    attempt_data = {}
     swp = Assignments.query.get(swp_id)
+    course = Course.query.get(swp.course_id)
 
-    so_list = []
     for attempt in attempts:
-        so = Outcomes.query.get(attempt.so_id)
-        so_data = {}
-        so_data["so_name"] = so.so_name
-        so_data['so_id'] = so.so_id
-        so_list.append(so_data)
+        attempt_data['attempt_id'] = attempt.id
+        attempt_data['course_name'] = course.course_name
+        attempt_data['swp'] = swp.swp_name
+        attempt_data['SO1'] = attempt.so1
+        attempt_data['SO2'] = attempt.so2
+        attempt_data['SO3'] = attempt.so3
+        attempt_data['SO4'] = attempt.so4
+        attempt_data['SO5'] = attempt.so5
+        attempt_data['SO6'] = attempt.so6
+        results.append(attempt_data)
 
-    attempt_data['swp_name'] = swp.swp_name
-    attempt_data['so_list'] = so_list
-    results.append(attempt_data)
     # print(results)
     return results
 
 
 # UPDATE ONE ATTEMPT
-@app.route('/attempts/<int:attempt_id>', methods=['GET', 'POST'])
+@app.route('/attempts/<int:swp_id>', methods=['GET', 'POST'])
 # @login_required
-def update_attempts(attempt_id):
+def update_attempts(swp_id):
     if request.method == 'POST':
         try:
-            attempt = Attempts.query.get(attempt_id)
-            attempt.swp_id = request.form['swp_id']
-            attempt.so_id = request.form['so_id']
+            attempt = Attempts.query.get(swp_id)
+            if not attempt:
+                add_attempts()
+            attempt.so1 = request.form['SO1']
+            attempt.so2 = request.form['SO2']
+            attempt.so3 = request.form['SO3']
+            attempt.so4 = request.form['SO4']
+            attempt.so5 = request.form['SO5']
+            attempt.so6 = request.form['SO6']
             db.session.commit()
             print("Attempt record succesfully updated!")
             return redirect(url_for('get_all_attempts'))
@@ -1072,18 +1136,22 @@ def add_attempts():
         try:
             # instantiate new  info based on form input
             swp_id = request.form['swp_id']
-            so_id = request.form['so_id']
+            so1 = request.form['SO1']
+            so2 = request.form['SO2']
+            so3 = request.form['SO3']
+            so4 = request.form['SO4']
+            so5 = request.form['SO5']
+            so6 = request.form['SO6']
             # check database for existing course overlap
-            existing_attempt = Attempts.query.filter_by(swp_id=swp_id, so_id=so_id).all()
+            existing_attempt = Attempts.query.filter_by(swp_id=swp_id).all()
             # return error if existing course returns true otherwise add course
             if existing_attempt:
                 print('Info already exists!')
-                # return redirect(url_for('home'))
-                return redirect(url_for('get_all_attempts'))
+                update_attempts(swp_id)
             else:
                 print('New SO/SWP combination FOUND!')
                 dbconnection = engine.connect()
-                statement = f"INSERT INTO attempts(swp_id, so_id) VALUES ({swp_id}, {so_id});"
+                statement = f"INSERT INTO attempts(swp_id, so1, so2, so3, so4, so5, so6) VALUES ({swp_id}, {so1}, {so2}, {so3}, {so4}, {so5}, {so6});"
                 print(statement)
                 dbconnection.execute(statement)
                 dbconnection.close()
@@ -1093,16 +1161,34 @@ def add_attempts():
             print('EXCEPTION: Add failed!')
             return redirect(url_for('get_all_attempts'))
 
+def add_attempts(swp_name, course_id, so1, so2, so3, so4, so5, so6):
+        swp = Assignments.query.filter_by(swp_name = swp_name, course_id=course_id).all()
+
+        existing_attempt = Attempts.query.filter_by(swp_id=swp.swp_id).all()
+            # return error if existing course returns true otherwise add course
+        if existing_attempt:
+            print('Info already exists!')
+            #update_attempts(swp_id)
+        else:
+            print('New SO/SWP combination FOUND!')
+            dbconnection = engine.connect()
+            statement = f"INSERT INTO attempts(swp_id, so1, so2, so3, so4, so5, so6) VALUES ({swp.swp_id}, {so1}, {so2}, {so3}, {so4}, {so5}, {so6});"
+            print(statement)
+            dbconnection.execute(statement)
+            dbconnection.close()
+            return redirect(url_for('get_all_attempts'))
+        # IF TRY FAILS -- RETURN FAILURE MESSAGE
+
     # return redirect(url_for('home'))
 
 
 # DELETE ONE ATTEMPT
-@app.route('/attempts/<int:attempt_id>', methods=['GET', 'DELETE'])
+@app.route('/attempts/<int:swp_id>', methods=['GET', 'DELETE'])
 # @login_required
-def delete_attempts(attempt_id):
+def delete_attempts(swp_id):
     if request.method == 'DELETE':
         try:
-            attempt = Attempts.query.get(attempt_id)
+            attempt = Attempts.query.filter_by(swp_id = swp_id)
             print(attempt)
             db.session.delete(attempt)
             db.session.commit()
