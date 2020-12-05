@@ -429,16 +429,14 @@ def get_one_student(student_id):
     return jsonify(results)
 
 
-# UPDATE ONE STUDENT
-@app.route('/students/<int:student_id>', methods=['GET', 'POST'])
+# ADD NEW STUDENT
+@app.route('/students', methods=['GET', 'POST'])
 @login_required
-def update_student(student_id):
+def update_students():
     if request.method == 'POST':
-        try:
-            # get course to update by ID save in var
-            student = Student.query.get(student_id)
-
-            # update existing course info based on form input
+        student = Student.query.get(request.form['student_id'])
+        if student:
+            # update existing student info based on form input
             student.fname = request.form['first_name']
             student.lname = request.form['last_name']
 
@@ -447,55 +445,25 @@ def update_student(student_id):
             flash('Student Updated!')
             # return redirect(url_for('home'))
             return redirect(url_for('get_all_students'))
-        except:
-            flash('Update failed!')
-            return redirect(url_for('get_all_courses'))
-    else:
-        return redirect(url_for('get_all_students'))
-
-
-# ADD NEW STUDENT
-@app.route('/students', methods=['GET', 'POST'])
-@login_required
-def add_students():
-    if request.method == 'POST':
-        student = Student.query.get(request.form['student_id'])
-        if student:
-            print("student found")
-            return redirect(url_for('get_all_students'))
         else:
             print("student not found -- add student")
             student_id = request.form['id']
-            print(student_id)
             fname = request.form['first_name']
-            print(fname)
             lname = request.form['last_name']
-            print(lname)
             student = Student(student_id, fname, lname)
-
-            if student:
-                print("student created")
-                student_data = {}
-                result = []
-                student_data['first'] = fname
-                student_data['last'] = lname
-                student_data['id'] = student_id
-                result.append(student_data)
-                print(result)
-            print("work you stupid thing")
             dbconnection = engine.connect()
             statement = f"INSERT INTO student(student_id, fname, lname) VALUES ({student_id}, '{fname}','{lname}');"
-            print(statement)
             dbconnection.execute(statement)
+            print("Student added")
             dbconnection.close()
             return redirect(url_for('get_all_students'))
 
 
 # DELETE ONE STUDENT
-@app.route('/students/<int:student_id>', methods=['GET', 'DELETE'])
+@app.route('/students/<int:student_id>/delete', methods=['GET', 'POST'])
 @login_required
 def delete_students(student_id):
-    if request.method == 'DELETE':
+    if request.method == 'POST':
         try:
             student = Student.query.get(student_id)
             db.session.delete(student)
