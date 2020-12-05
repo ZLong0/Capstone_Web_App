@@ -131,7 +131,8 @@ def home():
         semesters_list = get_instructor_courses(user_id)
         return render_template("inst_home.html", current_user=user, semesters=semesters_list)
     elif user.account_type == 'root':
-        return render_template("root_home.html", current_user=user, user_list=user_list)
+        semesters_list = get_all_courses()
+        return render_template("root_home.html", current_user=user, user_list=user_list, semesters=semesters_list)
     else:
         semesters_list = get_all_courses()
         return render_template("home.html", current_user=user, semesters=semesters_list)
@@ -309,7 +310,7 @@ def get_instructors():
             instructor_data['last_name'] = instructor.lname
             results.append(instructor_data)
 
-        return jsonify(results)
+        return results
 
 
 # GET ONE INSTRUCTORS INFO
@@ -602,6 +603,7 @@ def get_all_courses():
                     course_data['department'] = course.department
                     course_data['course_number'] = course.course_number
                     course_data['section'] = course.section
+                    course_data['year'] = course.year
                     course_data['course_name'] = course.course_name
                     course_data['instructor_id'] = course.instructor
                     courses.append(course_data)
@@ -619,8 +621,10 @@ def get_all_courses():
 def edit_courses():
     if request.method == "GET":
         all_courses = get_all_courses()
+        instructors = get_instructors()
         print(all_courses)
-        return render_template('edit_courses.html', courses = all_courses, semesters=all_courses)
+        print(instructors)
+        return render_template('edit_courses.html', courses = all_courses, semesters=all_courses, instructors=instructors)
 
 
 @app.route('/courses/<int:course_id>', methods=['GET'])
@@ -745,8 +749,9 @@ def update_courses(course_id):
             # return render_template('/home')
 
         print('Course Updated!')
-        return redirect(url_for('get_all_courses'))
+        #return redirect(url_for('get_all_courses'))
         # return redirect(url_for('home'))
+        return redirect(url_for('edit_courses'))
 
 
 @app.route('/courses', methods=['GET', 'POST'])
