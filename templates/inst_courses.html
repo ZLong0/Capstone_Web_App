@@ -61,80 +61,39 @@
 	  </nav>
 	  
 	  <div class="main_content">
-		<h2 class="text-center">{{courses[0].course_department}} {{courses[0].course_number}} {{courses[0].course_name}}</h2>
-		
-		<!-- TODO: update tables to pull real information from database and create related modals -->
-		<!-- Collapsable table views -->
-		<div id="collapse-container">
-			<div class="text-center mb-2">
-				<button type="button" class="btn btn-sm btn-secondary" data-toggle="collapse" data-target="#student-view">View Students</button>
-
-				<button type="button" class="btn btn-sm btn-secondary" data-toggle="collapse" data-target="#swp-view">View Work Products</button>
-			</div>
-			
-			<!-- Student View -->
-			<div class="collapse" id="student-view" data-parent="#collapse-container">
-				<h4 class="text-center">Students</h4>
-				<div class="table-responsive">
-					<table class="table table-bordered mx-auto w-auto text-center">
-						<thead>
-							<tr>
-								<th scope="col">Student Name</th>
-								<th scope="col">Student ID</th>
-								{% if swps %}
-									{% for swp in swps %}
-									<th><a data-toggle="modal" href="#edit-swp-modal{{swp.swp_id}}">{{swp.swp_name}}</a></th>
-									{% endfor %}
-								{% endif %}
-							</tr>
-						</thead>
-						<tbody>
-							{% for student in students %}
-								<tr>
-									<td><a data-toggle="modal" href="#edit-student-modal{{student.student_id}}">{{student.student_first}} {{student.student_last}}</a></td>
-									<td>{{student.student_id}}</td>
-									{% if student.student_scores %}
-										{% for score in student.student_scores %}
-											<td>{{score.score}}</td>
-										{% endfor%}
-									{% endif %}
-								</tr>
+		  <div class="text-center">
+				<h2 class="text-center">{{courses[0].course_department}} {{courses[0].course_number}} {{courses[0].course_name}}</h2>
+				<button type="button" class="btn btn-secondary mb-1">Edit Scores</button>
+		  </div>
+		<div class="table-responsive">
+			<table class="table table-bordered mx-auto w-auto text-center">
+				<thead>
+					<tr>
+						<th scope="col">Student Name</th>
+						<th scope="col">Student ID</th>
+						{% if swps %}
+							{% for swp in swps %}
+								<th><a data-toggle="modal" href="#edit-swp-modal{{swp.swp_id}}">{{swp.swp_name}}</a></th>
 							{% endfor %}
-						</tbody>
-					</table>
-				</div>
-			</div>
-			
-			<!-- SWP View -->
-			<div class="collapse" id="swp-view" data-parent="#collapse-container">
-				<h4 class="text-center">Student Work Products</h4>
-				<div class="table-responsive">
-					<table class="table table-bordered mx-auto w-auto text-center">
-						<thead>
-							<tr>
-								<th scope="col">SWP Name</th>
-								<th scope="col">SWP ID</th>
-							</tr>
-						</thead>
-						<tbody>
-							{% if swps %}				
-								{% for swp in swps %}
-									<tr>
-										<td><a data-toggle="modal" href="#edit-swp-modal{{swp.swp_id}}">{{swp.swp_name}}</a></td>
-										<td>{{swp.swp_id}}</td>
-									</tr>
-									{% endfor %}
-							{% else %}
-								<tr>
-									<td>None ADD BUTTON HERE</td>
-								</tr>
+						{% endif %}
+					</tr>
+				</thead>
+				<tbody>
+					{% for student in students %}
+						<tr>
+							<td><a data-toggle="modal" href="#edit-student-modal{{student.student_id}}">{{student.student_first}} {{student.student_last}}</a></td>
+							<td>{{student.student_id}}</td>
+							{% if student.student_scores %}
+								{% for score in student.student_scores %}
+									<td>{{score.score}}</td>
+								{% endfor%}
 							{% endif %}
-						</tbody>
-					</table>
-				</div>
-			</div>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
 		</div>
-	</div>
+	  </div>
 	
 	<!-- Modals -->
 	
