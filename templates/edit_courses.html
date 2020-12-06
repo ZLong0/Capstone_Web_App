@@ -119,8 +119,9 @@
                                 <div class="form-group col">
                                     <label for="term">Term</label>
                                     <select class="form-control" id="term" name="term" required="true">
-                                        <option value="FALL">FALL</option>
-                                        <option value="SPRING">SPRING</option>
+                                         <option value="SPRING">SPRING</option>
+                                         <option value="SUMMER">SUMMER</option>
+                                         <option value="FALL">FALL</option>                                       
                                     </select>
                                 </div>
                 
@@ -156,6 +157,7 @@
                                     <label for="instructor_id">Instructor</label>
                                     <select class="form-control" id="instructor_id" name="instructor_id" required="true">
                                         {% if instructors %}
+                                            <option value="" selected></option>
                                             {% for instructor in instructors %}
                                                 <option value="{{instructor.instructor_id}}">{{instructor.last_name}}, {{instructor.first_name}} ({{instructor.instructor_id}})</option>
                                             {% endfor %}
@@ -178,9 +180,9 @@
 	  
 	  <!-- Edit Course Modal(generated for every course) -->
 	  {% if courses %}
-	  		{% for course in courses %}
-	  			{% if course.course_list %}
-	  				{% for course in course.course_list %}
+	  		{% for term in courses %}
+	  			 {% if term.course_list %}
+	          				{% for course in term.course_list %}
 						  <div class="modal fade" id="edit-course-modal{{course.course_id}}">
 							<div class="modal-dialog">
 							  <div class="modal-content">
@@ -198,17 +200,24 @@
 												 <div class="form-row">
 													<div class="form-group col">
 														<label for="course_name">Term</label>
-														<select class="form-control" id="instructor_id" name="term" required="true">
-															{% if course.term == "FALL" %}
-															<option value="FALL" selected>FALL</option>
-															<option value="SPRING">SPRING</option>
-															{% else %}
-															<option value="FALL">FALL</option>
-															<option value="SPRING" selected>SPRING</option>
+														<select class="form-control" id="term" name="term" required="true">
+                                                            {% if term.term == 'FALL' %}
+                                                            <option value="SPRING">SPRING</option>
+                                                            <option value="SUMMER">SUMMER</option> 
+                                                            <option value="FALL" selected>FALL</option>
+                                                            {% elif term.term == 'SUMMER' %}
+                                                            <option value="SPRING">SPRING</option>
+                                                            <option value="SUMMER" selected>SUMMER</option> 
+                                                            <option value="FALL">FALL</option>                                                            
+                                                            {% else %}                                                          
+                                                            <option value="SPRING" selected>SPRING</option>
+                                                            <option value="SUMMER">SUMMER</option>
+                                                            <option value="FALL">FALL</option>
+														
 															{% endif %}
 														</select>
 													</div>
-
+                           
 													<div class="form-group col">
 														<label for="year">Year</label>
 														<input type="text" class="form-control" id="year" name="year" placeholder="YYYY" value="{{course.year}}" required="true">
@@ -288,9 +297,13 @@
 									<h5 class="text-center m-2">Are you sure you want to delete this course? All course information will be lost!</h5>
 								</div>
 					<!-- Modal footer -->
-					<div class="modal-footer">                
-						<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-						<button onclick="location.href='{{ url_for('delete_course', course_id = course.course_id)}}'" class="btn btn-secondary">DELETE</button>
+					<div class="modal-footer">
+                        <form action="{{url_for('delete_course', course_id=course.course_id)}}" class="modal-form m-2" method="post">
+                            <button class="btn btn-secondary btn-lg btn-block" type="submit">Confirm</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        </form>                
+						
+                        
 					</div>
 				  </div>
 			  </div>
@@ -301,39 +314,48 @@
 	  {% endif %}
 	  
 	  <!-- Add SWP Modal -->
-	  <div class="modal fade" id="add-swp-modal">
-		<div class="modal-dialog">
-		  <div class="modal-content">
+      <div class="modal fade" id="add-swp-modal">
+        <div class="modal-dialog">
+          <div class="modal-content">
 
-			<!-- Modal Header -->
-			<div class="modal-header">
-				<h4 class="modal-title">Add Work Product</h4>
-				<button type="button" class="close" data-dismiss="modal">×</button>
-			</div>
-			
-			<!-- Modal body -->
-			<div class="modal-body">
-				<form action="/swp" class="modal-form" method="post">
-					<label for="course_id">Select Course</label>
-					<select id="course_id" name="course_id">
-						{% for semester in semesters %}							
-							{% for course in semester.course_list %}
-								<option value="{{course.course_id}}">{{semester.term}} {{semester.year}} {{course.department}} {{course.course_number}}:  {{course.section}}</option>
-							{% endfor %}
-						{% endfor %}
-					</select>
-					<input type="text" name="swp_name" class="form-control" placeholder="Enter SWP name" required autofocus>
-					<button class="btn btn-secondary" type="submit">Submit</button>
-				</form>
-			</div>
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">Add Work Product</h4>
+                <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+            
+            <!-- Modal body -->
+            <div class="modal-body">
+                <form action="/swp" class="modal-form" method="post">
+                    <label for="course_id">Select Course</label>
+                    <select id="course_id" name="course_id">
+                        {% for semester in semesters %}							
+                            {% for course in semester.course_list %}
+                                <option value="{{course.course_id}}">{{semester.term}} {{semester.year}} {{course.department}} {{course.course_number}}:  {{course.section}}</option>
+                            {% endfor %}
+                        {% endfor %}
+                    </select>
+                    <input type="text" name="swp_name" class="form-control" placeholder="Enter SWP name" required autofocus>
+                          <fieldset>
+                          <legend>Student Outcomes</legend>
+                              <input type = "checkbox" name="SO1" id="SO1" value = "SO1">SO1</input>
+                              <input type = "checkbox" name="SO2" id="SO2" value = "SO2">SO2</input>
+                              <input type = "checkbox" name="SO3" id="SO3" value = "SO3">SO3</input>
+                              <input type = "checkbox" name="SO4" id="SO4" value = SO4>SO4</input>
+                              <input type = "checkbox" name="SO5" id="SO5" value = "SO5">SO5</input>
+                              <input type = "checkbox" name="SO6" id="SO6" value = "SO6">SO</input>
+                          </fieldset>
+                    <button class="btn btn-secondary" type="submit">Submit</button>
+                </form>
+            </div>
 
-			<!-- Modal footer -->
-			<div class="modal-footer">
-				  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-			</div>
-		  </div>
-	  </div>
-	  </div>
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+      </div>
+      </div>
 	  
 	  <!-- Edit SWP Modal -->
 	  <div class="modal fade" id="edit-swp-modal">
