@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	  <meta charset="utf-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	  
+	  <!-- Bootstrap Dependencies -->
+	  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+	  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+	  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+	  
+	  <title>ATAS Home</title>
+	  <link href="../static/styles/styles.css" rel="stylesheet">
+  </head>
+ 
+  <body>
+	  
+	  <nav class="navbar navbar-expand-lg navbar-dark static-top" id="nav">
+ 		<div class="container">
+      		<div class="navbar-brand">
+				Accreditation Tracker and Analysis System
+			</div>
+			
+      		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        		<span class="navbar-toggler-icon"></span>
+      		</button>
+      		<div class="collapse navbar-collapse" id="navbarResponsive">
+				<div class="navbar-nav ml-auto">
+					<a class="nav-item nav-link" href="/home">Home</a>
+					<!--COURSES DROPDOWN-->   
+					<div class="nav-item dropdown">
+					   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
+					   <div class="dropdown-menu">
+						   {% if semesters %}
+						   		{% for semester in semesters %}
+									<a class="dropdown-item" data-toggle="modal" href="#course-list-modal{{semester.term}}{{semester.year}}">{{semester.term}} {{semester.year}}</a>
+							{% endfor %}
+						   {% else  %}
+								<a class="dropdown-item" href="">No Courses Assigned</a>
+
+						   {% endif %}
+
+					   </div>
+				   </div>
+					<a class="nav-item nav-link" href="/outcomes">Student Outcomes</a>
+					<div class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle active" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Administrative Tasks</a>
+						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <a class="dropdown-item" href="/courses/edit">Edit Courses</a>
+                            <a class="dropdown-item" href="/students">Edit Courses</a>						
+							<a class="dropdown-item" data-toggle="modal" href="#add-swp-modal">Add Student Work Products</a>
+							<a class="dropdown-item" href="/edit_student_outcomes">Edit Student Outcomes</a>
+							<a class="dropdown-item" href="/generate_report">Generate Report</a>
+						</div>
+					</div>
+					<a class="nav-item nav-link" href="/logout">Log Out</a>
+				</div>
+      		</div>
+    	</div>
+	  </nav>
+	  <div>
+      {% if students %}
+        <div class="text-center mb-1">
+            <h2>Edit Students</h2><button class="btn btn-secondary" data-toggle="modal" data-target="#add-course-modal">Add New Student</button>
+        </div>
+		<div class="table-responsive">
+			<table class="table table-bordered mx-auto w-auto text-center">			  
+				<thead>
+					<tr>
+						<th>First Name</th>
+						<th>Last Name</th>
+                        <th>T#</th>
+                        <th></th>
+					</tr>
+				</thead>
+				<tbody>
+                    {% for student in students %}
+                      <tr>
+						    <td>{{student.fname}}</td>
+						    <td>{{student.lname}}</td>
+                            <td>{{student.student_id}}</td>
+                            <td><button class="btn btn-secondary" data-toggle="modal" data-target="#delete-student-modal{{student.student_id}}">Delete</button></td>
+                        </tr>
+                    {% endfor %}
+				</tbody>			 
+			</table>
+		</div>
+        {% endif %}
+      </div>
+      
+	  <!-- Modals -->
+	  <!-- Delete Course Modal(generated for every course) -->
+    {% if students %}
+	  		{% for student in students %}
+				<div class="modal fade" id="delete-student-modal{{student.student_id}}">
+				    <div class="modal-dialog">
+						  <div class="modal-content">
+
+							<!-- Modal Header -->
+							<div class="modal-header">
+								<h4 class="modal-title">Delete {{student.fname}} {{student.lname}}?</h4>
+								<button type="button" class="close" data-dismiss="modal">×</button>
+							</div>
+
+                            <!-- Modal body -->
+                            <div class="modal-lg">
+    							<h5 class="text-center m-2">Are you sure you want to delete this student from all courses?</h5>
+							</div>
+					<!-- Modal footer -->
+					<div class="modal-footer">
+                        <form action="{{url_for('delete_students', student_id=student.student_id)}}" class="modal-form m-2" method="post">
+                            <button class="btn btn-secondary btn-lg btn-block" type="submit">Confirm</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        </form>                
+					</div>
+				  </div>
+			  </div>
+			  </div>
+	  		{% endfor %}
+	  {% endif %}
+      
+      {% if semesters %}
+	  		{% for semester in semesters %}
+	  			<div class="modal fade" id="course-list-modal{{semester.term}}{{semester.year}}">
+					<div class="modal-dialog">
+						<div class="modal-content">
+
+							<!-- Modal Header -->
+							<div class="modal-header">
+								<h4 class="modal-title">{{semester.term}} {{semester.year}} Courses</h4>
+								<button type="button" class="close" data-dismiss="modal">×</button>
+							</div>
+
+							<!-- Modal body -->
+							<div class="modal-body">
+								<ul class="list-group">
+									{% for course in semester.course_list %}
+										<a class="list-group-item list-group-item-action text-center" href="{{ url_for('get_one_course', course_id = course.course_id)}}">{{course.department}} {{course.course_number}}: {{course.section}}</a>
+									{% endfor %}
+								</ul>
+							</div>
+
+							<!-- Modal footer -->
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							</div>
+						</div>
+					</div>
+	  			</div>
+	  		{% endfor %}	
+	    {% endif %}
+	  <!-- End of Modals -->
+	
+	  <!-- End of Modals -->
+  </body>
+</html>

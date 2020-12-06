@@ -409,7 +409,18 @@ def get_all_students():
         student_data['first_name'] = student.fname
         student_data['last name'] = student.lname
         results.append(student_data)
-    return jsonify(results)
+    return  students
+
+
+@app.route('/students/edit', methods=['GET'])
+#@login_required
+def edit_students():
+        all_courses = get_all_courses()
+        instructors = get_instructors()
+        students = get_all_students()
+        print(all_courses)
+        print(instructors)
+        return render_template('edit_students.html', courses = all_courses, semesters=all_courses, instructors=instructors, students = students)
 
 
 # GET ONE STUDENT
@@ -466,14 +477,15 @@ def delete_students(student_id):
     if request.method == 'POST':
         try:
             student = Student.query.get(student_id)
+            delete_student_from_enrolled(student_id)
             db.session.delete(student)
             db.session.commit()
             print("Student deleted" + student_id)
         except:
             print("Error:  Delete Unsuccessful")
-        return redirect(url_for('get_all_students'))
+        return
     else:
-        return redirect(url_for('get_all_students'))
+        return
 
 
 # COURSE CLASS
@@ -577,7 +589,8 @@ def get_one_course(course_id):
 
     swp_results = get_course_swps(course_id)
     student_results = get_course_results(course_id)  
-
+    for student in student_results:
+        print(student['student_id'])
     if user.account_type == 'instructor':
         semesters_list = get_instructor_courses(user_id)
         print(semesters_list)
@@ -853,7 +866,7 @@ def get_course_swps(course_id):
         swp_data = {}
         course = Course.query.get(swp.course_id)
         attempts_list = get_swp_attempts(swp.swp_id)
-        if len(attempts_list)==0:
+        if len(attempts_list) == 0:
             swp_data['SO1'] = 0
             swp_data['SO2'] = 0
             swp_data['SO3'] = 0
@@ -1148,8 +1161,7 @@ def delete_attempts(swp_id):
                 db.session.delete(attempt)
                 db.session.commit()
                 print(" Deleted")
-
-    return 
+            return
 
 
 # ENROLLED CLASS
@@ -1217,14 +1229,6 @@ def get_course_enrolled(course_id):
 
     sorted_results = sorted(results_list, key=lambda i: i['student_last'])
     return sorted_results
-
-
-
-# TODO -- NOT SURE IF WE NEED THIS METHOD OR NOT
-@app.route('/enrolled/<int:course_id>', methods=['GET', 'POST'])
-# @login_required
-def update_enrolled(course_id):
-    return ""
 
 
 # ENROLL STUDENT IN ONE COURSE
@@ -1334,6 +1338,13 @@ def get_all_results():
     return jsonify(output)
 
 
+#@login_required
+def get_student_results(student_id, swp_id):
+    results = []
+    results = Results.query.filter_by(swp_id = swp_id, student_id = student_id).all()
+    return results
+
+
 @app.route('/results/swp/<int:swp_id>', methods = ['GET'])
 #@login_required
 def get_swp_results(swp_id):
@@ -1370,9 +1381,8 @@ def get_course_results(course_id):
             scores_data = {}
             if student_scores == None:
                 scores_data['swp_id'] = assignment['swp_id']
-                scores_data['score'] = "-"
+                scores_data['score'] = ""
             else:
-                scores_data['result_id'] = assignments['id']
                 scores_data['swp_id'] = assignment['swp_id']
                 scores_data['score'] = student_scores.value
             
@@ -1395,6 +1405,7 @@ def get_course_results(course_id):
     return output
 
 
+#keeping incase we want to use it from the student modal
 @app.route('/results/student/<int:student_id>/<int:swp_id>', methods=['GET', 'POST'])
 # @login_required
 def update_student_result(student_id, swp_id):
@@ -1411,30 +1422,30 @@ def update_student_result(student_id, swp_id):
 
     return redirect(url_for('get_all_results'))
 
-
-# TODO -- complete put results endpoint
-@app.route('/results', methods=['POST', 'GET'])
-# @login_required
-def add_results():
-    if request.method == "post":
-        try:
-            student_id = request.form['student_id']
-            swp_id = request.form['swp_id']
-            if Results.query.filter_by(swp_id=swp_id, student_id=student_id).all():
-                return redirect(url_for('update_student_result', student_id=student_id, swp_id=swp_id, method='POST'))
-            else:
-                print("NEW RESULT FOUND -- INSERT INTO DB")
-                value = request.form['score']
-                dbconnection = engine.connect()
-                statement = f"INSERT INTO Results(student_id, swp_id, value)\
-                        VALUES ({student_id},{swp_id}, {value});"
-                print(statement)
-                dbconnection.execute(statement)
-                dbconnection.close()
-                print("RESULT added!")
-                return redirect(url_for('get_all_results'))
-        except:
-            return "test failed"
+#this method updates values from EDIT COURSE button submissions
+def update_course_results(student_id, swp_id, value):
+    existing_result = get_student_results(student_id, swp_id)
+    if existing_result:
+        #update
+        for result in existing_result:
+            result.value = value
+            db.session.commit()
+        return
+    else:
+        #addnew
+        student_id = student_id
+        swp_id = swp_id       
+        value = value
+        
+        print("NEW RESULT FOUND -- INSERT INTO DB")
+        dbconnection = engine.connect()
+        statement = f"INSERT INTO Results(student_id, swp_id, value)\
+                VALUES ({student_id},{swp_id}, {value});"
+        print(statement)
+        dbconnection.execute(statement)
+        dbconnection.close()
+        print("RESULT added!")
+        return 
 
 
 @app.route('/results/<int:result_id>/delete', methods=['POST', 'GET'])
@@ -1455,19 +1466,43 @@ def delete_one_result(result_id):
 
 
 #TESTING EDIT SCORES FORM
-@app.route('/update_scores_test', methods=['POST'])
-def update_scores():
-    student_ids = request.form.getlist('student_id')
-    print(student_ids)
-    scores_list = {}
-    print(request.form.getlist('1788806scores'))
-    for item in student_ids:
-        print(item + 'scores')
-        student_scores = request.form.getlist(item + 'scores')
-        scores_list['id'] = student_scores
+@app.route('/update_scores/<int:course_id>', methods=['POST'])
+def update_scores(course_id):    
+    swp_list = request.form.getlist('swp-id')
+    print(swp_list)
+    results_list = []
+    student_ids = request.form.getlist('student-id') 
 
-    print(scores_list)
-    return jsonify(scores_list)
+    if len(student_ids) == 0:
+        return redirect(url_for('get_one_course', course_id = course_id))
+
+    value = ""
+    student_id = ""
+    swp_id = ""
+
+    for item in student_ids:            
+        result_data = {}
+        result_data['student_id'] = item
+        student_id = item
+        scores_list =request.form.getlist(item + 'scores')        
+        scores = []        
+        length = len(swp_list)
+
+        for i in range(length):
+            scores_data = {}                
+            scores_data['value'] = scores_list[i]           
+            scores_data['swp_id'] = swp_list[i]
+            scores.append(scores_data)
+            value = scores_list[i]              
+            swp_id = swp_list[i]
+            update_course_results(student_id, swp_id, value)
+        
+        result_data['scores_list'] = scores
+        results_list.append(result_data)
+        
+    #print(scores_list)
+    return redirect(url_for('get_one_course', course_id = course_id))
+    
 
 
 if __name__ == '__main__':
