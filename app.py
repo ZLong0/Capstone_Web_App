@@ -947,10 +947,8 @@ def add_swp():
         if request.form.get("SO6"):
             so6 = 1
         else:
-            so6 = 0
-       
-        print(swp_name)
-        print(course_id)
+            so6 = 0      
+      
         swp_name = swp_name.upper()
         new_swp = Assignments(course_id, swp_name)
         # check database for existing  overlap
@@ -1048,7 +1046,6 @@ def get_swp_attempts(swp_id):
     attempts = Attempts.query.filter_by(swp_id=swp_id).all()
     # print(attempts)
     results = []
-    attempt_data = {}
 
     attempt_data = {}
     swp = Assignments.query.get(swp_id)
@@ -1075,70 +1072,65 @@ def get_swp_attempts(swp_id):
 # @login_required
 def update_attempts(swp_id):
     if request.method == 'POST':
-        try:
-            attempt = Attempts.query.get(swp_id)
-            so1 = request.form['SO1']
-            so2 = request.form['SO2']
-            so3 = request.form['SO3']
-            so4 = request.form['SO4']
-            so5 = request.form['SO5']
-            so6 = request.form['SO6']
-            if not attempt:
-                print('New SO/SWP combination FOUND!')
-                dbconnection = engine.connect()
-                statement = f"INSERT INTO attempts(swp_id, so1, so2, so3, so4, so5, so6) VALUES ({swp_id}, {so1}, {so2}, {so3}, {so4}, {so5}, {so6});"
-                print(statement)
-                dbconnection.execute(statement)
-                dbconnection.close()
-                return redirect(url_for('get_all_attempts'))
-            else:
-                attempt.so1 = so1
-                attempt.so2 = so2
-                attempt.so3 = so3
-                attempt.so4 = so4
-                attempt.so5 = so5
-                attempt.so6 = so6
-                db.session.commit()
-                print("Attempt record succesfully updated!")
-                return redirect(url_for('get_all_attempts'))
-        except:
-            return ("ERROR OCCURED ON UPDATE")
-    return redirect(url_for('get_all_attempts'))
+        attempt = Attempts.query.get(swp_id)
+        so1 = 0
+        so2 = 0
+        so3 = 0
+        so4 = 0
+        so5 = 0
+        so6 = 0
+
+        if request.form.get("SO1"):
+            so1 = 1
+        else:
+            so1 = 0
+        if request.form.get("SO2"):
+            so2 = 1
+        else:
+            so2 = 0
+
+        if request.form.get("SO3"):
+            so3 = 1
+        else:
+            so3 = 0
+        if request.form.get("SO4"):
+            so4 = 1
+        else:
+            so4 = 0
+
+        if request.form.get("SO5"):
+            so5 = 1
+        else:
+            so5 = 0
+
+        if request.form.get("SO6"):
+            so6 = 1
+        else:
+            so6 = 0
+
+        if not attempt:
+            print('New SO/SWP combination FOUND!')
+            dbconnection = engine.connect()
+            statement = f"INSERT INTO attempts(swp_id, so1, so2, so3, so4, so5, so6) VALUES ({swp_id}, {so1}, {so2}, {so3}, {so4}, {so5}, {so6});"
+            print(statement)
+            dbconnection.execute(statement)
+            dbconnection.close()
+            return redirect(url_for('get_all_attempts'))
+        else:
+            attempt.so1 = so1
+            attempt.so2 = so2
+            attempt.so3 = so3
+            attempt.so4 = so4
+            attempt.so5 = so5
+            attempt.so6 = so6
+            db.session.commit()
+            print("Attempt record succesfully updated!")
+            return redirect(url_for('get_all_attempts'))
 
 
 # ADD NEW ATTEMPT
 @app.route('/attempts', methods=['GET', 'POST'])
 # @login_required
-def add_attempts():
-    if request.method == 'POST':
-        try:
-            # instantiate new  info based on form input
-            swp_id = request.form['swp_id']
-            so1 = request.form['SO1']
-            so2 = request.form['SO2']
-            so3 = request.form['SO3']
-            so4 = request.form['SO4']
-            so5 = request.form['SO5']
-            so6 = request.form['SO6']
-            # check database for existing course overlap
-            existing_attempt = Attempts.query.filter_by(swp_id=swp_id).all()
-            # return error if existing course returns true otherwise add course
-            if existing_attempt:
-                print('Info already exists!')
-                update_attempts(swp_id)
-            else:
-                print('New SO/SWP combination FOUND!')
-                dbconnection = engine.connect()
-                statement = f"INSERT INTO attempts(swp_id, so1, so2, so3, so4, so5, so6) VALUES ({swp_id}, {so1}, {so2}, {so3}, {so4}, {so5}, {so6});"
-                print(statement)
-                dbconnection.execute(statement)
-                dbconnection.close()
-                return redirect(url_for('get_all_attempts'))
-        # IF TRY FAILS -- RETURN FAILURE MESSAGE
-        except:
-            print('EXCEPTION: Add failed!')
-            return redirect(url_for('get_all_attempts'))
-
 def add_attempts(swp_name, course_id, so1, so2, so3, so4, so5, so6):
         swp = Assignments.query.filter_by(swp_name = swp_name, course_id=course_id).all()
         for swp in swp:
