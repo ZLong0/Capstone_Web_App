@@ -409,7 +409,18 @@ def get_all_students():
         student_data['first_name'] = student.fname
         student_data['last name'] = student.lname
         results.append(student_data)
-    return jsonify(results)
+    return  students
+
+
+@app.route('/students/edit', methods=['GET'])
+#@login_required
+def edit_students():
+        all_courses = get_all_courses()
+        instructors = get_instructors()
+        students = get_all_students()
+        print(all_courses)
+        print(instructors)
+        return render_template('edit_students.html', courses = all_courses, semesters=all_courses, instructors=instructors, students = students)
 
 
 # GET ONE STUDENT
@@ -466,14 +477,15 @@ def delete_students(student_id):
     if request.method == 'POST':
         try:
             student = Student.query.get(student_id)
+            delete_student_from_enrolled(student_id)
             db.session.delete(student)
             db.session.commit()
             print("Student deleted" + student_id)
         except:
             print("Error:  Delete Unsuccessful")
-        return redirect(url_for('get_all_students'))
+        return
     else:
-        return redirect(url_for('get_all_students'))
+        return
 
 
 # COURSE CLASS
