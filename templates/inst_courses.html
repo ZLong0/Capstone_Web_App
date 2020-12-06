@@ -68,35 +68,36 @@
 			<button type="button" data-toggle="modal" data-target="#course-add-swp-modal" class="btn btn-secondary mb-1">Add SWP</button>
 		</div>
 	  <div class="table-responsive text-center">
-		  <form action="{{url_for('update_scores')}}" method="post">
+		  <form action="{{url_for('update_scores',course_id = courses[0].course_id)}}" method="post">
 			  <table class="table table-bordered mx-auto w-auto text-center">
-				  <thead>
-					  <tr>
-						  <th scope="col">Student Name</th>
-						  <th scope="col">Student ID</th>
-						  {% if swps %}
-							  {% for swp in swps %}
-								  <th><a data-toggle="modal" href="#edit-swp-modal{{swp.swp_id}}">{{swp.swp_name}}</a></th>
-							  {% endfor %}
-						  {% endif %}
-					  </tr>
-				  </thead>
-				  <tbody>
-					  {% for student in students %}
-					  <input hidden type="text" name="student-id" value="{{student.student_id}}">
-						  <tr>
-							  <td><a data-toggle="modal" href="#edit-student-modal{{student.student_id}}">{{student.student_first}} {{student.student_last}}</a></td>
-							  <td>{{student.student_id}}</td>
-							  {% if student.student_scores %}
-								  {% for score in student.student_scores %}
-									  <td>
-										  <input readonly name="{{student.student_id}}scores" type="number" class="form-control-plaintext text-center score" min="0" max="4" value="{{score.score}}" placeholder="-">
-									  </td>
-								  {% endfor%}
-							  {% endif %}
-						  </tr>
-					  {% endfor %}
-				  </tbody>
+				<thead>
+					<tr>
+						<th scope="col">Student Name</th>
+						<th scope="col">Student ID</th>
+						{% if swps %}
+							{% for swp in swps %}
+								<input hidden type="text" name="swp-id" value="{{swp.swp_id}}">	
+								<th><a  data-toggle="modal" href="#edit-swp-modal{{swp.swp_id}}">{{swp.swp_name}}</a></th>
+							{% endfor %}
+						{% endif %}
+					</tr>
+				</thead>
+				<tbody>
+					{% for student in students %}
+					<input hidden type="text" name="student-id" value="{{student.student_id}}">
+						<tr>
+							<td><a data-toggle="modal" href="#edit-student-modal{{student.student_id}}">{{student.student_first}} {{student.student_last}}</a></td>
+							<td name="student-id" value = "{{student.student_id}}">{{student.student_id}}</td>
+							{% if student.student_scores %}
+								{% for score in student.student_scores %}
+									<td>
+										<input readonly name="{{student.student_id}}scores" type="number" class="form-control-plaintext text-center score" min="0" max="4" value="{{score.score}}" placeholder="-">
+									</td>
+								{% endfor%}
+							{% endif %}
+						</tr>
+					{% endfor %}
+				</tbody>
 			  </table>
 			  <button hidden class="btn btn-secondary score_btn" type="submit">Save Changes</button>
 			  <button hidden class="btn btn-secondary score_btn" type="button" onclick="window.location.reload();">Cancel</button>
