@@ -723,15 +723,10 @@ def delete_course(course_id):
         course = Course.query.get(course_id)
         if course:
             swps = get_course_swps(course_id)
-            if swps:
-                for swp in swps:
-                    attempt = get_swp_attempts(swp['swp_id'])
-                    print(attempt)
-                    if attempt:
-                        delete_attempts(swp['swp_id'])
-                    else:
-                        delete_swp(swp['swp_id'])
-            
+            if len(swps) != 0 :
+                for swp in swps:              
+                   #delete_swp handles deleting attempts and results for that swp id 
+                   delete_swp(swp['swp_id'])
             enrolled = get_course_enrolled(course_id)
             if len(enrolled) > 0:
                 for student in enrolled:
@@ -739,8 +734,7 @@ def delete_course(course_id):
 
             db.session.delete(course)
             db.session.commit()
-            #return redirect(url_for('get_all_courses'))
-            return ("course found")
+            return redirect(url_for('edit_courses'))
         else:
             print("Course not found")
         return ("please stop getting mad")
@@ -890,13 +884,49 @@ def get_course_swps(course_id):
 def update_swp(swp_id):
     if request.method == 'POST':
         swp = Assignments.query.get(swp_id)
+        so1 = 0
+        so2 = 0
+        so3 =0
+        so4 =0
+        so5 =0
+        so6 = 0
+        swp_name = request.form['swp_name'] 
+        if request.form.get("SO1"):
+            so1 = 1
+        else:
+            so1 = 0
+        print("so1")
+        print(so1)
+        if request.form.get("SO2"):
+            so2 = 1
+        else:
+            so2 = 0
+
+        if request.form.get("SO3"):
+            so3 = 1
+        else:
+            so3 = 0
+        if request.form.get("SO4"):
+            so4 = 1
+        else:
+            so4 = 0
+
+        if request.form.get("SO5"):
+            so5 = 1
+        else:
+            so5 = 0
+
+        if request.form.get("SO6"):
+            so6 = 1
+        else:
+            so6 = 0   
         print(swp)
         if swp:
-            # swp.course_id = request.form('course_id')
             name = request.form['swp_name']
             name = name.upper()
             swp.swp_name = name
             db.session.commit()
+            update_attempts(swp.swp_id, so1, so2, so3, so4, so5, so6)
             print("Student Work Product succesfully updated!")
             return redirect(url_for('get_one_course', course_id = swp.course_id))
         else:
@@ -981,14 +1011,18 @@ def add_swp():
 def delete_swp(swp_id):
     if request.method == 'POST':
         swp = Assignments.query.get(swp_id)
-        delete_attempts(swp_id)
+        print(swp)
+        print(swp.swp_id)
+        delete_attempts(swp.swp_id)
+        results = get_swp_results(swp.swp_id)
+        if len(results) != 0:
+            for result in results:
+                delete_one_result(result.id)
         db.session.delete(swp)
         db.session.commit()
 
         print("Work Product Deleted")
 
-    #return redirect(url_for('get_all_swp'))
-    #return redirect(url_for('home'))
     return redirect(url_for('get_one_course', course_id=swp.course_id))
 
 
@@ -1070,54 +1104,15 @@ def get_swp_attempts(swp_id):
 
 # UPDATE ONE ATTEMPT
 @app.route('/attempts/<int:swp_id>', methods=['GET', 'POST'])
-# @login_required
-def update_attempts(swp_id):
-    if request.method == 'POST':
-        attempt = Attempts.query.get(swp_id)
-        so1 = 0
-        so2 = 0
-        so3 = 0
-        so4 = 0
-        so5 = 0
-        so6 = 0
-
-        if request.form.get("SO1"):
-            so1 = 1
-        else:
-            so1 = 0
-        if request.form.get("SO2"):
-            so2 = 1
-        else:
-            so2 = 0
-
-        if request.form.get("SO3"):
-            so3 = 1
-        else:
-            so3 = 0
-        if request.form.get("SO4"):
-            so4 = 1
-        else:
-            so4 = 0
-
-        if request.form.get("SO5"):
-            so5 = 1
-        else:
-            so5 = 0
-
-        if request.form.get("SO6"):
-            so6 = 1
-        else:
-            so6 = 0
-
-        if not attempt:
-            print('New SO/SWP combination FOUND!')
-            dbconnection = engine.connect()
-            statement = f"INSERT INTO attempts(swp_id, so1, so2, so3, so4, so5, so6) VALUES ({swp_id}, {so1}, {so2}, {so3}, {so4}, {so5}, {so6});"
-            print(statement)
-            dbconnection.execute(statement)
-            dbconnection.close()
-            return redirect(url_for('get_all_attempts'))
-        else:
+#login-required
+def update_attempts(swp_id, so1, so2, so3, so4, so5, so6):
+    attempts = Attempts.query.filter_by(swp_id = swp_id).all()
+    if not attempts:
+        swp = Assignments.query.get(swp_id)
+        add_attempts(swp.swp_name, swp.course_id, so1, so2, so3, so4, so5, so6)
+        return
+    else:
+        for attempt in attempts:
             attempt.so1 = so1
             attempt.so2 = so2
             attempt.so3 = so3
@@ -1125,8 +1120,7 @@ def update_attempts(swp_id):
             attempt.so5 = so5
             attempt.so6 = so6
             db.session.commit()
-            print("Attempt record succesfully updated!")
-            return redirect(url_for('get_all_attempts'))
+        return 
 
 
 # ADD NEW ATTEMPT
@@ -1135,22 +1129,12 @@ def update_attempts(swp_id):
 def add_attempts(swp_name, course_id, so1, so2, so3, so4, so5, so6):
         swp = Assignments.query.filter_by(swp_name = swp_name, course_id=course_id).all()
         for swp in swp:
-            existing_attempt = Attempts.query.filter_by(swp_id=swp.swp_id).all()
-                # return error if existing course returns true otherwise add course
-            if existing_attempt:
-                print('Info already exists!')
-                #update_attempts(swp_id)
-            else:
-                print('New SO/SWP combination FOUND!')
-                dbconnection = engine.connect()
-                statement = f"INSERT INTO attempts(swp_id, so1, so2, so3, so4, so5, so6) VALUES ({swp.swp_id}, {so1}, {so2}, {so3}, {so4}, {so5}, {so6});"
-                print(statement)
-                dbconnection.execute(statement)
-                dbconnection.close()
-                return redirect(url_for('get_all_attempts'))
-            # IF TRY FAILS -- RETURN FAILURE MESSAGE
-
-    # return redirect(url_for('home'))
+            print('New SO/SWP combination FOUND!')
+            dbconnection = engine.connect()
+            statement = f"INSERT INTO attempts(swp_id, so1, so2, so3, so4, so5, so6) VALUES ({swp.swp_id}, {so1}, {so2}, {so3}, {so4}, {so5}, {so6});"
+            print(statement)
+            dbconnection.execute(statement)
+            dbconnection.close()
 
 
 # DELETE ONE ATTEMPT
@@ -1158,16 +1142,14 @@ def add_attempts(swp_name, course_id, so1, so2, so3, so4, so5, so6):
 # @login_required
 def delete_attempts(swp_id):
     if request.method == 'POST':
-        try:
-            attempt = Attempts.query.filter_by(swp_id = swp_id)
+            attempt = Attempts.query.filter_by(swp_id = swp_id).all()
             print(attempt)
-            db.session.delete(attempt)
-            db.session.commit()
-            print(" Deleted")
-        except:
-            print("Error:  Delete Unsuccessful")
+            for attempt in attempt:
+                db.session.delete(attempt)
+                db.session.commit()
+                print(" Deleted")
 
-    return redirect(url_for('get_all_attempts'))
+    return 
 
 
 # ENROLLED CLASS
@@ -1352,6 +1334,14 @@ def get_all_results():
     return jsonify(output)
 
 
+@app.route('/results/swp/<int:swp_id>', methods = ['GET'])
+#@login_required
+def get_swp_results(swp_id):
+    results = []
+    results = Results.query.filter_by(swp_id = swp_id).all()
+    return results
+
+
 @app.route('/results/course/<int:course_id>', methods=['GET'])
 # @login_required
 def get_course_results(course_id):
@@ -1382,6 +1372,7 @@ def get_course_results(course_id):
                 scores_data['swp_id'] = assignment['swp_id']
                 scores_data['score'] = "-"
             else:
+                scores_data['result_id'] = assignments['id']
                 scores_data['swp_id'] = assignment['swp_id']
                 scores_data['score'] = student_scores.value
             
@@ -1458,7 +1449,7 @@ def delete_one_result(result_id):
             db.session.delete(result)
             db.session.commit()
             print("Result Deleted")
-            return redirect(url_for('get_all_results'))
+            return
 
     return redirect(url_for('get_all_results'))
 
