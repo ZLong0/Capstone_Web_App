@@ -68,35 +68,36 @@
 			<button type="button" data-toggle="modal" data-target="#course-add-swp-modal" class="btn btn-secondary mb-1">Add SWP</button>
 		</div>
 	  <div class="table-responsive text-center">
-		  <form action="{{url_for('update_scores')}}" method="post">
+		  <form action="{{url_for('update_scores',course_id = courses[0].course_id)}}" method="post">
 			  <table class="table table-bordered mx-auto w-auto text-center">
-				  <thead>
-					  <tr>
-						  <th scope="col">Student Name</th>
-						  <th scope="col">Student ID</th>
-						  {% if swps %}
-							  {% for swp in swps %}
-								  <th><a data-toggle="modal" href="#edit-swp-modal{{swp.swp_id}}">{{swp.swp_name}}</a></th>
-							  {% endfor %}
-						  {% endif %}
-					  </tr>
-				  </thead>
-				  <tbody>
-					  {% for student in students %}
-					  <input hidden type="text" name="student-id" value="{{student.student_id}}">
-						  <tr>
-							  <td><a data-toggle="modal" href="#edit-student-modal{{student.student_id}}">{{student.student_first}} {{student.student_last}}</a></td>
-							  <td>{{student.student_id}}</td>
-							  {% if student.student_scores %}
-								  {% for score in student.student_scores %}
-									  <td>
-										  <input readonly name="{{student.student_id}}scores" type="number" class="form-control-plaintext text-center score" min="0" max="4" value="{{score.score}}" placeholder="-">
-									  </td>
-								  {% endfor%}
-							  {% endif %}
-						  </tr>
-					  {% endfor %}
-				  </tbody>
+				<thead>
+					<tr>
+						<th scope="col">Student Name</th>
+						<th scope="col">Student ID</th>
+						{% if swps %}
+							{% for swp in swps %}
+								<input hidden type="text" name="swp-id" value="{{swp.swp_id}}">	
+								<th><a  data-toggle="modal" href="#edit-swp-modal{{swp.swp_id}}">{{swp.swp_name}}</a></th>
+							{% endfor %}
+						{% endif %}
+					</tr>
+				</thead>
+				<tbody>
+					{% for student in students %}
+					<input hidden type="text" name="student-id" value="{{student.student_id}}">
+						<tr>
+							<td><a data-toggle="modal" href="#edit-student-modal{{student.student_id}}">{{student.student_first}} {{student.student_last}}</a></td>
+							<td name="student-id" value = "{{student.student_id}}">{{student.student_id}}</td>
+							{% if student.student_scores %}
+								{% for score in student.student_scores %}
+									<td>
+										<input readonly name="{{student.student_id}}scores" type="number" class="form-control-plaintext text-center score" min="0" max="4" value="{{score.score}}" placeholder="-">
+									</td>
+								{% endfor%}
+							{% endif %}
+						</tr>
+					{% endfor %}
+				</tbody>
 			  </table>
 			  <button hidden class="btn btn-secondary score_btn" type="submit">Save Changes</button>
 			  <button hidden class="btn btn-secondary score_btn" type="button" onclick="window.location.reload();">Cancel</button>
@@ -380,6 +381,49 @@
 </div>
 {% endfor %}
 {% endif %}
+
+	<!-- Add Student Modal(current course) -->
+	<div class="modal fade" id="course-add-student-modal">
+	  <div class="modal-dialog">
+		<div class="modal-content">
+
+		  <!-- Modal Header -->
+		  <div class="modal-header">
+			  <h4 class="modal-title">Add Student</h4>
+			  <button type="button" class="close" data-dismiss="modal">×</button>
+		  </div>
+		  
+		  <!-- Modal body -->
+		  <div class="modal-body">
+			  <form action="/swp" class="modal-form" method="post">
+				    <div class="form-group">
+					  <label for="student">Select Student</label>
+					  <select id="course_id" name="course_id">
+						  {% for semester in semesters %}							
+							  {% for course in semester.course_list %}
+								  <option value="{{course.course_id}}">{{semester.term}} {{semester.year}} {{course.department}} {{course.course_number}}:  {{course.section}}</option>
+							  {% endfor %}
+						  {% endfor %}
+					  </select>
+				  </div>
+				  <div class="form-group" hidden>
+					  <select id="course_id" name="course_id">
+						  <option value="{{courses[0].course_id}}"></option>
+					  </select>
+				  </div>
+				  
+				  
+				  <button class="btn btn-secondary" type="submit">Submit</button>
+			  </form>
+		  </div>
+
+		  <!-- Modal footer -->
+		  <div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+		  </div>
+		</div>
+	</div>
+	</div>
   
   <!-- Edit Student Modal (generated for each student) -->
   {% if students %}
