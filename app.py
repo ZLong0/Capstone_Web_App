@@ -589,7 +589,8 @@ def get_one_course(course_id):
 
     swp_results = get_course_swps(course_id)
     student_results = get_course_results(course_id)  
-
+    for student in student_results:
+        print(student['student_id'])
     if user.account_type == 'instructor':
         semesters_list = get_instructor_courses(user_id)
         print(semesters_list)
