@@ -380,6 +380,49 @@
 </div>
 {% endfor %}
 {% endif %}
+
+	<!-- Add Student Modal(current course) -->
+	<div class="modal fade" id="course-add-student-modal">
+	  <div class="modal-dialog">
+		<div class="modal-content">
+
+		  <!-- Modal Header -->
+		  <div class="modal-header">
+			  <h4 class="modal-title">Add Student</h4>
+			  <button type="button" class="close" data-dismiss="modal">×</button>
+		  </div>
+		  
+		  <!-- Modal body -->
+		  <div class="modal-body">
+			  <form action="/swp" class="modal-form" method="post">
+				    <div class="form-group">
+					  <label for="student">Select Student</label>
+					  <select id="course_id" name="course_id">
+						  {% for semester in semesters %}							
+							  {% for course in semester.course_list %}
+								  <option value="{{course.course_id}}">{{semester.term}} {{semester.year}} {{course.department}} {{course.course_number}}:  {{course.section}}</option>
+							  {% endfor %}
+						  {% endfor %}
+					  </select>
+				  </div>
+				  <div class="form-group" hidden>
+					  <select id="course_id" name="course_id">
+						  <option value="{{courses[0].course_id}}"></option>
+					  </select>
+				  </div>
+				  
+				  
+				  <button class="btn btn-secondary" type="submit">Submit</button>
+			  </form>
+		  </div>
+
+		  <!-- Modal footer -->
+		  <div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+		  </div>
+		</div>
+	</div>
+	</div>
   
   <!-- Edit Student Modal (generated for each student) -->
   {% if students %}
