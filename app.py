@@ -987,8 +987,9 @@ def delete_swp(swp_id):
 
         print("Work Product Deleted")
 
-    return redirect(url_for('get_all_swp'))
-    return redirect(url_for('home'))
+    #return redirect(url_for('get_all_swp'))
+    #return redirect(url_for('home'))
+    return redirect(url_for('get_one_course', course_id=swp.course_id))
 
 
 # ATTEMPTS CLASS
@@ -1460,6 +1461,22 @@ def delete_one_result(result_id):
             return redirect(url_for('get_all_results'))
 
     return redirect(url_for('get_all_results'))
+
+
+#TESTING EDIT SCORES FORM
+@app.route('/update_scores_test', methods=['POST'])
+def update_scores():
+    student_ids = request.form.getlist('student_id')
+    print(student_ids)
+    scores_list = {}
+    print(request.form.getlist('1788806scores'))
+    for item in student_ids:
+        print(item + 'scores')
+        student_scores = request.form.getlist(item + 'scores')
+        scores_list['id'] = student_scores
+
+    print(scores_list)
+    return jsonify(scores_list)
 
 
 if __name__ == '__main__':
