@@ -1500,13 +1500,9 @@ def update_scores(course_id):
             scores_data['value'] = scores_list[i]           
             scores_data['swp_id'] = swp_list[i]
             scores.append(scores_data)
-            value = scores_list[i]
-            if value == "":
-                pass
-            #todo update delete single value from table
-            else:       
-                swp_id = swp_list[i]
-                update_course_results(student_id, swp_id, value)
+            value = scores_list[i]              
+            swp_id = swp_list[i]
+            update_course_results(student_id, swp_id, value)
         
         result_data['scores_list'] = scores
         results_list.append(result_data)
