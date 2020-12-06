@@ -866,7 +866,7 @@ def get_course_swps(course_id):
         swp_data = {}
         course = Course.query.get(swp.course_id)
         attempts_list = get_swp_attempts(swp.swp_id)
-        if len(attempts_list)==0:
+        if len(attempts_list) == 0:
             swp_data['SO1'] = 0
             swp_data['SO2'] = 0
             swp_data['SO3'] = 0
@@ -1161,8 +1161,7 @@ def delete_attempts(swp_id):
                 db.session.delete(attempt)
                 db.session.commit()
                 print(" Deleted")
-
-    return 
+            return
 
 
 # ENROLLED CLASS
@@ -1230,14 +1229,6 @@ def get_course_enrolled(course_id):
 
     sorted_results = sorted(results_list, key=lambda i: i['student_last'])
     return sorted_results
-
-
-
-# TODO -- NOT SURE IF WE NEED THIS METHOD OR NOT
-@app.route('/enrolled/<int:course_id>', methods=['GET', 'POST'])
-# @login_required
-def update_enrolled(course_id):
-    return ""
 
 
 # ENROLL STUDENT IN ONE COURSE
@@ -1362,8 +1353,6 @@ def get_swp_results(swp_id):
     return results
 
 
-
-
 @app.route('/results/course/<int:course_id>', methods=['GET'])
 # @login_required
 def get_course_results(course_id):
@@ -1416,7 +1405,7 @@ def get_course_results(course_id):
     return output
 
 
-
+#keeping incase we want to use it from the student modal
 @app.route('/results/student/<int:student_id>/<int:swp_id>', methods=['GET', 'POST'])
 # @login_required
 def update_student_result(student_id, swp_id):
@@ -1483,6 +1472,10 @@ def update_scores(course_id):
     print(swp_list)
     results_list = []
     student_ids = request.form.getlist('student-id') 
+
+    if len(student_ids) == 0:
+        return redirect(url_for('get_one_course', course_id = course_id))
+
     value = ""
     student_id = ""
     swp_id = ""
