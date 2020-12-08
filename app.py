@@ -793,7 +793,7 @@ def outcomes():
 def get_one_outcome(so_id):
     outcome = Outcomes.query.get(so_id)
     return outcome
-    
+
 
 # ASSIGNMENTS (SWP) CLASS
 class Assignments(db.Model):
@@ -1506,6 +1506,7 @@ def update_scores(course_id):
     return redirect(url_for('get_one_course', course_id = course_id))
 
 
+#THIS IS FOR ALL TIME -- NOT SEMESTER SPECIFIC YET
 @app.route('/reports/so/<int:so_id>', methods=['GET'])
 #@login_required
 def single_so_results(so_id):
@@ -1544,7 +1545,6 @@ def so_median(so_id):
         return 0
     for swp in swps:
         scores_list = swp['scores_list']
-        print(swp['scores_list'])
         for score in scores_list:
             result.append(score)
   
@@ -1561,7 +1561,6 @@ def so_mean(so_id):
     result = []
     for swp in swps:
         scores_list = swp['scores_list']
-        print(swp['scores_list'])
         for score in scores_list:
             result.append(score)
   
