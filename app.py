@@ -789,6 +789,9 @@ def outcomes():
         semesters_list = get_all_courses()
         return render_template('outcomes.html', outcomes=outcomes_list, semesters=semesters_list)
 
+def get_one_outcome(so_id):
+    outcome = Outcomes.query.get(so_id)
+    return outcome
 
 # ASSIGNMENTS (SWP) CLASS
 class Assignments(db.Model):
@@ -1501,14 +1504,16 @@ def update_scores(course_id):
     return redirect(url_for('get_one_course', course_id = course_id))
 
 
-#TODO
 @app.route('/reports/so/<int:so_id>', methods=['GET'])
 #@login_required
 def single_so_results(so_id):
     results = []
     data = {}
-    count = 0
+    data['so_id'] = so_id
+    so = get_one_outcome(so_id)
+    data['so_name'] = so.so_name
 
+    count = 0
     count = so_count(so_id)
     data['count'] = count
     mean = so_mean(so_id)
@@ -1566,7 +1571,7 @@ def so_mean(so_id):
 @app.route('/reports/so/<int:so_id>', methods = ['GET'])
 def get_so_attempts(so_id):
     dbconnection = engine.connect()
-    so = Outcomes.query.get(so_id)
+    so = get_one_outcome(so_id)
     swps = []
    
     statement = f"SELECT swp_id, {so.so_name}, id from ATTEMPTS WHERE {so.so_name}= 1;"
