@@ -448,26 +448,26 @@ def update_students():
         student = Student.query.get(request.form['student_id'])
         if student:
             # update existing student info based on form input
-            student.fname = request.form['first_name']
-            student.lname = request.form['last_name']
+            student.fname = request.form['student_first']
+            student.lname = request.form['student_last']
 
             # commit changes to db
             db.session.commit()
             flash('Student Updated!')
             # return redirect(url_for('home'))
-            return redirect(url_for('get_all_students'))
+            return redirect(url_for('edit_students'))
         else:
             print("student not found -- add student")
-            student_id = request.form['id']
-            fname = request.form['first_name']
-            lname = request.form['last_name']
+            student_id = request.form['student_id']
+            fname = request.form['student_first']
+            lname = request.form['student_last']
             student = Student(student_id, fname, lname)
             dbconnection = engine.connect()
             statement = f"INSERT INTO student(student_id, fname, lname) VALUES ({student_id}, '{fname}','{lname}');"
             dbconnection.execute(statement)
             print("Student added")
             dbconnection.close()
-            return redirect(url_for('get_all_students'))
+            return redirect(url_for('edit_students'))
 
 
 # DELETE ONE STUDENT
@@ -483,7 +483,7 @@ def delete_students(student_id):
             print("Student deleted" + student_id)
         except:
             print("Error:  Delete Unsuccessful")
-        return
+        return redirect(url_for('edit_students'))
     else:
         return
 
@@ -1430,6 +1430,8 @@ def update_course_results(student_id, swp_id, value):
         for result in existing_result:
             result.value = value
             db.session.commit()
+        return
+    elif value == "":
         return
     else:
         #addnew
