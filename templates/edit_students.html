@@ -180,7 +180,7 @@
 	  	{% endfor %}
 	{% endif %}
 
-	  <!-- Delete Course Modal(generated for every course) -->
+	  <!-- Delete Student from All Modal -->
     {% if students %}
 	  		{% for student in students %}
 				<div class="modal fade" id="delete-student-modal{{student.student_id}}">
@@ -209,7 +209,10 @@
 			  </div>
 	  		{% endfor %}
 	  {% endif %}
-      
+
+
+
+      <!--Course List modal-->
       {% if semesters %}
 	  		{% for semester in semesters %}
 	  			<div class="modal fade" id="course-list-modal{{semester.term}}{{semester.year}}">

@@ -588,18 +588,19 @@ def get_one_course(course_id):
     course_results.append(course_info)
 
     swp_results = get_course_swps(course_id)
-    student_results = get_course_results(course_id)  
+    student_results = get_course_results(course_id) 
+    all_students = get_all_students() 
     for student in student_results:
         print(student['student_id'])
     if user.account_type == 'instructor':
         semesters_list = get_instructor_courses(user_id)
         print(semesters_list)
         return render_template('inst_courses.html', courses=course_results, students=student_results, swps=swp_results,
-                               semesters=semesters_list)
+                               semesters=semesters_list, all_students = all_students)
     else:
         semesters_list = get_all_courses()
         return render_template('courses.html', courses=course_results, students=student_results, swps=swp_results,
-                               semesters=semesters_list)
+                               semesters=semesters_list, all_students = all_students)
 
 
 # gets all courses for specific instructor id
@@ -1076,6 +1077,7 @@ def get_all_attempts():
         attempt_data['attempt_id'] = attempt.id
         attempt_data['course_name'] = course.course_name
         attempt_data['swp'] = swp.swp_name
+        attempt_data['swp_id'] = swp.swp_id
         attempt_data['SO1'] = attempt.so1
         attempt_data['SO2'] = attempt.so2
         attempt_data['SO3'] = attempt.so3
@@ -1251,9 +1253,7 @@ def add_enrolled():
 
         # return error if existing enrollment returns true -- otherwise add enrollment
         if existing_enrollment:
-            return "Student already enrolled in this course!"
-            # return redirect(url_for('home'))
-
+            return redirect(url_for('get_one_course', course_id=course_id))
         else:
             # commit changes to db
             dbconnection = engine.connect()
@@ -1262,7 +1262,7 @@ def add_enrolled():
             dbconnection.execute(statement)
             dbconnection.close()
             print("Student successfully enrolled in course!")
-            return redirect(url_for('get_enrolled', course_id=course_id))
+            return redirect(url_for('get_one_course', course_id=course_id))
 
 #           return redirect(url_for('home'))
 
@@ -1299,7 +1299,7 @@ def delete_student_from_course(course_id, student_id):
         db.session.commit()
 
         print("Enrollment Deleted")
-    return redirect(url_for('get_all_enrolled'))
+    return redirect(url_for('get_one_course', course_id = course_id))
     # return redirect(url_for('home'))
 
 
