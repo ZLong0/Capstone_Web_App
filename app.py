@@ -1,5 +1,5 @@
 #!/usr/bin/python3  
-import os
+import os, statistics
 from flask import Flask, render_template, jsonify, request, session, redirect, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -1089,12 +1089,12 @@ def get_all_attempts():
     return jsonify(results)
 
 
+
 # GET SWP ATTEMPTS 
 @app.route('/attempts/swp/<int:swp_id>', methods=["GET"])
 # @login_required
 def get_swp_attempts(swp_id):
     attempts = Attempts.query.filter_by(swp_id=swp_id).all()
-    # print(attempts)
     results = []
 
     attempt_data = {}
@@ -1113,7 +1113,6 @@ def get_swp_attempts(swp_id):
         attempt_data['SO6'] = attempt.so6
         results.append(attempt_data)
 
-    # print(results)
     return results
 
 
@@ -1263,10 +1262,6 @@ def add_enrolled():
             dbconnection.close()
             print("Student successfully enrolled in course!")
             return redirect(url_for('get_one_course', course_id=course_id))
-
-#           return redirect(url_for('home'))
-
-#    return redirect(url_for('home'))
 
 
 # DELETE STUDENT FROM ALL COURSES
@@ -1504,7 +1499,97 @@ def update_scores(course_id):
         
     #print(scores_list)
     return redirect(url_for('get_one_course', course_id = course_id))
+
+
+#TODO
+@app.route('/reports/so/<int:so_id>', methods=['GET'])
+#@login_required
+def single_so_results(so_id):
+    results = []
+    data = {}
+    count = 0
+
+    count = so_count(so_id)
+    data['count'] = count
+    mean = so_mean(so_id)
+    data['mean'] = mean
+    median = so_median(so_id)
+    data['median'] = median
+    results.append(data)
+    return jsonify(results)    
+
+
+def so_count(so_id):
+    swps = get_so_attempts(so_id)
+    if not swps:
+        return 0
+    count = 0
+    for swp in swps:
+        count = count + 1    
+    return count
+
+
+def so_median(so_id):
+    swps = get_so_attempts(so_id)
+    count = 0
+    result = []
+    if not swps:
+        return 0
+    for swp in swps:
+        scores_list = swp['scores_list']
+        print(swp['scores_list'])
+        for score in scores_list:
+            result.append(score)
+  
+    result.sort()
+    median = statistics.median(result)
+    return median
+
+
+def so_mean(so_id):
+    swps = get_so_attempts(so_id)
+    if not swps:
+        return 0
+    count = 0
+    result = []
+    for swp in swps:
+        scores_list = swp['scores_list']
+        print(swp['scores_list'])
+        for score in scores_list:
+            result.append(score)
+  
+    result.sort()
+    mean = statistics.mean(result)
+    return mean
+
+
+@app.route('/reports/so/<int:so_id>', methods = ['GET'])
+def get_so_attempts(so_id):
+    dbconnection = engine.connect()
+    so = Outcomes.query.get(so_id)
+    swps = []
+   
+    statement = f"SELECT swp_id, {so.so_name}, id from ATTEMPTS WHERE {so.so_name}= 1;"
+    attempts = dbconnection.execute(statement)
+   
+    if not attempts:
+       return []
+
+    for attempt in attempts:
+
+        data = {}
+        results = get_swp_results(attempt.swp_id)
+        score_list = []
+        for item in results:
+            score_list.append(item.value)
+        data['swp_id'] = attempt.swp_id
+        data['scores_list'] = score_list
+        data['SO'] = so.so_name
+        data['attempt_id'] = attempt.id
+        swps.append(data)
     
+    dbconnection.close()
+    return swps
 
 
 if __name__ == '__main__':
