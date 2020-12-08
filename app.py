@@ -789,9 +789,11 @@ def outcomes():
         semesters_list = get_all_courses()
         return render_template('outcomes.html', outcomes=outcomes_list, semesters=semesters_list)
 
+
 def get_one_outcome(so_id):
     outcome = Outcomes.query.get(so_id)
     return outcome
+    
 
 # ASSIGNMENTS (SWP) CLASS
 class Assignments(db.Model):
