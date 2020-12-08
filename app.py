@@ -793,7 +793,7 @@ def outcomes():
 def get_one_outcome(so_id):
     outcome = Outcomes.query.get(so_id)
     return outcome
-    
+
 
 
 # ASSIGNMENTS (SWP) CLASS
