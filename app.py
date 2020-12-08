@@ -1,5 +1,5 @@
 #!/usr/bin/python3  
-import os
+import os, statistics
 from flask import Flask, render_template, jsonify, request, session, redirect, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -448,26 +448,26 @@ def update_students():
         student = Student.query.get(request.form['student_id'])
         if student:
             # update existing student info based on form input
-            student.fname = request.form['first_name']
-            student.lname = request.form['last_name']
+            student.fname = request.form['student_first']
+            student.lname = request.form['student_last']
 
             # commit changes to db
             db.session.commit()
             flash('Student Updated!')
             # return redirect(url_for('home'))
-            return redirect(url_for('get_all_students'))
+            return redirect(url_for('edit_students'))
         else:
             print("student not found -- add student")
-            student_id = request.form['id']
-            fname = request.form['first_name']
-            lname = request.form['last_name']
+            student_id = request.form['student_id']
+            fname = request.form['student_first']
+            lname = request.form['student_last']
             student = Student(student_id, fname, lname)
             dbconnection = engine.connect()
             statement = f"INSERT INTO student(student_id, fname, lname) VALUES ({student_id}, '{fname}','{lname}');"
             dbconnection.execute(statement)
             print("Student added")
             dbconnection.close()
-            return redirect(url_for('get_all_students'))
+            return redirect(url_for('edit_students'))
 
 
 # DELETE ONE STUDENT
@@ -483,7 +483,7 @@ def delete_students(student_id):
             print("Student deleted" + student_id)
         except:
             print("Error:  Delete Unsuccessful")
-        return
+        return redirect(url_for('edit_students'))
     else:
         return
 
@@ -588,18 +588,19 @@ def get_one_course(course_id):
     course_results.append(course_info)
 
     swp_results = get_course_swps(course_id)
-    student_results = get_course_results(course_id)  
+    student_results = get_course_results(course_id) 
+    all_students = get_all_students() 
     for student in student_results:
         print(student['student_id'])
     if user.account_type == 'instructor':
         semesters_list = get_instructor_courses(user_id)
         print(semesters_list)
         return render_template('inst_courses.html', courses=course_results, students=student_results, swps=swp_results,
-                               semesters=semesters_list)
+                               semesters=semesters_list, all_students = all_students)
     else:
         semesters_list = get_all_courses()
         return render_template('courses.html', courses=course_results, students=student_results, swps=swp_results,
-                               semesters=semesters_list)
+                               semesters=semesters_list, all_students = all_students)
 
 
 # gets all courses for specific instructor id
@@ -788,6 +789,9 @@ def outcomes():
         semesters_list = get_all_courses()
         return render_template('outcomes.html', outcomes=outcomes_list, semesters=semesters_list)
 
+def get_one_outcome(so_id):
+    outcome = Outcomes.query.get(so_id)
+    return outcome
 
 # ASSIGNMENTS (SWP) CLASS
 class Assignments(db.Model):
@@ -1076,6 +1080,7 @@ def get_all_attempts():
         attempt_data['attempt_id'] = attempt.id
         attempt_data['course_name'] = course.course_name
         attempt_data['swp'] = swp.swp_name
+        attempt_data['swp_id'] = swp.swp_id
         attempt_data['SO1'] = attempt.so1
         attempt_data['SO2'] = attempt.so2
         attempt_data['SO3'] = attempt.so3
@@ -1087,12 +1092,12 @@ def get_all_attempts():
     return jsonify(results)
 
 
+
 # GET SWP ATTEMPTS 
 @app.route('/attempts/swp/<int:swp_id>', methods=["GET"])
 # @login_required
 def get_swp_attempts(swp_id):
     attempts = Attempts.query.filter_by(swp_id=swp_id).all()
-    # print(attempts)
     results = []
 
     attempt_data = {}
@@ -1111,7 +1116,6 @@ def get_swp_attempts(swp_id):
         attempt_data['SO6'] = attempt.so6
         results.append(attempt_data)
 
-    # print(results)
     return results
 
 
@@ -1251,9 +1255,7 @@ def add_enrolled():
 
         # return error if existing enrollment returns true -- otherwise add enrollment
         if existing_enrollment:
-            return "Student already enrolled in this course!"
-            # return redirect(url_for('home'))
-
+            return redirect(url_for('get_one_course', course_id=course_id))
         else:
             # commit changes to db
             dbconnection = engine.connect()
@@ -1262,11 +1264,7 @@ def add_enrolled():
             dbconnection.execute(statement)
             dbconnection.close()
             print("Student successfully enrolled in course!")
-            return redirect(url_for('get_enrolled', course_id=course_id))
-
-#           return redirect(url_for('home'))
-
-#    return redirect(url_for('home'))
+            return redirect(url_for('get_one_course', course_id=course_id))
 
 
 # DELETE STUDENT FROM ALL COURSES
@@ -1299,7 +1297,7 @@ def delete_student_from_course(course_id, student_id):
         db.session.commit()
 
         print("Enrollment Deleted")
-    return redirect(url_for('get_all_enrolled'))
+    return redirect(url_for('get_one_course', course_id = course_id))
     # return redirect(url_for('home'))
 
 
@@ -1431,6 +1429,8 @@ def update_course_results(student_id, swp_id, value):
             result.value = value
             db.session.commit()
         return
+    elif value == "":
+        return
     else:
         #addnew
         student_id = student_id
@@ -1502,7 +1502,99 @@ def update_scores(course_id):
         
     #print(scores_list)
     return redirect(url_for('get_one_course', course_id = course_id))
+
+
+@app.route('/reports/so/<int:so_id>', methods=['GET'])
+#@login_required
+def single_so_results(so_id):
+    results = []
+    data = {}
+    data['so_id'] = so_id
+    so = get_one_outcome(so_id)
+    data['so_name'] = so.so_name
+
+    count = 0
+    count = so_count(so_id)
+    data['count'] = count
+    mean = so_mean(so_id)
+    data['mean'] = mean
+    median = so_median(so_id)
+    data['median'] = median
+    results.append(data)
+    return jsonify(results)    
+
+
+def so_count(so_id):
+    swps = get_so_attempts(so_id)
+    if not swps:
+        return 0
+    count = 0
+    for swp in swps:
+        count = count + 1    
+    return count
+
+
+def so_median(so_id):
+    swps = get_so_attempts(so_id)
+    count = 0
+    result = []
+    if not swps:
+        return 0
+    for swp in swps:
+        scores_list = swp['scores_list']
+        print(swp['scores_list'])
+        for score in scores_list:
+            result.append(score)
+  
+    result.sort()
+    median = statistics.median(result)
+    return median
+
+
+def so_mean(so_id):
+    swps = get_so_attempts(so_id)
+    if not swps:
+        return 0
+    count = 0
+    result = []
+    for swp in swps:
+        scores_list = swp['scores_list']
+        print(swp['scores_list'])
+        for score in scores_list:
+            result.append(score)
+  
+    result.sort()
+    mean = statistics.mean(result)
+    return mean
+
+
+@app.route('/reports/so/<int:so_id>', methods = ['GET'])
+def get_so_attempts(so_id):
+    dbconnection = engine.connect()
+    so = get_one_outcome(so_id)
+    swps = []
+   
+    statement = f"SELECT swp_id, {so.so_name}, id from ATTEMPTS WHERE {so.so_name}= 1;"
+    attempts = dbconnection.execute(statement)
+   
+    if not attempts:
+       return []
+
+    for attempt in attempts:
+
+        data = {}
+        results = get_swp_results(attempt.swp_id)
+        score_list = []
+        for item in results:
+            score_list.append(item.value)
+        data['swp_id'] = attempt.swp_id
+        data['scores_list'] = score_list
+        data['SO'] = so.so_name
+        data['attempt_id'] = attempt.id
+        swps.append(data)
     
+    dbconnection.close()
+    return swps
 
 
 if __name__ == '__main__':

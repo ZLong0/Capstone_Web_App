@@ -63,7 +63,8 @@
 	  
 	  <div class="main_content">
 		<div class="text-center">
-			<h2 class="text-center">{{courses[0].course_department}} {{courses[0].course_number}} {{courses[0].course_name}}</h2>
+			<h2 class="text-center">{{courses[0].course_department}} {{courses[0].course_number}} {{courses[0].course_name}}</h2>			
+			 <button type="button" data-toggle="modal" href="#edit-enrolled-modal" class ="btn btn-secondary mb-1">Add Student</button>
 			<button type="button" class="btn btn-secondary mb-1" onclick="editScores();">Edit Scores</button>
 			<button type="button" data-toggle="modal" data-target="#course-add-swp-modal" class="btn btn-secondary mb-1">Add SWP</button>
 		</div>
@@ -105,389 +106,425 @@
 	  </div>
 	</div>
   
-  <!-- Modals -->
+ 	<!-- Modals -->
 
-	<!-- Add SWP Modal(current course) -->
-	<div class="modal fade" id="course-add-swp-modal">
-	  <div class="modal-dialog">
-		<div class="modal-content">
+	  <!-- Add SWP Modal(current course) -->
+	  <div class="modal fade" id="course-add-swp-modal">
+		<div class="modal-dialog">
+		  <div class="modal-content">
 
-		  <!-- Modal Header -->
-		  <div class="modal-header">
-			  <h4 class="modal-title">Add Work Product</h4>
-			  <button type="button" class="close" data-dismiss="modal">×</button>
+			<!-- Modal Header -->
+			<div class="modal-header">
+				<h4 class="modal-title">Add Work Product</h4>
+				<button type="button" class="close" data-dismiss="modal">×</button>
+			</div>
+			
+			<!-- Modal body -->
+			<div class="modal-body">
+				<form action="/swp" class="modal-form" method="post">
+					
+					<div class="form-group" hidden>
+						<select id="course_id" name="course_id">
+							<option value="{{courses[0].course_id}}"></option>
+						</select>
+					</div>
+					
+					<div class="form-group">
+						<label for="swp_name">Assignment Name</label>
+						<input type="text" class="form-control" id="swp_name" name="swp_name" required="true">
+					</div>
+				 
+					<div class="form-group">
+						 <label for="so-checkboxes">Student Outcomes</label>
+						 <div class="so-checkboxes">
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO1" id="SO1" value="SO1">
+								 <label class="form-check-label" for="SO1">SO1</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO2" id="SO2" value="SO2">
+								 <label class="form-check-label" for="SO2">SO2</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO3" id="SO3" value="SO3">
+								 <label class="form-check-label" for="SO3">SO3</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO4" id="SO4" value="SO4">
+								 <label class="form-check-label" for="SO4">SO4</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO5" id="SO5" value="SO5">
+								 <label class="form-check-label" for="SO5">SO5</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO6" id="SO6" value="SO6">
+								 <label class="form-check-label" for="SO6">SO6</label>
+							 </div>
+						 </div>
+					</div>
+					<button class="btn btn-secondary" type="submit">Submit</button>
+				</form>
+			</div>
+
+			<!-- Modal footer -->
+			<div class="modal-footer">
+				  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+			</div>
 		  </div>
-		  
-		  <!-- Modal body -->
-		  <div class="modal-body">
-			  <form action="/swp" class="modal-form" method="post">
-				  
-				  <div class="form-group" hidden>
-					  <select id="course_id" name="course_id">
-						  <option value="{{courses[0].course_id}}"></option>
-					  </select>
-				  </div>
-				  
-				  <div class="form-group">
-					  <label for="swp_name">Assignment Name</label>
-					  <input type="text" class="form-control" id="swp_name" name="swp_name" required="true">
-				  </div>
-			   
-				  <div class="form-group">
-					   <label for="so-checkboxes">Student Outcomes</label>
-					   <div class="so-checkboxes">
-						   <div class="form-check form-check-inline">
-							   <input class="form-check-input" type="checkbox" name="SO1" id="SO1" value="SO1">
-							   <label class="form-check-label" for="SO1">SO1</label>
-						   </div>
+	  </div>
+	  </div>
+	  
+	  <!-- Add SWP Modal -->
+	  <div class="modal fade" id="add-swp-modal">
+		<div class="modal-dialog">
+		  <div class="modal-content">
 
-						   <div class="form-check form-check-inline">
-							   <input class="form-check-input" type="checkbox" name="SO2" id="SO2" value="SO2">
-							   <label class="form-check-label" for="SO2">SO2</label>
-						   </div>
+			<!-- Modal Header -->
+			<div class="modal-header">
+				<h4 class="modal-title">Add Work Product</h4>
+				<button type="button" class="close" data-dismiss="modal">×</button>
+			</div>
+			
+			<!-- Modal body -->
+			<div class="modal-body">
+				<form action="/swp" class="modal-form" method="post">
+					
+					<div class="form-group">
+						<label for="course_id">Select Course</label>
+						<select id="course_id" name="course_id">
+							{% for semester in semesters %}							
+								{% for course in semester.course_list %}
+									<option value="{{course.course_id}}">{{semester.term}} {{semester.year}} {{course.department}} {{course.course_number}}:  {{course.section}}</option>
+								{% endfor %}
+							{% endfor %}
+						</select>
+					</div>
+					
+					<div class="form-group">
+						<label for="swp_name">Assignment Name</label>
+						<input type="text" class="form-control" id="swp_name" name="swp_name" required="true">
+					</div>
+				 
+					<div class="form-group">
+						 <label for="so-checkboxes">Student Outcomes</label>
+						 <div class="so-checkboxes">
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO1" id="SO1" value="SO1">
+								 <label class="form-check-label" for="SO1">SO1</label>
+							 </div>
 
-						   <div class="form-check form-check-inline">
-							   <input class="form-check-input" type="checkbox" name="SO3" id="SO3" value="SO3">
-							   <label class="form-check-label" for="SO3">SO3</label>
-						   </div>
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO2" id="SO2" value="SO2">
+								 <label class="form-check-label" for="SO2">SO2</label>
+							 </div>
 
-						   <div class="form-check form-check-inline">
-							   <input class="form-check-input" type="checkbox" name="SO4" id="SO4" value="SO4">
-							   <label class="form-check-label" for="SO4">SO4</label>
-						   </div>
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO3" id="SO3" value="SO3">
+								 <label class="form-check-label" for="SO3">SO3</label>
+							 </div>
 
-						   <div class="form-check form-check-inline">
-							   <input class="form-check-input" type="checkbox" name="SO5" id="SO5" value="SO5">
-							   <label class="form-check-label" for="SO5">SO5</label>
-						   </div>
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO4" id="SO4" value="SO4">
+								 <label class="form-check-label" for="SO4">SO4</label>
+							 </div>
 
-						   <div class="form-check form-check-inline">
-							   <input class="form-check-input" type="checkbox" name="SO6" id="SO6" value="SO6">
-							   <label class="form-check-label" for="SO6">SO6</label>
-						   </div>
-					   </div>
-				  </div>
-				  <button class="btn btn-secondary" type="submit">Submit</button>
-			  </form>
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO5" id="SO5" value="SO5">
+								 <label class="form-check-label" for="SO5">SO5</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO6" id="SO6" value="SO6">
+								 <label class="form-check-label" for="SO6">SO6</label>
+							 </div>
+						 </div>
+					</div>
+					<button class="btn btn-secondary" type="submit">Submit</button>
+				</form>
+			</div>
+
+			<!-- Modal footer -->
+			<div class="modal-footer">
+				  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+			</div>
 		  </div>
-
-		  <!-- Modal footer -->
-		  <div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-		  </div>
-		</div>
-	</div>
-	</div>
-	
-	<!-- Add SWP Modal -->
-	<div class="modal fade" id="add-swp-modal">
-	  <div class="modal-dialog">
-		<div class="modal-content">
-
-		  <!-- Modal Header -->
-		  <div class="modal-header">
-			  <h4 class="modal-title">Add Work Product</h4>
-			  <button type="button" class="close" data-dismiss="modal">×</button>
-		  </div>
-		  
-		  <!-- Modal body -->
-		  <div class="modal-body">
-			  <form action="/swp" class="modal-form" method="post">
-				  
-				  <div class="form-group">
-					  <label for="course_id">Select Course</label>
-					  <select id="course_id" name="course_id">
-						  {% for semester in semesters %}							
-							  {% for course in semester.course_list %}
-								  <option value="{{course.course_id}}">{{semester.term}} {{semester.year}} {{course.department}} {{course.course_number}}:  {{course.section}}</option>
-							  {% endfor %}
-						  {% endfor %}
-					  </select>
-				  </div>
-				  
-				  <div class="form-group">
-					  <label for="swp_name">Assignment Name</label>
-					  <input type="text" class="form-control" id="swp_name" name="swp_name" required="true">
-				  </div>
-			   
-				  <div class="form-group">
-					   <label for="so-checkboxes">Student Outcomes</label>
-					   <div class="so-checkboxes">
-						   <div class="form-check form-check-inline">
-							   <input class="form-check-input" type="checkbox" name="SO1" id="SO1" value="SO1">
-							   <label class="form-check-label" for="SO1">SO1</label>
-						   </div>
-
-						   <div class="form-check form-check-inline">
-							   <input class="form-check-input" type="checkbox" name="SO2" id="SO2" value="SO2">
-							   <label class="form-check-label" for="SO2">SO2</label>
-						   </div>
-
-						   <div class="form-check form-check-inline">
-							   <input class="form-check-input" type="checkbox" name="SO3" id="SO3" value="SO3">
-							   <label class="form-check-label" for="SO3">SO3</label>
-						   </div>
-
-						   <div class="form-check form-check-inline">
-							   <input class="form-check-input" type="checkbox" name="SO4" id="SO4" value="SO4">
-							   <label class="form-check-label" for="SO4">SO4</label>
-						   </div>
-
-						   <div class="form-check form-check-inline">
-							   <input class="form-check-input" type="checkbox" name="SO5" id="SO5" value="SO5">
-							   <label class="form-check-label" for="SO5">SO5</label>
-						   </div>
-
-						   <div class="form-check form-check-inline">
-							   <input class="form-check-input" type="checkbox" name="SO6" id="SO6" value="SO6">
-							   <label class="form-check-label" for="SO6">SO6</label>
-						   </div>
-					   </div>
-				  </div>
-				  <button class="btn btn-secondary" type="submit">Submit</button>
-			  </form>
-		  </div>
-
-		  <!-- Modal footer -->
-		  <div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-		  </div>
-		</div>
-	</div>
-	</div>
+	  </div>
+	  </div>
 
 <!-- Edit SWP Modal (generated for each swp)-->
 {% if swps %}
 {% for swp in swps %}
 <div class="modal fade" id="edit-swp-modal{{swp.swp_id}}">
-<div class="modal-dialog">
-	  <div class="modal-content">
-
-		<!-- Modal Header -->
-		<div class="modal-header">
-		  <h4 class="modal-title">Edit Work Product</h4>
-		   <button type="button" class="close" data-dismiss="modal">×</button>
-	 </div>
-   <!-- Modal body -->
-	 <div class="modal-body">
-		   <form action="/swp/{{swp.swp_id}}" class="modal-form" method="post">
-			   
-			   <div class="form-group">
-				   <label for="swp_name">Assignment Name</label>
-				   <input type="text" class="form-control mb-2" id="swp_name" name="swp_name" value="{{swp.swp_name}}" required="true">
-			   </div>
-			   
-			   <div class="form-group">
-				   <label for="so-checkboxes">Student Outcomes</label>
-				   <div class="so-checkboxes">
-					   <div class="form-check form-check-inline">
-						   {% if swp.SO1 == 1 %}
-						   <input class="form-check-input" type="checkbox" name="SO1" id="SO1" value="SO1" checked>
-						   {% else %}
-						   <input class="form-check-input" type="checkbox" name="SO1" id="SO1" value="SO1">
-						   {% endif %}
-						   <label class="form-check-label" for="SO1">SO1</label>
-					   </div>
-
-					   <div class="form-check form-check-inline">
-						   {% if swp.SO2 == 1 %}
-						   <input class="form-check-input" type="checkbox" name="SO2" id="SO2" value="SO2" checked>
-						   {% else %}
-						   <input class="form-check-input" type="checkbox" name="SO2" id="SO2" value="SO2">
-						   {% endif %}
-						   <label class="form-check-label" for="SO2">SO2</label>
-					   </div>
-
-					   <div class="form-check form-check-inline">
-						   {% if swp.SO3 == 1 %}
-						   <input class="form-check-input" type="checkbox" name="SO3" id="SO3" value="SO3" checked>
-						   {% else %}
-						   <input class="form-check-input" type="checkbox" name="SO3" id="SO3" value="SO3">
-						   {% endif %}
-						   <label class="form-check-label" for="SO3">SO3</label>
-					   </div>
-
-					   <div class="form-check form-check-inline">
-						   {% if swp.SO4 == 1 %}
-						   <input class="form-check-input" type="checkbox" name="SO4" id="SO4" value="SO4" checked>
-						   {% else %}
-						   <input class="form-check-input" type="checkbox" name="SO4" id="SO4" value="SO4">
-						   {% endif %}
-						   <label class="form-check-label" for="SO4">SO4</label>
-					   </div>
-
-					   <div class="form-check form-check-inline">
-						   {% if swp.SO5 == 1 %}
-						   <input class="form-check-input" type="checkbox" name="SO5" id="SO5" value="SO5" checked>
-						   {% else %}
-						   <input class="form-check-input" type="checkbox" name="SO5" id="SO5" value="SO5">
-						   {% endif %}
-						   <label class="form-check-label" for="SO5">SO5</label>
-					   </div>
-
-					   <div class="form-check form-check-inline">
-						   {% if swp.SO6 == 1 %}
-						   <input class="form-check-input" type="checkbox" name="SO6" id="SO6" value="SO6" checked>
-						   {% else %}
-						   <input class="form-check-input" type="checkbox" name="SO6" id="SO6" value="SO6">
-						   {% endif %}
-						   <label class="form-check-label" for="SO6">SO6</label>
-					   </div>
-				   </div>
-			   </div>
-			   <button class="btn btn-secondary" type="submit">Submit</button>
-			   <button class="btn btn-secondary" type="button" data-toggle="modal" data-target="#delete-swp-modal{{swp.swp_id}}">Delete</button>
-		   </form>
-	 </div>
-
-		<!-- Modal footer -->
-		<div class="modal-footer">
-			<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-		</div>
-
-	</div>
-   </div>
-</div>
-{% endfor %}
-{% endif %}
-	
-	<!-- Delete SWP Modal (generated for each swp)-->
-{% if swps %}
-{% for swp in swps %}
-<div class="modal fade" id="delete-swp-modal{{swp.swp_id}}">
-<div class="modal-dialog">
-	  <div class="modal-content">
-
-		<!-- Modal Header -->
-		<div class="modal-header">
-		  <h4 class="modal-title">Delete {{swp.swp_name}}?</h4>
-		   <button type="button" class="close" data-dismiss="modal">×</button>
-	 </div>
-   <!-- Modal body -->
-	 <div class="modal-body">
-		 <h5 class="text-center m-2">Are you sure you want to delete this SWP? All information will be lost!</h5>
-	 </div>
-
-		<!-- Modal footer -->
-		  <div class="modal-footer">
-			<form action="{{url_for('delete_swp', swp_id=swp.swp_id)}}" class="modal-form m-2" method="post">
-				<button class="btn btn-secondary btn-lg btn-block" type="submit">Confirm</button>
-				<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-			</form>                
-		  </div>
-
-	</div>
-   </div>
-</div>
-{% endfor %}
-{% endif %}
-
-	<!-- Add Student Modal(current course) -->
-	<div class="modal fade" id="course-add-student-modal">
-	  <div class="modal-dialog">
+  <div class="modal-dialog">
 		<div class="modal-content">
 
 		  <!-- Modal Header -->
 		  <div class="modal-header">
-			  <h4 class="modal-title">Add Student</h4>
-			  <button type="button" class="close" data-dismiss="modal">×</button>
-		  </div>
-		  
-		  <!-- Modal body -->
-		  <div class="modal-body">
-			  <form action="/swp" class="modal-form" method="post">
-				    <div class="form-group">
-					  <label for="student">Select Student</label>
-					  <select id="course_id" name="course_id">
-						  {% for semester in semesters %}							
-							  {% for course in semester.course_list %}
-								  <option value="{{course.course_id}}">{{semester.term}} {{semester.year}} {{course.department}} {{course.course_number}}:  {{course.section}}</option>
-							  {% endfor %}
-						  {% endfor %}
-					  </select>
-				  </div>
-				  <div class="form-group" hidden>
-					  <select id="course_id" name="course_id">
-						  <option value="{{courses[0].course_id}}"></option>
-					  </select>
-				  </div>
-				  
-				  
-				  <button class="btn btn-secondary" type="submit">Submit</button>
-			  </form>
-		  </div>
+			<h4 class="modal-title">Edit Work Product</h4>
+			 <button type="button" class="close" data-dismiss="modal">×</button>
+	   </div>
+	 <!-- Modal body -->
+	   <div class="modal-body">
+			 <form action="/swp/{{swp.swp_id}}" class="modal-form" method="post">
+				 
+				 <div class="form-group">
+					 <label for="swp_name">Assignment Name</label>
+					 <input type="text" class="form-control mb-2" id="swp_name" name="swp_name" value="{{swp.swp_name}}" required="true">
+				 </div>
+				 
+				 <div class="form-group">
+					 <label for="so-checkboxes">Student Outcomes</label>
+					 <div class="so-checkboxes">
+						 <div class="form-check form-check-inline">
+							 {% if swp.SO1 == 1 %}
+							 <input class="form-check-input" type="checkbox" name="SO1" id="SO1" value="SO1" checked>
+							 {% else %}
+							 <input class="form-check-input" type="checkbox" name="SO1" id="SO1" value="SO1">
+							 {% endif %}
+							 <label class="form-check-label" for="SO1">SO1</label>
+						 </div>
+
+						 <div class="form-check form-check-inline">
+							 {% if swp.SO2 == 1 %}
+							 <input class="form-check-input" type="checkbox" name="SO2" id="SO2" value="SO2" checked>
+							 {% else %}
+							 <input class="form-check-input" type="checkbox" name="SO2" id="SO2" value="SO2">
+							 {% endif %}
+							 <label class="form-check-label" for="SO2">SO2</label>
+						 </div>
+
+						 <div class="form-check form-check-inline">
+							 {% if swp.SO3 == 1 %}
+							 <input class="form-check-input" type="checkbox" name="SO3" id="SO3" value="SO3" checked>
+							 {% else %}
+							 <input class="form-check-input" type="checkbox" name="SO3" id="SO3" value="SO3">
+							 {% endif %}
+							 <label class="form-check-label" for="SO3">SO3</label>
+						 </div>
+
+						 <div class="form-check form-check-inline">
+							 {% if swp.SO4 == 1 %}
+							 <input class="form-check-input" type="checkbox" name="SO4" id="SO4" value="SO4" checked>
+							 {% else %}
+							 <input class="form-check-input" type="checkbox" name="SO4" id="SO4" value="SO4">
+							 {% endif %}
+							 <label class="form-check-label" for="SO4">SO4</label>
+						 </div>
+
+						 <div class="form-check form-check-inline">
+							 {% if swp.SO5 == 1 %}
+							 <input class="form-check-input" type="checkbox" name="SO5" id="SO5" value="SO5" checked>
+							 {% else %}
+							 <input class="form-check-input" type="checkbox" name="SO5" id="SO5" value="SO5">
+							 {% endif %}
+							 <label class="form-check-label" for="SO5">SO5</label>
+						 </div>
+
+						 <div class="form-check form-check-inline">
+							 {% if swp.SO6 == 1 %}
+							 <input class="form-check-input" type="checkbox" name="SO6" id="SO6" value="SO6" checked>
+							 {% else %}
+							 <input class="form-check-input" type="checkbox" name="SO6" id="SO6" value="SO6">
+							 {% endif %}
+							 <label class="form-check-label" for="SO6">SO6</label>
+						 </div>
+					 </div>
+				 </div>
+				 <button class="btn btn-secondary" type="submit">Submit</button>
+				 <button class="btn btn-secondary" type="button" data-toggle="modal" data-target="#delete-swp-modal{{swp.swp_id}}">Delete</button>
+			 </form>
+	   </div>
 
 		  <!-- Modal footer -->
 		  <div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+			  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 		  </div>
-		</div>
-	</div>
-	</div>
-  
-  <!-- Edit Student Modal (generated for each student) -->
-  {% if students %}
-	  {% for student in students %}
-		  <div class="modal fade" id="edit-student-modal{{student.student_id}}">
+
+	  </div>
+	 </div>
+</div>
+  {% endfor %}
+{% endif %}
+	  
+	  <!-- Delete SWP Modal (generated for each swp)-->
+{% if swps %}
+{% for swp in swps %}
+<div class="modal fade" id="delete-swp-modal{{swp.swp_id}}">
+  <div class="modal-dialog">
+		<div class="modal-content">
+
+		  <!-- Modal Header -->
+		  <div class="modal-header">
+			<h4 class="modal-title">Delete {{swp.swp_name}}?</h4>
+			 <button type="button" class="close" data-dismiss="modal">×</button>
+	   </div>
+	 <!-- Modal body -->
+	   <div class="modal-body">
+		   <h5 class="text-center m-2">Are you sure you want to delete this SWP? All information will be lost!</h5>
+	   </div>
+
+		  <!-- Modal footer -->
+			<div class="modal-footer">
+			  <form action="{{url_for('delete_swp', swp_id=swp.swp_id)}}" class="modal-form m-2" method="post">
+				  <button class="btn btn-secondary btn-lg btn-block" type="submit">Confirm</button>
+				  <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+              </form>                
+			</div>
+
+	  </div>
+	 </div>
+</div>
+  {% endfor %}
+{% endif %}
+	
+	<!-- Edit Student Modal (generated for each student) -->
+	{% if students %}
+		{% for student in students %}
+			<div class="modal fade" id="edit-student-modal{{student.student_id}}">
+				<div class="modal-dialog">
+					<div class="modal-content">
+
+						<!-- Modal Header -->
+						<div class="modal-header">
+							<h4 class="modal-title">{{student.student_first}} {{student.student_last}}</h4>
+							<button type="button" class="close" data-dismiss="modal">×</button>
+						</div>
+
+						<!-- Modal body -->
+						<div class="modal-body">
+							<form action="" class="modal-form" method="put">
+
+								<button class="btn btn-secondary" type="submit">Submit</button>
+							</form>
+						</div>
+
+						<!-- Modal footer -->
+						<div class="modal-footer">
+							<button class="btn btn-secondary" data-toggle="modal" data-target="#confirm-delete-student-modal{{student.student_id}}">Delete</button>
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						</div>
+
+					</div>
+				 </div>
+			</div>
+	  	{% endfor %}
+	{% endif %}
+
+<!--EDIT ENROLLED MODAL-->
+	{% if all_students %}
+		{% for student in all_students %}
+			<div class="modal fade" id="edit-enrolled-modal">
 			  <div class="modal-dialog">
 				  <div class="modal-content">
 
 					  <!-- Modal Header -->
 					  <div class="modal-header">
-						  <h4 class="modal-title">{{student.student_first}} {{student.student_last}}</h4>
+						  <h4 class="modal-title">Add Student to Course </h4>
 						  <button type="button" class="close" data-dismiss="modal">×</button>
 					  </div>
 
 					  <!-- Modal body -->
 					  <div class="modal-body">
-						  <form action="" class="modal-form" method="put">
+						<form action="{{url_for('add_enrolled')}}" class="modal-form" method="post">
+							<div class="form-group" hidden>
+								<select id="course_id" name="course_id">
+									<option value="{{courses[0].course_id}}"></option>
+								</select>
+							</div>
+							 <div class="form-group">
+								<input readonly  class="form-control-plaintext text-center score">Course: {{courses[0].course_department}} {{courses[0].course_number}} {{courses[0].course_name}}</input>
+				 			</div>
+							<div class="form-group">
+								<select id="student_id" name="student_id">
+								{% for student in all_students %}
+										<option id="selected_student" value="{{student.student_id}}">{{student.fname}} {{student.lname}} ({{student.student_id}})</option>
+								{% endfor %}
+								</select>
+							</div>			
+							<button class="btn btn-secondary" type="submit">Submit</button>
+						 </form>
+					   </div>
 
-							  <button class="btn btn-secondary" type="submit">Submit</button>
-						  </form>
+					  <!-- Modal footer -->
+					  <div class="modal-footer">
+						  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					  </div>
+				  </div>
+			  </div>
+			</div>
+		{% endfor %}
+  {% endif %}
+	
+  	<!-- Delete Student confirm  Modal -->
+    {% if students %}
+	  		{% for student in students %}
+				<div class="modal fade" id="confirm-delete-student-modal{{student.student_id}}">
+				    <div class="modal-dialog">
+						  <div class="modal-content">
+
+							<!-- Modal Header -->
+							<div class="modal-header">
+								<h4 class="modal-title">Delete {{student.fname}} {{student.lname}}?</h4>
+								<button type="button" class="close" data-dismiss="modal">×</button>
+							</div>
+
+                            <!-- Modal body -->
+                            <div class="modal-lg">
+								<h5 class="text-center m-2">Are you sure you want to delete this {{student.fname}} from this courses?</h5>
+								<h3>All information will be lost!</h3>
+							</div>
+					<!-- Modal footer -->
+					<div class="modal-footer">
+                        <form action="{{url_for('delete_student_from_course', course_id = courses[0].course_id, student_id=student.student_id)}}" class="modal-form m-2" method="post">
+                            <button class="btn btn-secondary btn-lg btn-block" type="submit">Confirm</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        </form>                
+					</div>
+				  </div>
+			  </div>
+			  </div>
+	  		{% endfor %}
+	  {% endif %}
+
+	<!-- Course List Modal (modal is generated for each term)-->
+	<!-- TODO: make links take user to respective course page (may need to add endpoint to handle link) -->
+	{% if semesters %}
+		{% for semester in semesters %}
+			<div class="modal fade" id="course-list-modal{{semester.term}}{{semester.year}}">
+			  <div class="modal-dialog">
+				  <div class="modal-content">
+
+					  <!-- Modal Header -->
+					  <div class="modal-header">
+						  <h4 class="modal-title">{{semester.term}} {{semester.year}} Courses</h4>
+						  <button type="button" class="close" data-dismiss="modal">×</button>
+					  </div>
+
+					  <!-- Modal body -->
+					  <div class="modal-body">
+						  
+						  <ul class="list-group">
+							  {% for course in semester.course_list %}
+								  <a class="list-group-item list-group-item-action text-center" href="{{ url_for('get_one_course', course_id = course.course_id)}}">{{course.department}} {{course.course_number}}: {{course.section}}</a>
+							  {% endfor %}
+						  </ul>
 					  </div>
 
 					  <!-- Modal footer -->
 					  <div class="modal-footer">
 						  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 					  </div>
-					</div>
-				   </div>
-		  </div>
+				  </div>
+			  </div>
+			</div>
 		{% endfor %}
   {% endif %}
-  
-  <!-- Course List Modal (modal is generated for each term)-->
-  <!-- TODO: make links take user to respective course page (may need to add endpoint to handle link) -->
-  {% if semesters %}
-	  {% for semester in semesters %}
-		  <div class="modal fade" id="course-list-modal{{semester.term}}{{semester.year}}">
-			<div class="modal-dialog">
-				<div class="modal-content">
-
-					<!-- Modal Header -->
-					<div class="modal-header">
-						<h4 class="modal-title">{{semester.term}} {{semester.year}} Courses</h4>
-						<button type="button" class="close" data-dismiss="modal">×</button>
-					</div>
-
-					<!-- Modal body -->
-					<div class="modal-body">
-						<ul class="list-group">
-							{% for course in semester.course_list %}
-								<a class="list-group-item list-group-item-action text-center" href="{{ url_for('get_one_course', course_id = course.course_id)}}">{{course.department}} {{course.course_number}}: {{course.section}}</a>
-							{% endfor %}
-						</ul>
-					</div>
-
-					<!-- Modal footer -->
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-					</div>
-				</div>
-			</div>
-		  </div>
-	  {% endfor %}
-{% endif %}
-  <!-- End of Modals -->
+	<!-- End of Modals -->
 </body>
 </html>

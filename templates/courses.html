@@ -63,6 +63,7 @@
 	  <div class="main_content">
 		  <div class="text-center">
 			  <h2 class="text-center">{{courses[0].course_department}} {{courses[0].course_number}} {{courses[0].course_name}}</h2>
+			  <button type="button" data-toggle="modal" href="#edit-enrolled-modal" class ="btn btn-secondary mb-1">Add Student</button>
 			  <button type="button" class="btn btn-secondary mb-1" onclick="editScores();">Edit Scores</button>
 			  <button type="button" data-toggle="modal" data-target="#course-add-swp-modal" class="btn btn-secondary mb-1">Add SWP</button>
 		  </div>
@@ -404,6 +405,7 @@
 
 						<!-- Modal footer -->
 						<div class="modal-footer">
+							<button class="btn btn-secondary" data-toggle="modal" data-target="#confirm-delete-student-modal{{student.student_id}}">Delete</button>
 							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 						</div>
 					  </div>
@@ -411,6 +413,83 @@
 			</div>
 	  	{% endfor %}
 	{% endif %}
+
+<!--EDIT ENROLLED MODAL-->
+	{% if all_students %}
+		{% for student in all_students %}
+			<div class="modal fade" id="edit-enrolled-modal">
+			  <div class="modal-dialog">
+				  <div class="modal-content">
+
+					  <!-- Modal Header -->
+					  <div class="modal-header">
+						  <h4 class="modal-title">Add Student to Course </h4>
+						  <button type="button" class="close" data-dismiss="modal">×</button>
+					  </div>
+
+					  <!-- Modal body -->
+					  <div class="modal-body">
+						<form action="{{url_for('add_enrolled')}}" class="modal-form" method="post">
+							<div class="form-group" hidden>
+								<select id="course_id" name="course_id">
+									<option value="{{courses[0].course_id}}"></option>
+								</select>
+							</div>
+							 <div class="form-group">
+								<input readonly  class="form-control-plaintext text-center score">Course: {{courses[0].course_department}} {{courses[0].course_number}} {{courses[0].course_name}}</input>
+				 			</div>
+							<div class="form-group">
+								<select id="student_id" name="student_id">
+								{% for student in all_students %}
+										<option id="selected_student" value="{{student.student_id}}">{{student.fname}} {{student.lname}} ({{student.student_id}})</option>
+								{% endfor %}
+								</select>
+							</div>			
+							<button class="btn btn-secondary" type="submit">Submit</button>
+						 </form>
+					   </div>
+
+					  <!-- Modal footer -->
+					  <div class="modal-footer">
+						  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					  </div>
+				  </div>
+			  </div>
+			</div>
+		{% endfor %}
+  {% endif %}
+
+  	<!-- Delete Student confirm  Modal -->
+    {% if students %}
+	  		{% for student in students %}
+				<div class="modal fade" id="confirm-delete-student-modal{{student.student_id}}">
+				    <div class="modal-dialog">
+						  <div class="modal-content">
+
+							<!-- Modal Header -->
+							<div class="modal-header">
+								<h4 class="modal-title">Delete {{student.fname}} {{student.lname}}?</h4>
+								<button type="button" class="close" data-dismiss="modal">×</button>
+							</div>
+
+                            <!-- Modal body -->
+                            <div class="modal-lg">
+								<h5 class="text-center m-2">Are you sure you want to delete this {{student.fname}} from this courses?</h5>
+							
+							</div>
+					<!-- Modal footer -->
+					<div class="modal-footer">
+                        <form action="{{url_for('delete_student_from_course', course_id = courses[0].course_id, student_id=student.student_id)}}" class="modal-form m-2" method="post">
+								<h6 class="text-center">All information will be lost!</h6>
+								<button class="btn btn-secondary btn-lg btn-block" type="submit">Confirm</button>
+								<button type="button" class="btn btn-secondary btn-lg btn-block" data-dismiss="modal">Cancel</button>
+                        </form>                
+					</div>
+				  </div>
+			  </div>
+			  </div>
+	  		{% endfor %}
+	  {% endif %}
 	
 	<!-- Course List Modal (modal is generated for each term)-->
 	<!-- TODO: make links take user to respective course page (may need to add endpoint to handle link) -->
@@ -428,6 +507,7 @@
 
 					  <!-- Modal body -->
 					  <div class="modal-body">
+						  
 						  <ul class="list-group">
 							  {% for course in semester.course_list %}
 								  <a class="list-group-item list-group-item-action text-center" href="{{ url_for('get_one_course', course_id = course.course_id)}}">{{course.department}} {{course.course_number}}: {{course.section}}</a>
