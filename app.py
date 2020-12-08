@@ -124,7 +124,7 @@ def index():
 def home():
     user_id = current_user.get_id()
     user = Users.query.get(user_id)
-    user_list = Users.query.all()
+    user_list = Users.query.filter(Users.account_type != 'root')
     dbconnection = engine.connect()
 
     if user.account_type == 'instructor':
@@ -235,12 +235,12 @@ def logout():
 @app.route("/root_pending", methods=["POST", "GET"])
 @login_required
 def pending_list_update():
-    user_list = Users.query.all()
+    user_list = Users.query.filter(Users.account_type != 'root')
     if request.method == "POST":
         user_pending = request.form['user_pending']
         selected_user = Users.query.filter_by(email=request.form['user_select']).first()
         root_cc = Users.query.filter_by(account_type='root').first()
-        instructor_check = Instructor.query.filter_by(inst_id=selected_user.id).first()
+        instructor_check = Instructor.query.filter_by(inst_id=selected_user.id)
         if user_pending == 'approved':
             selected_user = Users.query.filter_by(email=selected_user.email).first()
             selected_user.pending = 0
@@ -602,6 +602,24 @@ def get_one_course(course_id):
         return render_template('courses.html', courses=course_results, students=student_results, swps=swp_results,
                                semesters=semesters_list, all_students = all_students)
 
+# still working here for graphing
+@app.route('/courses/<int:course_id>/<int:swp_id>', methods=['GET'])
+@login_required
+def bar_graph_student_grade(course_id, swp_id):
+    course = Course.query.get(course_id)
+    # students_enrolled = get_course_enrolled(course.id)
+    swp_list = get_course_results(course.id)
+    student_full_name_list = []
+    student_scores_list = []
+    for students in swp_list:
+        student_individual_name = students['student_first'] + " " + students['student_last']
+        student_full_name_list.append(student_individual_name)
+        student_scores = students['student_scores']
+        for score in student_scores:
+            student_scores_list.append(score['score'])
+    values = student_scores_list
+    labels = student_full_name_list
+
 
 # gets all courses for specific instructor id
 @app.route('/courses/inst/<int:instructor_id>', methods=['GET'])
@@ -789,11 +807,9 @@ def outcomes():
         semesters_list = get_all_courses()
         return render_template('outcomes.html', outcomes=outcomes_list, semesters=semesters_list)
 
-
 def get_one_outcome(so_id):
     outcome = Outcomes.query.get(so_id)
     return outcome
-
 
 # ASSIGNMENTS (SWP) CLASS
 class Assignments(db.Model):
@@ -1506,7 +1522,6 @@ def update_scores(course_id):
     return redirect(url_for('get_one_course', course_id = course_id))
 
 
-#THIS IS FOR ALL TIME -- NOT SEMESTER SPECIFIC YET
 @app.route('/reports/so/<int:so_id>', methods=['GET'])
 #@login_required
 def single_so_results(so_id):
@@ -1545,6 +1560,7 @@ def so_median(so_id):
         return 0
     for swp in swps:
         scores_list = swp['scores_list']
+        print(swp['scores_list'])
         for score in scores_list:
             result.append(score)
   
@@ -1561,6 +1577,7 @@ def so_mean(so_id):
     result = []
     for swp in swps:
         scores_list = swp['scores_list']
+        print(swp['scores_list'])
         for score in scores_list:
             result.append(score)
   
