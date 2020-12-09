@@ -16,6 +16,42 @@
   </head>
  
   <body>	  
-	
+	<!-- basic block for a bar graph, needs data passed to the page for values and labels -->
+	  <center>
+          <canvas id="chart" width="auto" height="auto"></canvas>
+          <script>
+              var barData ={
+                  labels:[
+                      {% for item in labels %}
+                          "{{ item }}",
+                      {% endfor %}
+                  ],
+                  datasets:[{
+                      //coloring from the template, haven't bothered changing it yet since it's lower priority
+                      fillColor: "rgba(151,187,205,0.2)",
+                      strokeColor: "rgba(151,187,205,1)",
+                      pointColor: "rgba(151,187,205,1)",
+                      data:[
+                          {% for item in values %}
+                              "{{ item }}",
+                          {% endfor %}
+                      ]
+                  }]
+              }
+              var results = document.getElementById("chart").getContext("2d");
+              steps = 4
+              max = 4
+              new Chart(results).Bar(barData, {
+                  scaleOverride: true,
+                  scaleSteps: steps,
+                  scaleStepWidth: Math.ceil(max/steps),
+                  scaleStartValue: 0,
+                  scaleShowVerticalLines: true,
+                  scaleShowGridLines: true,
+                  barShowStroke: true,
+                  scaleShowLabels: true
+              });
+          </script>
+      </center>
 </body>
 </html>
