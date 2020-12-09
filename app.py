@@ -811,11 +811,6 @@ def get_one_outcome(so_id):
     outcome = Outcomes.query.get(so_id)
     return outcome
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> Fixed Root control for instructors account modifications, added beginning bar graphing template for individual swp results of a course
 # ASSIGNMENTS (SWP) CLASS
 class Assignments(db.Model):
     swp_id = db.Column("swp_id", db.Integer, primary_key=True)
