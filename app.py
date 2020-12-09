@@ -603,13 +603,20 @@ def get_one_course(course_id):
                                semesters=semesters_list, all_students = all_students)
 
 # still working here for graphing
+# graph needs values and labels passed to it using render_template(<template>, values=values, labels=labels)
+# labels and values need to be in a list with string labels and int values
+# connecting is still wonky because I moved this from /courses/<int:course_id> to here to try and
 @app.route('/courses/<int:course_id>/<int:swp_id>', methods=['GET'])
 @login_required
 def bar_graph_student_grade(course_id, swp_id):
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
     course = Course.query.get(course_id)
     # students_enrolled = get_course_enrolled(course.id)
     swp_list = get_course_results(course.id)
+    # labels for single swp in course using student names as labels
     student_full_name_list = []
+    # values using the score on a single swp
     student_scores_list = []
     for students in swp_list:
         student_individual_name = students['student_first'] + " " + students['student_last']
@@ -619,6 +626,13 @@ def bar_graph_student_grade(course_id, swp_id):
             student_scores_list.append(score['score'])
     values = student_scores_list
     labels = student_full_name_list
+    if user.account_type == 'instructor':
+        semesters_list = get_instructor_courses(user_id)
+        print(semesters_list)
+        return render_template('graph_results.html.html', semesters=semesters_list, values=values, labels=labels)
+    else:
+        semesters_list = get_all_courses()
+        return render_template('graph_results.html', semesters=semesters_list, values=values, lables=labels)
 
 
 # gets all courses for specific instructor id
