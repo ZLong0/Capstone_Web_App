@@ -14,17 +14,3 @@ function editScores() {
 		buttons.item(i).removeAttribute("hidden");
 	}
 }
-
-function displayCourses(course_list) {
-	if (course_list.length == 0) document.getElementById("course_options").innerHTML = "<option></option>";
-
-	else {
-		var course_options = "";
-		for (item in course_list) {
-			opt = document.createElement("option");
-			opt.value = item;
-			opt.text = item;
-			newSel.appendChild(opt);
-		  }
-		}
-}
