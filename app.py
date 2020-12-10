@@ -638,7 +638,7 @@ def bar_graph_student_grade(course_id, swp_id):
 # new endpoint for graphing
 @app.route('/report_select', methods=['GET','POST'])
 @login_required
-def report_selector():
+def report_selector_1():
     user_id = Users.get_id(current_user)
     user = Users.query.get(user_id)
     if request.method == 'POST':
@@ -666,6 +666,31 @@ def report_selector():
             return render_template('report_select.html')
     return render_template('report_select.html')
 
+
+@app.route('/report_selected', methods=['GET','POST'])
+@login_required
+def report_selector():
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
+    
+    swps = get_all_swp()
+    attempt = []
+    for swp in swps:
+        attempts = get_swp_attempts(swp['swp_id'])
+    
+    courses = get_all_courses()
+    enrolled = get_all_enrolled()
+    instructors = get_instructors()
+
+    dbconnection = engine.connect()
+    statement = "SELECT distinct department, course_number FROM course"
+    course_types = dbconnection.execute(statement)
+
+    print(course_types)
+    return render_template('report_select.html', swps = swps, attempts = attempt, courses = courses, semesters = courses, enrollment = enrolled, instructors = instructors, course_types = course_types)
 
 # gets all courses for specific instructor id
 @app.route('/courses/inst/<int:instructor_id>', methods=['GET'])
@@ -857,6 +882,10 @@ def get_one_outcome(so_id):
     outcome = Outcomes.query.get(so_id)
     return outcome
 
+def get_all_outcomes():
+    outcomes = Outcomes.query.all()
+    return outcomes
+
 # ASSIGNMENTS (SWP) CLASS
 class Assignments(db.Model):
     swp_id = db.Column("swp_id", db.Integer, primary_key=True)
@@ -894,7 +923,7 @@ def get_all_swp():
 
         results.append(swp_data)
 
-    return jsonify(results)
+    return results
 
 
 # GET ONE SWP
@@ -1568,7 +1597,7 @@ def update_scores(course_id):
     return redirect(url_for('get_one_course', course_id = course_id))
 
 
-@app.route('/reports/so/<int:so_id>', methods=['GET'])
+@app.route('/reports', methods=['GET'])
 #@login_required
 def single_so_results(so_id):
     results = []
@@ -1630,6 +1659,63 @@ def so_mean(so_id):
     result.sort()
     mean = statistics.mean(result)
     return mean
+
+
+@app.route('/reports/instructor', methods = ['GET', 'POST'])
+def instructor_report_single():
+    report_type = request.form["report_type"]
+    instructor_id = request.form["instructor"]
+    outcomes = []
+    outcomes = get_all_outcomes()
+    so_labels = []
+    for so in outcomes:
+        so_labels.append(so.so_name)
+
+    statement = f"Report Type = {report_type} for Instructor ID {instructor_id}  SO LABELS = {so_labels}"
+    return jsonify(statement)
+
+
+@app.route('/reports/course', methods=['GET', 'POST'])
+def course_report_single():
+    report_type = request.form["report_type"]
+    course_id = request.form["course"]
+    outcomes = []
+    outcomes = get_all_outcomes()
+    so_labels = []
+    for so in outcomes:
+        so_labels.append(so.so_name)
+
+    statement = f"Report Type = {report_type} for Course ID {course_id}  SO LABELS = {so_labels}"
+    return jsonify(statement)
+
+
+@app.route('/reports/course/time', methods = ['GET', 'POST'])
+def course_report_time():
+    course_number = request.form["course"]
+
+    dbconnection = engine.connect()
+    statement = f"SELECT * FROM COURSE WHERE COURSE_NUMBER={course_number} GROUP BY TERM, YEAR"
+    query_results = dbconnection.execute(statement)
+    course_list = []
+    if query_results:
+        for item in query_results:
+            course_list.append(item)
+    else:
+        course_list.append(query_results)
+    dbconnection.close()
+
+    output = f"COURSES:  {course_list}"
+    return output
+
+
+@app.route('/reports/outcomes', methods=['GET', 'POST'])
+def outcome_report_single():
+    report_type = request.form["report_type"]
+    term = request.form["term"]
+    so = request.form["outcome"]
+
+    statement = f"Report Type:{report_type} for COURSE LIST: {term}  OUTCOME = {so}"
+    return statement
 
 
 @app.route('/reports/so/<int:so_id>', methods = ['GET'])

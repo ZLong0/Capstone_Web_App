@@ -1,124 +1,101 @@
 <!DOCTYPE html>
-<html lang="en" class="login">
+<html lang="en">
   <head>
 	  <meta charset="utf-8">
 	  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	  
 	  <!-- Bootstrap Dependencies -->
 	  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
-	  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 	  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
 	  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
 	  
-	  <title>ATAS Report Select</title>
+	  <title>ATAS Home</title>
 	  <link href="../static/styles/styles.css" rel="stylesheet">
+	  <script src="../static/scripts/script.js"></script>
   </head>
  
-  <body>
-  <!-- navigation panel, need to work on conflict with 'text-center' class I think
-    <nav class="navbar navbar-expand-lg navbar-dark static-top" id="nav">
+  <body>	  
+	  <nav class="navbar navbar-expand-lg navbar-dark static-top" id="nav">
  		<div class="container">
       		<div class="navbar-brand">
 				Accreditation Tracker and Analysis System
 			</div>
-
-      		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+			
+      		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
         		<span class="navbar-toggler-icon"></span>
       		</button>
       		<div class="collapse navbar-collapse" id="navbarResponsive">
 				<div class="navbar-nav ml-auto">
-					<a class="nav-item nav-link active" href="/home">Home</a>
 
-					<div class="nav-item dropdown">
-					   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
+					<a class="nav-item nav-link" href="/home">Home</a>
+					
+			   		<!-- Courses Dropdown -->
+				   <div class="nav-item dropdown">
+					   <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
 					   <div class="dropdown-menu">
 						   {% if semesters %}
 						   		{% for semester in semesters %}
 									<a class="dropdown-item" data-toggle="modal" href="#course-list-modal{{semester.term}}{{semester.year}}">{{semester.term}} {{semester.year}}</a>
-							{% endfor %}
+
+								{% endfor %}
 						   {% else  %}
 								<a class="dropdown-item" href="">No Courses Assigned</a>
 
 						   {% endif %}
-
 					   </div>
 				   </div>
-					<a class="nav-item nav-link" href="/outcomes">Student Outcomes</a>
-					<div class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Administrative Tasks</a>
-						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-							<a class="dropdown-item" href="/courses/edit">Edit Courses</a>
-							<a class="dropdown-item" href="/students/edit">Edit Students</a>
+				   <a class="nav-item nav-link" href="/outcomes">Student Outcomes</a>
+				   <div class="nav-item dropdown">
+					   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Administrative Tasks</a>
+					   <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+							 <a class="dropdown-item" href="/courses/edit">Edit Courses</a>
+							 <a class="dropdown-item"  href="/students/edit">Edit Students</a>							
 							<a class="dropdown-item" data-toggle="modal" href="#add-swp-modal">Add Work Products</a>
-							<a class="dropdown-item" href="/edit_student_outcomes">Edit Student Outcomes</a>
-							<a class="dropdown-item" href="/generate_report">Generate Report</a>
-						</div>
-					</div>
+							<a class="dropdown-item" href="/report_selected">Generate Report</a>
+					   </div>
+				   </div>
 					<a class="nav-item nav-link" href="/logout">Log Out</a>
 				</div>
-      		</div>
-    	</div>
-    </nav>
-  -->
-      <div class="text-center">
-        <img class="mb-4" src="../static/images/ualr_logo.png" alt="" height="70">
-        <h1 class="h3 mb-3 font-weight-normal">ATAS Report Select</h1>
-          <div class='msg_flash text-center'>
-            {% with messages = get_flashed_messages() %}
-                {% if error %}
-                    <div class="alert alert-danger alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert"><span>×</span></button>
-                        {{error}}
-                    </div>
-                {% endif %}
-                {% if message %}
-                    <div class="alert alert-success alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert"><span>×</span></button>
-                        {{message}}
-                    </div>
-                {% endif %}
-            {% endwith %}
-          </div>
+      		</div> 
+    	</div><!--END NAV CONTAINER-->
+      </nav>
 
-          <div class="form-row">
-            <div class="form-group col">
-                <button type="button" data-toggle="modal" data-target="#single-course-single-swp" class="btn btn-secondary mb-1">Individual SWP for Individual Course</button>
-            </div>
+    <div class="main_content">
+        <div class="text-center">
+            <img class="mb-4" src="../static/images/ualr_logo.png" alt="" height="70">
+            <h1 class="h3 mb-3 font-weight-normal">ATAS Report Selector</h1>
+        </div>
 
-            <div class="form-group col">
-                <button type="button" data-toggle="modal" data-target="#" class="btn btn-secondary mb-1">TBD</button>
-            </div>
+		    <div class="text-center">
+          <button type="button" data-toggle="modal" href="#course-reports" class ="btn btn-secondary mb-1">Course Reports</button>
+          <button type="button" data-toggle="modal" href="#instructor-reports" class ="btn btn-secondary mb-1">Instructor Reports</button>
+			   <button type="button" data-toggle="modal" href="#outcomes-reports" class ="btn btn-secondary mb-1">Outcomes Reports</button>
+        </div>
+        
+	    	<div class="table-responsive text-center">
+		
+		    </div>
+    </div>
+	
+	<!-- Modals -->
 
-            <div class="form-group col">
-                <button type="button" data-toggle="modal" data-target="#" class="btn btn-secondary mb-1">TBD</button>
-            </div>
-          </div>
-      </div>
       <!-- form modals -->
-      <div class="modal fade" id="single-course-single-swp">
+      <div class="modal fade" id="course-reports">
         <div class="modal-dialog">
           <div class="modal-content">
 
             <!-- Modal Header -->
             <div class="modal-header">
-                <h4 class="modal-title">Individual SWP for Individual Course</h4>
+                <h4 class="modal-title">Course Reports</h4>
                 <button type="button" class="close" data-dismiss="modal">×</button>
             </div>
 
             <!-- Modal body -->
             <div class="modal-body">
-                <form action="/report_select" class="modal-form" method="post">
-                    <div class="form-group">
-                        <label for="course_id">Course ID</label>
-					    <input type="text" class="form-control" id="course_id" name="course_id" placeholder="Enter Course ID" required="true">
-				    </div>
-
-                    <div class="form-group">
-                        <label for="swp_id">SWP ID</label>
-                        <input type="text" class="form-control" id="swp_id" name="swp_id" placeholder="Enter SWP ID" required="true">
-                    </div>
-                    <button class="btn btn-secondary" type="submit">Submit</button>
-                </form>
+                <div class="form-group">
+                  <button class="btn btn-secondary" data-toggle="modal" data-target="#course-time-report-modal">Over Time Report</button>
+                  <button class="btn btn-secondary" data-toggle="modal" data-target="#course-single-report">Single Course Report</button>
+                </div>
             </div>
 
             <!-- Modal footer -->
@@ -128,6 +105,331 @@
           </div>
         </div>
       </div>
+    
+      <!--INSTRUCTOR REPORT MODAL 1-->
+      <div class="modal fade" id="instructor-reports">
+        <div class="modal-dialog">
+          <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">Instructor Reports</h4>
+                <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body">
+                    <div class="form-group">
+                        <button class="btn btn-secondary" data-toggle="modal" data-target="#instructor-time-report-modal">Over Time Report</button>
+                        <button class="btn btn-secondary" data-toggle="modal" data-target="#instructor-so-report-modal">Single Term Report</button>
+                    </div>
+            </div>
+
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+      <!--OUTCOMES REPORTING MODAL -->
+      <div class="modal fade" id="outcomes-reports">
+        <div class="modal-dialog">
+          <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">Outcomes Reports</h4>
+                <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body">
+                <div class="form-group">
+                  <button class="btn btn-secondary" data-toggle="modal" data-target="#outcomes-time-report-modal">Over Time Report</button>
+                  <button class="btn btn-secondary" data-toggle="modal" data-target="#outcomes-term-report-modal">Single Term Report</button>
+                </div>
+            </div>
+
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--COURSE REPORTS-->
+   {% if course_types %}
+  <div class="modal fade" id="course-time-report-modal">
+        <div class="modal-dialog">
+          <div class="modal-content">
+
+
+            <div class="modal-header">
+                <h4 class="modal-title">Course Over Time Report</h4>
+                <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+            <div class="modal-body">
+
+            <form action="{{url_for('course_report_time')}}" class="modal-form" method="post">                 
+                    	<div class="form-group">
+					            	  <label for="course">Term</label>
+                          <select id="course" name="course" >
+                              <option value="" disabled selected>Select</option>                             
+                                {% for item in course_types %} 
+                                   <option value="{{item.course_number}}">{{item.department}} {{item.course_number}}</option>
+                                {% endfor %}                              
+                          </select> 
+                      </div> 
+                    <fieldset>
+                      <legend>Report Type</legend>
+                      <input type="radio" name="report_type" value="Count" required>Count<br>
+                      <input type="radio" name="report_type" value="Median">Median<br>
+                      <input type="radio" name="report_type" value="Mean">Mean<br>
+                      <br>                    
+                  </fieldset>                                          
+                    <button class="btn btn-secondary" type="submit">Submit</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+ {% endif %}
+
+      <div class="modal fade" id="course-single-report">
+        <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h4 class="modal-title">Course Report</h4>
+                  <button type="button" class="close" data-dismiss="modal">×</button>
+              </div>
+
+              <div class="modal-body">
+                <form action="{{url_for('course_report_single')}}" class="modal-form" method="post">                  
+                  <div class="form-group">
+                      <label for="course">Course</label>
+                      <select id="course" name="course">
+                        {% if semesters %}
+                          {% for semester in semesters %}
+                            {% for course in semester.course_list%}                                  
+                                  <option value="{{course.course_id}}">({{semester.term}} {{semester.year}}) {{course.department}} {{course.course_number}}: {{course.section}}</option>
+                              {% endfor %} 
+                          {% endfor%}
+                          {% endif %}
+                      </select> 
+                  </div> 
+                  <fieldset>
+                    <legend>Report Type</legend>
+                    <input type="radio" name="report_type" value="Count" required>Count<br>
+                    <input type="radio" name="report_type" value="Median">Median<br>
+                    <input type="radio" name="report_type" value="Mean">Mean<br>
+                    <br>                    
+                  </fieldset>                                        
+                  <button class="btn btn-secondary" type="submit">Submit</button>
+                </form>
+              </div>
+              <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              </div>
+          </div>
+        </div>
+      </div>
+
+    <!--INSTRUCTOR REPORTS-->
+      <div class="modal fade" id="instructor-time-report-modal">
+        <div class="modal-dialog">
+          <div class="modal-content">
+
+
+            <div class="modal-header">
+                <h4 class="modal-title">Instructor Over Time Report</h4>
+                <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+
+
+            <div class="modal-body">
+              <form action="" class="modal-form" method="post">                  
+                <div class="form-group">
+                    <label for="instructor">Instructor</label>
+                    <select id="instructor" name="instructor">
+                      {% if instructors %}
+                        {% for instructor in instructors %}                                
+                                <option value="{{instructor.instructor_id}}">{{instructor.last_name}}, {{instructor.first_name}}</option>
+                        {% endfor%}
+                      {% endif %}
+                    </select>
+               </div>   
+               <fieldset>
+                    <legend>Report Type</legend>
+                    <input type="radio" name="report_type" value="Count" required>Count<br>
+                    <input type="radio" name="report_type" value="Median">Median<br>
+                    <input type="radio" name="report_type" value="Mean">Mean<br>
+                    <br>                    
+                  </fieldset>                                        
+                <button class="btn btn-secondary" type="submit">Submit</button>
+              </form>
+            </div>
+
+
+            <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if semesters %}
+      <div class="modal fade" id="instructor-so-report-modal">
+        <div class="modal-dialog">
+          <div class="modal-content">
+
+
+            <div class="modal-header">
+                <h4 class="modal-title">Instructor Single Term Report</h4>
+                <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+
+
+            <div class="modal-body">
+              <form action="{{url_for('instructor_report_single')}}" class="modal-form" method="post">                  
+                <div class="form-group">
+                    <label for="instructor">Instructor</label>
+                    <select id="instructor" name="instructor" required>
+                      <option value="" disabled selected>Select</option>  
+                        {% for instructor in instructors %}                                
+                                <option value="{{instructor.instructor_id}}" >{{instructor.last_name}}, {{instructor.first_name}}</option>
+                        {% endfor%}
+                    </select>
+               </div>
+
+                <div class="form-group">
+                        <label for="term">Term</label>
+                        <select id="term" name="term" required>
+                            <option value="" disabled selected>Select</option>                             
+                              {% for semester in semesters %}                                  
+                                  <option value="{{semester.course_list}}" >{{semester.term}} {{semester.year}}</option>
+                              {% endfor %}                              
+                        </select> 
+                </div>
+
+                <fieldset>
+                    <legend>Report Type</legend>
+                    <input type="radio" name="report_type" value="Count" required>Count<br>
+                    <input type="radio" name="report_type" value="Median">Median<br>
+                    <input type="radio" name="report_type" value="Mean">Mean<br>
+                    <br>                    
+                  </fieldset>
+                  <button class="btn btn-secondary" type="submit">Submit</button>
+              </form>
+            </div>
+          {% endif %}
+
+
+            <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!--OUTCOME REPORTS-->
+      <div class="modal fade" id="outcomes-time-report-modal">
+        <div class="modal-dialog">
+          <div class="modal-content">
+
+
+            <div class="modal-header">
+                <h4 class="modal-title">Student Outcomes Over Time</h4>
+                <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+
+
+            <div class="modal-body">
+              <form action="" class="modal-form" method="post">
+                <fieldset>
+                  <legend>Student Outcome</legend>
+                  <input type="radio" name="outcome" value="1" required>SO1<br>
+                  <input type="radio" name="outcome" value="2">SO2<br>
+                  <input type="radio" name="outcome" value="3">SO3<br>
+                  <input type="radio" name="outcome" value="4">SO4<br>
+                  <input type="radio" name="outcome" value="5">SO5<br>
+                  <input type="radio" name="outcome" value="6">SO6<br>
+                 <br>                    
+              </fieldset>
+
+              <fieldset>
+                <legend>Report Type</legend>
+                <input type="radio" name="report_type" value="Count" required>Count<br>
+                <input type="radio" name="report_type" value="Median">Median<br>
+                <input type="radio" name="report_type" value="Mean">Mean<br>
+                <br>                    
+              </fieldset>
+                  <button class="btn btn-secondary" type="submit">Submit</button>
+              </form>
+            </div>
+            <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+
+ {% if semesters %}
+      </div><div class="modal fade" id="outcomes-term-report-modal">
+        <div class="modal-dialog">
+          <div class="modal-content">
+
+
+            <div class="modal-header">
+                <h4 class="modal-title">Outcomes for Single Term</h4>
+                <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+
+
+            <div class="modal-body">
+                <form action="{{url_for('outcome_report_single')}}" class="modal-form" method="post">
+                    <fieldset>
+                    <legend>Student Outcome</legend>
+                     <input type="radio" name="outcome" value="1" required>SO1<br>
+                     <input type="radio" name="outcome" value="2">SO2<br>
+                     <input type="radio" name="outcome" value="3">SO3<br>
+                     <input type="radio" name="outcome" value="4">SO4<br>
+                     <input type="radio" name="outcome" value="5">SO5<br>
+                     <input type="radio" name="outcome" value="6">SO6<br>
+                    <br>                    
+                  </fieldset>
+
+                  <div class="form-group">
+					            	  <label for="term">Term</label>
+                          <select id="term" name="term" >
+                              <option value="" disabled selected>Select</option>                             
+                                {% for semester in semesters %}                                  
+                                   <option value="{{semester.course_list}}">{{semester.term}} {{semester.year}}</option>
+                                {% endfor %}                              
+                          </select> 
+                   </div>
+                  <fieldset>
+                    <legend>Report Type</legend>
+                    <input type="radio" name="report_type" value="Count" required>Count<br>
+                    <input type="radio" name="report_type" value="Median">Median<br>
+                    <input type="radio" name="report_type" value="Mean">Mean<br>
+                    <br>                    
+                  </fieldset>
+                    <button class="btn btn-secondary" type="submit">Submit</button>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>  
+    {% endif %}
   <!-- form modals template -->
       <!--<div class="modal fade" id="single-course-single-swp">
         <div class="modal-dialog">
