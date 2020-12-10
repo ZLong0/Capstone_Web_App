@@ -1690,8 +1690,62 @@ def course_report_single():
     so_labels = []
     for so in outcomes:
         so_labels.append(so.so_name)
+    
+    swps = Assignments.query.filter_by(course_id=course_id).all()
 
-    statement = f"Report Type = {report_type} for Course ID {course_id}  SO LABELS = {so_labels}"
+    attempts = []
+    scores = []
+    so1_scores = [] 
+    so2_scores = []
+    so3_scores = []
+    so4_scores = []
+    so5_scores = []
+    so6_scores = []
+
+    for swp in swps:
+        attempt_results = get_swp_attempts(swp.swp_id)
+        attempts.append(attempt_results)
+
+        for attempt in attempt_results:
+            if attempt['SO1'] == 1:                
+                scores = get_swp_results(swp.swp_id)
+                for score in scores:
+                    so1_scores.append(score.value)                        
+            if attempt['SO2'] == 1:               
+                scores = get_swp_results(swp.swp_id)
+                for score in scores:
+                    so2_scores.append(score.value)                
+            if attempt['SO3'] == 1:                
+                scores = get_swp_results(swp.swp_id)
+                for score in scores:
+                    so3_scores.append(score.value)                
+            if attempt['SO4'] == 1:                
+                scores = get_swp_results(swp.swp_id)
+                for score in scores:
+                    so4_scores.append(score.value)               
+            if attempt['SO5'] == 1:                
+                scores = get_swp_results(swp.swp_id)
+                for score in scores:
+                    so5_scores.apend(score.value)                
+            if attempt['SO6'] == 1:                
+                scores = get_swp_results(swp.swp_id)
+                for score in scores:
+                    so6_scores.append(score.value)
+                
+    print("SO1 SCORES: ")
+    print(so1_scores)
+    print("SO2 SCORES: ")
+    print(so2_scores)
+    print("SO3 SCORES: ")
+    print(so3_scores)
+    print("SO4 SCORES: ")
+    print(so4_scores)
+    print("SO5 SCORES: ")
+    print(so5_scores)
+    print("SO6 SCORES: ")
+    print(so6_scores) 
+
+    statement = f"Report Type = {report_type} for Course ID {course_id}  SO LABELS = {so_labels}  DATA: SWPS: {swps} ATTETMPS:  {attempts}"
     return jsonify(statement)
 
 
