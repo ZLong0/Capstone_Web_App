@@ -43,22 +43,22 @@
 
 						   {% endif %}
 					   </div>
-				   </div>					
-					<a class="nav-item nav-link" href="/outcomes">Student Outcomes</a>
-					<div class="nav-item dropdown">
-						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Administrative Tasks</a>
-						<div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-							<a class="dropdown-item" href="/registration_requests">Registration Requests</a>
-							<a class="dropdown-item" href="/manage_users">Manage Users</a>
-							<a class="dropdown-item" href="/courses/edit">Edit Courses</a>
+				   </div>
+				   <a class="nav-item nav-link" href="/outcomes">Student Outcomes</a>
+				   <div class="nav-item dropdown">
+					   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Administrative Tasks</a>
+					   <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+							 <a class="dropdown-item" href="/courses/edit">Edit Courses</a>
+							 <a class="dropdown-item"  href="/students/edit">Edit Students</a>							
+							<a class="dropdown-item" data-toggle="modal" href="#add-swp-modal">Add Work Products</a>
 							<a class="dropdown-item" href="/report_selected">Generate Report</a>
-						</div>
-					</div>
+					   </div>
+				   </div>
 					<a class="nav-item nav-link" href="/logout">Log Out</a>
 				</div>
-      		</div>
-    	</div>
-	  </nav>
+      		</div> 
+    	</div><!--END NAV CONTAINER-->
+      </nav>
 	  <div>
 		<h2 class="text-center">Welcome Root!</h2>
 	  </div>
@@ -67,6 +67,16 @@
 	  <!-- Users table/approval and denial -->
 
       {% if user_list%}
+	  		  <!-- shows pending users alert if pending users exist -->
+	  		  {% if pending_users == True %}
+				  <div id="pending-alert" class="alert alert-warning alert-dismissible fade show text-center mx-auto">
+					  Pending Users!
+					  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						  <span>&times;</span>
+					  </button>
+	  			  </div>
+	  		  {% endif %}
+	  
           <form action="/root_pending" method="post">
 			  <div class="table-responsive">
 				  <table class="table table-bordered mx-auto w-auto text-center">
@@ -77,21 +87,36 @@
 								<th scope="col">First Name</th>
 								<th scope="col">Last Name</th>
 								<th scope="col">Email</th>
-								<th scope="col">Requested/Granted Account Type</th>
-								<th scope="col">Pending (1 = True)</th>
+								<th scope="col">Account Type</th>
 							</tr>
 						</thead>
 						<tbody>
+							<!-- Display Pending Users at Top and Highlighted -->
 							{% for user in user_list %}
-								<tr>
+								{% if user.pending == 1 %}
+								<tr class="table-warning">
 									<td><input type="radio" id="user_select" name="user_select" value="{{ user.email }}"></td>
 									<td>{{ user.id }}</td>
 									<td>{{ user.fname }}</td>
 									<td>{{ user.lname }}</td>
 									<td>{{ user.email }}</td>
 									<td>{{ user.account_type }}</td>
-									<td>{{ user.pending }}</td>
 								</tr>
+								{% endif %}
+							{% endfor %}
+							
+							<!-- Display Approved Users -->
+							{% for user in user_list %}
+								{% if user.pending == 0 %}
+									<tr>
+										<td><input type="radio" id="user_select" name="user_select" value="{{ user.email }}"></td>
+										<td>{{ user.id }}</td>
+										<td>{{ user.fname }}</td>
+										<td>{{ user.lname }}</td>
+										<td>{{ user.email }}</td>
+										<td>{{ user.account_type }}</td>
+									</tr>
+								{% endif %}
 							{% endfor %}
 						</tbody>
 					</table>
@@ -103,45 +128,87 @@
               <label for="user_revoke">Revoke</label>
               <input type="radio" id="user_deny" name="user_pending" value="denied">
               <label for="user_deny">Deny</label>
-              <button class="btn btn-secondary btn-lg btn-block" type="submit">Submit</button>
+              <br><button class="btn btn-secondary btn-lg" type="submit">Submit</button>
           </center>
           </form>
       {% endif %}
 
       <!-- Add SWP Modal -->
-	    <div class="modal fade" id="add-swp-modal">
-    		<div class="modal-dialog">
-			  <div class="modal-content">
-  
-                <!-- Modal Header -->
-				<div class="modal-header">
-				    <h4 class="modal-title">Add Work Product</h4>
-				    <button type="button" class="close" data-dismiss="modal">×</button>
-				</div>
-                
-				<!-- Modal body -->
-				<div class="modal-body">
-				    <form action="/swp" class="modal-form" method="put">
-                        <label for="course_id">Select Course</label>
-                        <select id="course_id" name="course_id">
-                            {% for semester in semesters %}
+	  <div class="modal fade" id="add-swp-modal">
+		<div class="modal-dialog">
+		  <div class="modal-content">
+
+			<!-- Modal Header -->
+			<div class="modal-header">
+				<h4 class="modal-title">Add Work Product</h4>
+				<button type="button" class="close" data-dismiss="modal">×</button>
+			</div>
+			
+			<!-- Modal body -->
+			<div class="modal-body">
+				<form action="/swp" class="modal-form" method="post">
+					
+					<div class="form-group">
+						<label for="course_id">Select Course</label>
+						<select id="course_id" name="course_id">
+							{% for semester in semesters %}							
 								{% for course in semester.course_list %}
-                                	<option value="">{{course}}</option>
+									<option value="{{course.course_id}}">{{semester.term}} {{semester.year}} {{course.department}} {{course.course_number}}:  {{course.section}}</option>
 								{% endfor %}
-                            {% endfor %}
-                        </select>
-                        <input type="text" name="swp_name" class="form-control" placeholder="Enter SWP name" required autofocus>
-				        <button class="btn btn-secondary" type="submit">Submit</button>
-				    </form>
-				</div>
-	
-				<!-- Modal footer -->
-				<div class="modal-footer">
-					  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-				</div>
-			  </div>
+							{% endfor %}
+						</select>
+					</div>
+					
+					<div class="form-group">
+						<label for="swp_name">Assignment Name</label>
+						<input type="text" class="form-control" id="swp_name" name="swp_name" required="true">
+					</div>
+				 
+					<div class="form-group">
+						 <label for="so-checkboxes">Student Outcomes</label>
+						 <div class="so-checkboxes">
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO1" id="SO1" value="SO1">
+								 <label class="form-check-label" for="SO1">SO1</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO2" id="SO2" value="SO2">
+								 <label class="form-check-label" for="SO2">SO2</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO3" id="SO3" value="SO3">
+								 <label class="form-check-label" for="SO3">SO3</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO4" id="SO4" value="SO4">
+								 <label class="form-check-label" for="SO4">SO4</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO5" id="SO5" value="SO5">
+								 <label class="form-check-label" for="SO5">SO5</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO6" id="SO6" value="SO6">
+								 <label class="form-check-label" for="SO6">SO6</label>
+							 </div>
+						 </div>
+					</div>
+					<button class="btn btn-secondary" type="submit">Submit</button>
+				</form>
+			</div>
+
+			<!-- Modal footer -->
+			<div class="modal-footer">
+				  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+			</div>
 		  </div>
-  		</div>
+	  </div>
+	  </div>
 	  
 	  <!-- Edit SWP Modal -->
 	  <div class="modal fade" id="edit-swp-modal">

@@ -364,14 +364,15 @@
 	   </div>
 	 <!-- Modal body -->
 	   <div class="modal-body">
-		   <h5 class="text-center m-2">Are you sure you want to delete this SWP? All information will be lost!</h5>
+		   <h5 class="text-center m-2">Are you sure you want to delete this SWP?</h5>
 	   </div>
 
 		  <!-- Modal footer -->
 			<div class="modal-footer">
 			  <form action="{{url_for('delete_swp', swp_id=swp.swp_id)}}" class="modal-form m-2" method="post">
+				  <h6 class="text-center">All information will be lost!</h6>
 				  <button class="btn btn-secondary btn-lg btn-block" type="submit">Confirm</button>
-				  <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+				  <button type="button" class="btn btn-secondary btn-lg btn-block" data-dismiss="modal">Cancel</button>
               </form>                
 			</div>
 
@@ -396,15 +397,12 @@
 
 						<!-- Modal body -->
 						<div class="modal-body">
-							<form action="" class="modal-form" method="put">
-
-								<button class="btn btn-secondary" type="submit">Submit</button>
-							</form>
+							<h5>Actions:</h5>
+							<button class="btn btn-secondary" data-toggle="modal" data-target="#confirm-delete-student-modal{{student.student_id}}">Delete</button>
 						</div>
 
 						<!-- Modal footer -->
 						<div class="modal-footer">
-							<button class="btn btn-secondary" data-toggle="modal" data-target="#confirm-delete-student-modal{{student.student_id}}">Delete</button>
 							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 						</div>
 					  </div>
@@ -422,7 +420,7 @@
 
 					  <!-- Modal Header -->
 					  <div class="modal-header">
-						  <h4 class="modal-title">Add Student to Course </h4>
+						  <h4 class="modal-title">Add Student to {{courses[0].course_department}} {{courses[0].course_number}} {{courses[0].course_name}}</h4>
 						  <button type="button" class="close" data-dismiss="modal">×</button>
 					  </div>
 
@@ -434,11 +432,9 @@
 									<option value="{{courses[0].course_id}}"></option>
 								</select>
 							</div>
-							 <div class="form-group">
-								<input readonly  class="form-control-plaintext text-center score">Course: {{courses[0].course_department}} {{courses[0].course_number}} {{courses[0].course_name}}</input>
-				 			</div>
 							<div class="form-group">
-								<select id="student_id" name="student_id">
+								<label for="student_id">Select Student</label>
+								<select id="student_id" class="form-control" name="student_id">
 								{% for student in all_students %}
 										<option id="selected_student" value="{{student.student_id}}">{{student.fname}} {{student.lname}} ({{student.student_id}})</option>
 								{% endfor %}
@@ -467,13 +463,13 @@
 
 							<!-- Modal Header -->
 							<div class="modal-header">
-								<h4 class="modal-title">Delete {{student.fname}} {{student.lname}}?</h4>
+								<h4 class="modal-title">Delete {{student.student_first}} {{student.student_last}}?</h4>
 								<button type="button" class="close" data-dismiss="modal">×</button>
 							</div>
 
                             <!-- Modal body -->
                             <div class="modal-lg">
-								<h5 class="text-center m-2">Are you sure you want to delete this {{student.fname}} from this courses?</h5>
+								<h5 class="text-center m-2">Are you sure you want to delete {{student.student_first}} from this course?</h5>
 							
 							</div>
 					<!-- Modal footer -->
