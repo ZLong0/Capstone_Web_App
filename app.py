@@ -126,13 +126,19 @@ def home():
     user = Users.query.get(user_id)
     user_list = Users.query.filter(Users.account_type != 'root')
     dbconnection = engine.connect()
+    
+    #checks if there are pending users (used to decide to show pending users icon in root_home)
+    pending_users = False
+    for item in user_list:
+        if item.pending == 1:
+            pending_users = True
 
     if user.account_type == 'instructor':
         semesters_list = get_instructor_courses(user_id)
         return render_template("inst_home.html", current_user=user, semesters=semesters_list)
     elif user.account_type == 'root':
         semesters_list = get_all_courses()
-        return render_template("root_home.html", current_user=user, user_list=user_list, semesters=semesters_list)
+        return render_template("root_home.html", current_user=user, user_list=user_list, semesters=semesters_list, pending_users=pending_users)
     else:
         semesters_list = get_all_courses()
         return render_template("home.html", current_user=user, semesters=semesters_list)
