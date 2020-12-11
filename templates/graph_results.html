@@ -59,9 +59,13 @@
        </div><!--END NAV CONTAINER-->
      </nav>
 	<!-- basic block for a bar graph, needs data passed to the page for values and labels -->
-           <div class="main-content">{% if report_title %}<h2>{{report_title}}</h2>{% endif %}
-            <canvas id="chart" width="auto" height="auto"></canvas>
+        <div class="main-content">
+			{% if report_title %}<h2 class="text-center">{{report_title}}</h2>{% endif %}
+			<div class="container text-center">
+            	<canvas id="chart"></canvas>
+			</div>
         </div>
+	  
           <script>
               var barData ={
                     labels:[
