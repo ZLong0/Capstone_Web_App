@@ -34,14 +34,12 @@
                   <div class="nav-item dropdown">
                       <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
                       <div class="dropdown-menu">
-                          {% if semesters %}
-                                  {% for semester in semesters %}
+                          {% if all_courses %}
+                                  {% for semester in all_courses %}
                                    <a class="dropdown-item" data-toggle="modal" href="#course-list-modal{{semester.term}}{{semester.year}}">{{semester.term}} {{semester.year}}</a>
-
                                {% endfor %}
                           {% else  %}
                                <a class="dropdown-item" href="">No Courses Assigned</a>
-
                           {% endif %}
                       </div>
                   </div>

@@ -310,11 +310,15 @@
                 <div class="form-group">
                         <label for="term">Term</label>
                         <select id="term" name="term" required>
-                            <option value="" disabled selected>Select</option>                             
-                              {% for semester in semesters %}                                  
-                                  <option value="{{semester.course_list}}" >{{semester.term}} {{semester.year}}</option>
-                              {% endfor %}                              
+                            <option value="" disabled selected>Select</option>                                                                                   
+                            <option value="SPRING" >SPRING</option>
+                            <option value="SUMMER">SUMMER</option>
+                            <option value="FALL">FALL</option>                                                        
                         </select> 
+                </div>
+                <div class="form-group">
+						        <label for="year">Year</label>
+						        <input type="text" class="form-control" id="year" name="year" placeholder="YYYY" required="true">
                 </div>
 
                 <fieldset>
@@ -391,7 +395,7 @@
 
 
             <div class="modal-body">
-                <form action="{{url_for('outcome_report_single')}}" class="modal-form" method="post">
+                <form action="{{url_for('outcome_report_single_term')}}" class="modal-form" method="post">
                     <fieldset>
                     <legend>Student Outcome</legend>
                      <input type="radio" name="outcome" value="1" required>SO1<br>
@@ -404,14 +408,19 @@
                   </fieldset>
 
                   <div class="form-group">
-					            	  <label for="term">Term</label>
-                          <select id="term" name="term" >
-                              <option value="" disabled selected>Select</option>                             
-                                {% for semester in semesters %}                                  
-                                   <option value="{{semester.course_list}}">{{semester.term}} {{semester.year}}</option>
-                                {% endfor %}                              
-                          </select> 
-                   </div>
+                    <label for="term">Term</label>
+                    <select id="term" name="term" required>
+                        <option value="" disabled selected>Select</option>                                                                                   
+                        <option value="SPRING" >SPRING</option>
+                        <option value="SUMMER">SUMMER</option>
+                        <option value="FALL">FALL</option>                                                        
+                    </select> 
+                  </div>
+                  <div class="form-group">
+                     <label for="year">Year</label>
+                    <input type="text" class="form-control" id="year" name="year" placeholder="YYYY" required="true">
+                 </div>
+
                   <fieldset>
                     <legend>Report Type</legend>
                     <input type="radio" name="report_type" value="Count" required>Count<br>
@@ -430,42 +439,5 @@
         </div>
       </div>  
     {% endif %}
-  <!-- form modals template -->
-      <!--<div class="modal fade" id="single-course-single-swp">
-        <div class="modal-dialog">
-          <div class="modal-content">
-
-
-            <div class="modal-header">
-                <h4 class="modal-title">Individual SWP for Individual Course</h4>
-                <button type="button" class="close" data-dismiss="modal">×</button>
-            </div>
-
-
-            <div class="modal-body">
-                <form action="/select_report" class="modal-form" method="post">
-
-                    <div class="form-group">
-
-                    </div>
-
-                    <div class="form-group">
-
-                    </div>
-
-                    <div class="form-group">
-
-                    </div>
-                    <button class="btn btn-secondary" type="submit">Submit</button>
-                </form>
-            </div>
-
-
-            <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-          </div>
-        </div>
-      </div>-->
   </body>
 </html>

@@ -1193,7 +1193,6 @@ class Enrolled(db.Model):
 @app.route('/enrolled', methods=['GET'])
 # @login_required
 def get_all_enrolled():
-    print("GET_ALL_ENROLLED_")
     enrolled = Enrolled.query.all()
     results_list = []
     swp_list = []
@@ -1202,11 +1201,8 @@ def get_all_enrolled():
     for enroll in enrolled:
         enrollment_data = {}
         student_id = enroll.student_id
-        print(student_id)
         student = Student.query.get(student_id)
-        print(student)
         results = Results.query.filter_by(student_id=student_id).all()
-        # print(results)
         if student:
             enrollment_data['student_id'] = student.student_id
             enrollment_data['student_first'] = student.fname
@@ -1579,16 +1575,50 @@ def so_mean(so_id):
 
 @app.route('/reports/instructor', methods = ['GET', 'POST'])
 def instructor_report_single():
-    report_type = request.form["report_type"]
     instructor_id = request.form["instructor"]
+    term = request.form["term"]
+    year = request.form["year"]
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
+
+    
+
+    swps = []
+    dbconnection = engine.connect()
+    statement = f"SELECT id FROM COURSE where instructor = {instructor_id} and term = '{term}' and year = '{year}'"
+    course_list = dbconnection.execute(statement)
+
+    if not course_list:
+        ""
+    else:
+        for course in course_list:
+            course_swps = Assignments.query.filter_by(course_id=course[0]).all()
+            for item in course_swps:
+                swps.append(item)
+
+    report_type = request.form["report_type"]
+    values = get_bar_graph_data(swps, report_type)   
+
+    #these are to generate drop downs 
+    courses = get_all_courses()
+    print(courses)
+    enrolled = get_all_enrolled()
+    instructors = get_instructors()
+
+    #BAR CHART LABELS
     outcomes = []
     outcomes = get_all_outcomes()
     so_labels = []
     for so in outcomes:
-        so_labels.append(so.so_name)
-
-    statement = f"Report Type = {report_type} for Instructor ID {instructor_id}  SO LABELS = {so_labels}"
-    return jsonify(statement)
+        so_labels.append(so.so_name)       
+    
+    report_title = f"{report_type} for {instructor_id} during {term} {year}"
+    #print(report_title)
+    #return jsonify(so_labels)
+    return render_template('graph_results.html', labels = so_labels, values = values, courses=courses, semesters = courses, report_title = report_title)
 
 
 @app.route('/reports/course', methods=['GET', 'POST'])
@@ -1604,7 +1634,7 @@ def course_report_single():
     for swp in swps:
         attempts = get_swp_attempts(swp['swp_id'])
     
-    courses = get_all_courses()
+    all_courses=get_all_courses()
     enrolled = get_all_enrolled()
     instructors = get_instructors()
 
@@ -1613,7 +1643,6 @@ def course_report_single():
     course_types = dbconnection.execute(statement)
 
     report_type = request.form["report_type"]
-    print(report_type)
     course_id = request.form["course"]
     outcomes = []
     outcomes = get_all_outcomes()
@@ -1625,9 +1654,7 @@ def course_report_single():
     values = get_bar_graph_data(swps, report_type) 
     
     report_title = f"{report_type} for {course_id}"
-    print(report_title)
-    statement = f"Report Type = {report_type} for Course ID {course_id}  SO LABELS = {so_labels}  DATA: SWPS: {swps} ATTETMPS:  {attempts}"
-    return render_template('graph_results.html', labels = so_labels, values = values, semesters = courses, report_title = report_title)
+    return render_template('graph_results.html', labels = so_labels, values = values, semesters = all_courses, all_courses = all_courses, report_title = report_title)
 
 
 @app.route('/reports/course/time', methods = ['GET', 'POST'])
@@ -1650,13 +1677,40 @@ def course_report_time():
 
 
 @app.route('/reports/outcomes', methods=['GET', 'POST'])
-def outcome_report_single():
+def outcome_report_single_term():
     report_type = request.form["report_type"]
     term = request.form["term"]
+    year = request.form["year"]
     so = request.form["outcome"]
+    print(so)
 
-    statement = f"Report Type:{report_type} for COURSE LIST: {term}  OUTCOME = {so}"
-    return statement
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
+    
+    dbconnection = engine.connect()
+    statement = f"SELECT id, department, course_number from course where term = '{term}' and year = '{year}'"
+    courses = dbconnection.execute(statement)
+
+    course_labels = [] 
+    data = []
+    results = get_so_bar_graph_data(courses, so, report_type)
+
+    for result in results:
+        labels = result['labels']
+        for item in labels:
+            course_labels.append(item)
+        count = result['data']
+        for item in count:
+            data.append(item)
+    
+    print(course_labels)
+    print(data)  
+               
+    report_title = f"{report_type} for Outcome {so} during {term} {year}"
+    return render_template('graph_results.html', labels = course_labels, values = data, report_title = report_title)
 
 
 @app.route('/reports/so/<int:so_id>', methods = ['GET'])
@@ -1778,7 +1832,7 @@ def get_bar_graph_data(swps, report_type):
                     for score in scores:
                         so1_scores.append(score.value)                        
             if attempt['SO2'] == 1:
-                so2 += 1               
+                so2_count += 1               
                 scores = get_swp_results(swp.swp_id)
                 if not scores:
                     so2_scores.append(0)
@@ -1873,6 +1927,84 @@ def get_bar_graph_data(swps, report_type):
         values.append(so6_count)
     
     return values
+
+
+def get_so_bar_graph_data(courses, so, report_type):   
+    result = []  
+    if report_type =="Count":        
+        item_data = {}
+        labels = []
+        data = []
+        for course in courses:
+            count = 0
+            dbconnection = engine.connect()
+            statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]}"
+            swps = dbconnection.execute(statement)        
+            course_name = f"{course.department} {course.course_number}"
+            labels.append(course_name)       
+            for swp in swps:
+                statement = f"SELECT * FROM ATTEMPTS WHERE swp_id = {swp[0]} and SO{so} == 1"
+                results = dbconnection.execute(statement)            
+                if results:
+                    count += 1  
+            data.append(count)   
+
+        item_data['labels'] = labels       
+        item_data['data'] = data
+        result.append(item_data)
+        print(result)
+        dbconnection.close()
+        return result               
+    elif report_type =="Median":
+        result = []
+        item_data = {} 
+        labels = []
+        median = []
+        for course in courses:
+            dbconnection = engine.connect()
+            statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]}"
+            swps = dbconnection.execute(statement)        
+            course_name = f"{course.department} {course.course_number}"
+            labels.append(course_name)  
+            scores =[]
+
+            for swp in swps:              
+                statement = f"SELECT * FROM ATTEMPTS WHERE swp_id = {swp[0]} and SO{so} == 1"
+                results = dbconnection.execute(statement)                     
+                if not results:
+                   scores.append(0)
+                else:  
+                    values = Results.query.filter_by(swp_id = swp[0]).all()
+                    for item in values:
+                        scores.append(item.value)                    
+            print(scores)
+            if len(scores)==0:
+                median.append(0)
+            else:
+                scores.sort()                
+                val = statistics.median(scores)
+                median.append(val)
+            print(median)
+
+        item_data['labels'] = labels
+        item_data['data'] = median
+        result.append(item_data)
+        print(result)
+        dbconnection.close()
+        return result
+    else:
+        scores = []
+        for swp in swps:
+            statement = f"SELECT * FROM ATTEMPTS WHERE swp_id = {swp[0]} and SO{so} == 1"
+            results = dbconnection.execute(statement)            
+            if results:
+                count += 1   
+        item_data['labels'] = labels
+        item_data['data'] = count
+
+    return result
+
+
 
 if __name__ == '__main__':
     db.create_all()
