@@ -2158,6 +2158,7 @@ def get_line_graph_data(course_number, department, report_type):
                             data.append(term_scores)
 
     dbconnection.close()
+
     result_data['data'] = data
     print("DATA")
     print(data)
@@ -2178,14 +2179,14 @@ def get_term_scores(course_number, department, year, term, report_type):
         so5_scores = []
         so6_scores = []  
         values = []
-        scores = []     
-        for course in courses:
-            so1_count = 0
-            so2_count = 0
-            so3_count = 0
-            so4_count = 0
-            so5_count = 0
-            so6_count = 0
+        scores = [] 
+        so1_count = 0
+        so2_count = 0
+        so3_count = 0
+        so4_count = 0
+        so5_count = 0
+        so6_count = 0    
+        for course in courses:         
 
             swps = get_course_swps(course[0])
             if len(swps) == 0:
@@ -2264,6 +2265,8 @@ def get_term_scores(course_number, department, year, term, report_type):
     so6_scores.sort()
 
     if report_type =='Count':
+        print("COUNT: ")
+        print(so1_count)
         values.append(so1_count)
         values.append(so2_count)
         values.append(so3_count)
