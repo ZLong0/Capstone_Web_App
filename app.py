@@ -1864,9 +1864,34 @@ def outcome_report_time():
     results = []
     data= {}
     data['labels'] = labels
-    data['data'] = term_scores
+ 
+    so1_scores = []
+    so2_scores = []
+    so3_scores = []
+    so4_scores = []
+    so5_scores = []
+    so6_scores = []
+    #USER FOR LOOP TO GO THROUGH TERM_SCORES AND CREATE THELIST AS NEEDED
+
+    for item in term_scores:
+        so1_scores.append(item[0])
+        so2_scores.append(item[1])
+        so3_scores.append(item[2])
+        so4_scores.append(item[3])
+        so5_scores.append(item[4])
+        so6_scores.append(item[5])
+
+    data_by_sos = []
+    data_by_sos.append(so1_scores)
+    data_by_sos.append(so2_scores)
+    data_by_sos.append(so3_scores)
+    data_by_sos.append(so4_scores)
+    data_by_sos.append(so5_scores)
+    data_by_sos.append(so6_scores)
+
+    data['data'] = data_by_sos
     results.append(data)
-    return jsonify(results)
+    return jsonify(results))
 
 @app.route('/reports/so/<int:so_id>', methods = ['GET'])
 def get_so_attempts(so_id):
