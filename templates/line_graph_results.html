@@ -8,19 +8,18 @@
 	  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
 	  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
 	  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
-      <script src="../static/scripts/Chart.min.js"></script>
-	  
-	  <title>ATAS Home</title>
-	  <link href="../static/styles/styles.css" rel="stylesheet">
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+	  <title>ATAS Home</title>	  
+	  <link href="../static/styles/styles.css" rel="stylesheet">	  
 	  <script src="../static/scripts/script.js"></script>
   </head>
  
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark static-top" id="nav">
+	<nav class="navbar navbar-expand-lg navbar-dark static-top" id="nav">
         <div class="container">
              <div class="navbar-brand">
-               Accreditation Tracker and Analysis System
-           </div>
+           	    Accreditation Tracker and Analysis System
+           	</div>
            
              <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
                <span class="navbar-toggler-icon"></span>
@@ -57,14 +56,15 @@
                </div>
              </div> 
        </div><!--END NAV CONTAINER-->
-     </nav>
+	</nav>
 	<!-- basic block for a bar graph, needs data passed to the page for values and labels -->
-        <div class="main-content">
+         <div class="main-content">
 			{% if report_title %}<h2 class="text-center">{{report_title}}</h2>{% endif %}
 			<div class="container text-center">
-            	<canvas id="chart"></canvas>
+            	<canvas id="line-chart"></canvas>
 			</div>
-        </div>
+		</div>
+		
             <!-- Modals -->
 	  
 	  <!-- Add SWP Modal -->
@@ -232,36 +232,62 @@
 	  		{% endfor %}	
 	  {% endif %}
 	  <!-- End of Modals -->
-          <script>
-              var barData ={
-                    labels:[
-                        {% for item in labels %}
-                            "{{ item }}",
-                        {% endfor %}
-                    ],
-                  datasets:[{
-                      fillColor: "#6E2639",
-                      strokeColor: "black",
-                      data:[
-                          {% for item in values %}
-                              "{{ item }}",
-                          {% endfor %}
-                      ]
-                  }]
-              }
-              var results = document.getElementById("chart").getContext("2d");
-              steps = 4
-              max = 4
-              new Chart(results).Bar(barData, {
-                  scaleOverride: true,
-                  scaleSteps: steps,
-                  scaleStepWidth: Math.ceil(max/steps),
-                  scaleStartValue: 0,
-                  scaleShowVerticalLines: true,
-                  scaleShowGridLines: true,
-                  barShowStroke: true,
-                  scaleShowLabels: true,
-              });
-          </script>
+   <script>
+	   var labels = [
+		   				{% for item in labels %}
+		   					"{{item}}",
+		   				{% endfor %}
+		]
+		var so1 = {{so1_data}}
+		var so2 = {{so2_data}}
+		var so3 = {{so3_data}}
+		var so4 = {{so4_data}}
+		var so5 = {{so5_data}}
+		var so6 = {{so6_data}}
+
+        new Chart(document.getElementById("line-chart"), {
+  				type: 'line',
+  				data: {
+    			labels: labels,
+    			datasets: [{ 
+        data: so1,
+        label: "SO1",
+        borderColor: "#3e95cd",
+        fill: false
+      }, { 
+        data: so2,
+        label: "SO2",
+        borderColor: "#8e5ea2",
+        fill: false
+      }, { 
+        data: so3,
+        label: "SO3",
+        borderColor: "#3cba9f",
+        fill: false
+      }, { 
+        data: so4,
+        label: "SO4",
+        borderColor: "#e8c3b9",
+        fill: false
+      }, { 
+        data: so5,
+        label: "SO5",
+        borderColor: "#c45850",
+        fill: false
+	  }, { 
+        data: so6,
+        label: "SO6",
+        borderColor: "#CCC",
+        fill: false
+      }
+    ]
+  },
+  options: {
+    title: {
+      display: true,
+      text: ""    }
+  }
+});
+      </script>
 </body>
 </html>

@@ -1514,7 +1514,7 @@ def update_scores(course_id):
     return redirect(url_for('get_one_course', course_id = course_id))
 
 
-@app.route('/reports/instructor', methods = ['GET', 'POST'])
+@app.route('/reports/inst', methods = ['GET', 'POST'])
 @login_required
 def instructor_report_single():
     instructor_id = request.form["instructor"]
@@ -1559,13 +1559,15 @@ def instructor_report_single():
     outcomes = get_all_outcomes()
     so_labels = []
     for so in outcomes:
-        so_labels.append(so.so_name)       
+        so_labels.append(so.so_name)
     
-    report_title = f"{report_type} for {instructor_id} during {term} {year}"
+    instructor = Instructor.query.get(instructor_id)
+      
+    report_title = f"{report_type} for {instructor.fname} {instructor.lname} during {term} {year}"
     return render_template('graph_results.html', labels = so_labels, values = values, courses=sorted_semesters, semesters = sorted_semesters, report_title = report_title, graph_type=graph_type)
 
 
-@app.route('/reports/instructor/time', methods=['GET', 'POST'])
+@app.route('/reports/instructor', methods=['GET', 'POST'])
 @login_required
 def instructor_report_time():
     user_id = Users.get_id(current_user)
@@ -1653,10 +1655,28 @@ def instructor_report_time():
 
     data['data'] = data_by_sos
     results.append(data)
-    return jsonify(results)
+    x_axis = []
+    for item in labels:
+            x_axis.append(item)
+    print(data_by_sos)
+
+    semesters_list = get_all_courses()
+    sorted_semesters = sort_semesters(semesters_list)
+
+    outcomes = []
+    outcomes = get_all_outcomes()
+    so_labels = []
+    for so in outcomes:
+        so_labels.append(so.so_name)
+    
+    instructor = Instructor.query.get(instructor_id)
+       
+    report_title = f"{report_type} for {instructor.fname} {instructor.lname} Over Time"
+    return render_template('line_graph_results.html', labels=x_axis, semesters=sorted_semesters,all_courses=sorted_semesters, report_title=report_title, graph_type=graph_type, so_lables=so_labels,
+                        so1_data = so1_scores, so2_data = so2_scores, so3_data = so3_scores, so4_data=so4_scores, so5_data = so5_scores, so6_data = so6_scores)
 
 
-@app.route('/reports/course', methods=['GET', 'POST'])
+@app.route('/reports/courses', methods=['GET', 'POST'])
 @login_required
 def course_report_single():
     user_id = Users.get_id(current_user)
@@ -1699,17 +1719,18 @@ def course_report_single():
     return render_template('graph_results.html', labels = so_labels, values = values, semesters = sorted_semesters, all_courses = sorted_semesters, report_title = report_title, graph_type=graph_type)
 
 
-@app.route('/reports/course/time', methods = ['GET', 'POST'])
-@login_required
+@app.route('/reports/allsections', methods = ['GET', 'POST'])
 def course_report_time():
     course_number = request.form["course_number"]
     department = request.form["department"]
     report_type = request.form["report_type"]
     report_time = request.form['report_time']
+    graph_type = ""
     if report_time == 'time':
         graph_type = 'line'
     elif report_time == 'term':
         graph_type = 'bar'
+   
 
     semesters_list = get_all_courses()
     sorted_semesters = sort_semesters(semesters_list)
@@ -1756,15 +1777,22 @@ def course_report_time():
     data_by_sos.append(so6_scores)
 
     data['data'] = data_by_sos
-    results.append(data)
-    # return jsonify(results)
-    report_title = f"{report_type} for {course_number}"
-    return render_template('graph_results.html', labels=data['labels'], values=data['data'], semesters=sorted_semesters,
-                           all_courses=sorted_semesters, report_title=report_title, graph_type=graph_type, so_lables=so_labels)
+    results.append(data) 
+    x_axis = []
+    for item in labels:
+        for i in item:
+            x_axis.append(i)
+    print(data_by_sos)
+
+    course = Course.query.filter_by(course_number = course_number).first()
+    
+    report_title = f"{report_type} for {course.department} {course.course_number} ({course.course_name}) Over Time"
+    return render_template('line_graph_results.html', labels=x_axis, semesters=sorted_semesters,all_courses=sorted_semesters, report_title=report_title, graph_type=graph_type, so_lables=so_labels,
+                        so1_data = so1_scores, so2_data = so2_scores, so3_data = so3_scores, so4_data=so4_scores, so5_data = so5_scores, so6_data = so6_scores)
 
 
 
-@app.route('/reports/outcomes', methods=['GET', 'POST'])
+@app.route('/reports/outcome', methods=['GET', 'POST'])
 @login_required
 def outcome_report_single_term():
     report_type = request.form["report_type"]
@@ -1812,7 +1840,7 @@ def outcome_report_single_term():
                            values = data, report_title = report_title, graph_type=graph_type)
 
 
-@app.route('/reports/outcomes/time', methods=['GET', 'POST'])
+@app.route('/reports/outcomes', methods=['GET', 'POST'])
 @login_required
 def outcome_report_time():
     user_id = Users.get_id(current_user)
@@ -1899,7 +1927,23 @@ def outcome_report_time():
 
     data['data'] = data_by_sos
     results.append(data)
-    return jsonify(results)
+    x_axis = []
+    for item in labels:
+            x_axis.append(item)
+    print(data_by_sos)
+
+    semesters_list = get_all_courses()
+    sorted_semesters = sort_semesters(semesters_list)
+
+    outcomes = []
+    outcomes = get_all_outcomes()
+    so_labels = []
+    for so in outcomes:
+        so_labels.append(so.so_name)
+       
+    report_title = f"{report_type} for Student Outcomes Over Time"
+    return render_template('line_graph_results.html', labels=x_axis, semesters=sorted_semesters,all_courses=sorted_semesters, report_title=report_title, graph_type=graph_type, so_lables=so_labels,
+                        so1_data = so1_scores, so2_data = so2_scores, so3_data = so3_scores, so4_data=so4_scores, so5_data = so5_scores, so6_data = so6_scores)
 
 @app.route('/reports/so/<int:so_id>', methods = ['GET'])
 def get_so_attempts(so_id):
