@@ -900,7 +900,7 @@ def get_course_swps(course_id):
         swp_data['course_id'] = course.id
         swp_data['course name'] = course.course_name
         results.append(swp_data)
-
+    print(results)
     sorted_results = sorted(results, key=lambda i:i['swp_id'])
     return sorted_results
 
@@ -1473,6 +1473,7 @@ def delete_one_result(result_id):
 
 #TESTING EDIT SCORES FORM
 @app.route('/update_scores/<int:course_id>', methods=['POST'])
+@login_required
 def update_scores(course_id):    
     swp_list = request.form.getlist('swp-id')
     print(swp_list)
@@ -1511,6 +1512,7 @@ def update_scores(course_id):
 
 
 @app.route('/reports/instructor', methods = ['GET', 'POST'])
+@login_required
 def instructor_report_single():
     instructor_id = request.form["instructor"]
     term = request.form["term"]
@@ -1558,7 +1560,14 @@ def instructor_report_single():
     return render_template('graph_results.html', labels = so_labels, values = values, courses=courses, semesters = courses, report_title = report_title)
 
 
+@app.route('/reports/instructor/time')
+@login_required
+def instructor_report_time():
+   return
+
+
 @app.route('/reports/course', methods=['GET', 'POST'])
+@login_required
 def course_report_single():
     user_id = Users.get_id(current_user)
     user = Users.query.get(user_id)
@@ -1595,6 +1604,7 @@ def course_report_single():
 
 
 @app.route('/reports/course/time', methods = ['GET', 'POST'])
+@login_required
 def course_report_time():
     course_number = request.form["course_number"]
     department = request.form["department"]
@@ -1614,6 +1624,7 @@ def course_report_time():
 
 
 @app.route('/reports/outcomes', methods=['GET', 'POST'])
+@login_required
 def outcome_report_single_term():
     report_type = request.form["report_type"]
     term = request.form["term"]
@@ -1653,6 +1664,67 @@ def outcome_report_single_term():
         report_title = f"{report_type} For Outcome {so} During {term} {year}"
     return render_template('graph_results.html', labels = course_labels, values = data, report_title = report_title)
 
+
+@app.route('/reports/outcomes/time', methods=['GET', 'POST'])
+@login_required
+def outcome_report_time():
+    user_id = Users.get_id(current_user)
+    user = Users.query.get(user_id)
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
+
+    report_type = request.form['report_type']    
+    labels = []
+    term_scores = []
+
+    dbconnection = engine.connect()
+    statement = f"SELECT DISTINCT YEAR FROM COURSE ORDER BY YEAR"
+    years = dbconnection.execute(statement)
+
+    for year in years:
+        statement = f"SELECT DISTINCT TERM FROM COURSE WHERE YEAR = '{year[0]}'"
+        term_list = dbconnection.execute(statement)
+        if term_list:
+            for item in term_list:
+                print(item[0])
+                if item[0] == 'SPRING':
+                    var = f"{item[0]} {year[0]}"
+                    labels.append(var)
+                    ##get scores by year
+                    spring_scores = get_all_term_scores(item[0], year[0], report_type)
+                    term_scores.append(spring_scores)
+        statement = f"SELECT DISTINCT TERM FROM COURSE WHERE YEAR = '{year[0]}'"
+        term_list = dbconnection.execute(statement)
+        if term_list:
+            for item in term_list:
+                print(item[0])
+                if item[0] == 'SUMMER':
+                    var = f"{item[0]} {year[0]}"
+                    labels.append(var)
+                    #get scores by by year
+                    summer_scores = get_all_term_scores(item[0], year[0], report_type)
+                    term_scores.append(summer_scores)
+        statement = f"SELECT DISTINCT TERM FROM COURSE WHERE YEAR = '{year[0]}'"
+        term_list = dbconnection.execute(statement)
+        if term_list:
+            for item in term_list:
+                print(item[0])
+                if item[0] == 'FALL':
+                    var = f"{item[0]} {year[0]}"
+                    labels.append(var)
+                    #get scores by year
+                    fall_scores = get_all_term_scores(item[0], year[0], report_type)
+                    term_scores.append(fall_scores)
+
+                   
+
+    dbconnection.close()
+    results = []
+    data= {}
+    data['labels'] = labels
+    data['data'] = term_scores
+    results.append(data)
+    return jsonify(results)
 
 @app.route('/reports/so/<int:so_id>', methods = ['GET'])
 def get_so_attempts(so_id):
@@ -1835,41 +1907,17 @@ def get_bar_graph_data(swps, report_type):
     so5_scores.sort()
     so6_scores.sort()
 
-    if report_type =='Mean':
-        so1_mean = statistics.mean(so1_scores)
-        values.append(so1_mean)
-        so2_mean = statistics.mean(so2_scores)
-        values.append(so2_mean)
-        so3_mean = statistics.mean(so3_scores)
-        values.append(so3_mean)
-        so4_mean = statistics.mean(so4_scores)
-        values.append(so4_mean)
-        so5_mean = statistics.mean(so5_scores)
-        values.append(so5_mean)
-        so6_mean = statistics.mean(so6_scores)
-        values.append(so6_mean)
-    elif report_type =="Median":
-        so1_median = statistics.median(so1_scores)
-        values.append(so1_median)
-        so2_median = statistics.median(so2_scores)
-        values.append(so2_median)
-        so3_median = statistics.median(so3_scores)
-        values.append(so3_median)
-        so4_median = statistics.median(so4_scores)
-        values.append(so4_median)
-        so5_median = statistics.median(so5_scores)
-        values.append(so5_median)
-        so6_median = statistics.median(so6_scores)
-        values.append(so6_median)
-    else:
+    if report_type =='Count':
         values.append(so1_count)
         values.append(so2_count)
         values.append(so3_count)
         values.append(so4_count)
         values.append(so5_count)
-        values.append(so6_count)
-    
-    return values
+        values.append(so6_count)    
+        return values  
+    else:
+        values = calc_vals(report_type, so1_scores, so2_scores, so3_scores, so4_scores, so5_scores, so6_scores)
+        return values
 
 
 def get_so_bar_graph_data(courses, so, report_type):   
@@ -2037,83 +2085,82 @@ def get_line_graph_data(course_number, department, report_type):
     return results
 
 def get_term_scores(course_number, department, year, term, report_type):
-
     dbconnection = engine.connect()
     statement = f"SELECT ID FROM COURSE WHERE COURSE_NUMBER= {course_number} and department = '{department}' and year = {year} and term='{term}'"
     courses = dbconnection.execute(statement)
-   
-    if courses:        
+    if courses: 
         so1_scores = [] 
         so2_scores = []
         so3_scores = []
         so4_scores = []
         so5_scores = []
-        so6_scores = []     
-     
-        so1_count = 0
-        so2_count = 0
-        so3_count = 0
-        so4_count = 0
-        so5_count = 0
-        so6_count = 0 
+        so6_scores = []  
         values = []
-        scores = []
+        scores = []     
         for course in courses:
-                swps = get_course_swps(course[0])
-                if len(swps) == 0:
-                    pass
-                for swp in swps:
-                    attempt_results = get_swp_attempts(swp['swp_id'])       
-                    for attempt in attempt_results:
-                        if attempt['SO1'] == 1: 
-                            so1_count += 1
-                            scores = get_swp_results(swp['swp_id'])
-                            if not scores:
-                                so1_scores.append(0)
-                            else:
-                                for score in scores:
-                                    so1_scores.append(score.value)                                                                           
-                        if attempt['SO2'] == 1:
-                            so2_count += 1               
-                            scores = get_swp_results(swp['swp_id'])
-                            if not scores:
-                                so2_scores.append(0)
-                            else:
-                                for score in scores:
-                                    so2_scores.append(score.value)              
-                        if attempt['SO3'] == 1: 
-                            so3_count += 1               
-                            scores = get_swp_results(swp['swp_id'])
-                            if not scores:
-                                so3_scores.append(0)
-                            else:
-                                for score in scores:
-                                    so3_scores.append(score.value)             
-                        if attempt['SO4'] == 1:  
-                            so4_count += 1              
-                            scores = get_swp_results(swp['swp_id'])
-                            if not scores:
-                                so4_scores.append(0)
-                            else:
-                                for score in scores:
-                                    so4_scores.append(score.value)          
-                        if attempt['SO5'] == 1:  
-                            so5_count += 1              
-                            scores = get_swp_results(swp['swp_id'])
-                            if not scores:
-                                so5_scores.append(0)
-                            else:
-                                for score in scores:
-                                    so5_scores.append(score.value)             
-                        if attempt['SO6'] == 1:
-                            so6_count += 1  
-                            scores = get_swp_results(swp['swp_id'])              
-                            if not scores:
-                                so6_scores.append(0)
-                            else:
-                                for score in scores:
-                                    so6_scores.append(score.value)
-                
+            so1_count = 0
+            so2_count = 0
+            so3_count = 0
+            so4_count = 0
+            so5_count = 0
+            so6_count = 0
+
+            swps = get_course_swps(course[0])
+            if len(swps) == 0:
+                pass
+            for swp in swps:
+                attempt_results = get_swp_attempts(swp['swp_id'])       
+                for attempt in attempt_results:
+                    if attempt['SO1'] == 1: 
+                        so1_count += 1
+                        scores = get_swp_results(swp['swp_id'])
+                        if not scores:
+                            so1_scores.append(0)
+                        else:
+                            for score in scores:
+                                so1_scores.append(score.value)                                                                           
+                    if attempt['SO2'] == 1:
+                        so2_count += 1               
+                        scores = get_swp_results(swp['swp_id'])
+                        if not scores:
+                            so2_scores.append(0)
+                        else:
+                            for score in scores:
+                                so2_scores.append(score.value)              
+                    if attempt['SO3'] == 1: 
+                        so3_count += 1               
+                        scores = get_swp_results(swp['swp_id'])
+                        if not scores:
+                            so3_scores.append(0)
+                        else:
+                            for score in scores:
+                                so3_scores.append(score.value)             
+                    if attempt['SO4'] == 1:  
+                        so4_count += 1              
+                        scores = get_swp_results(swp['swp_id'])
+                        if not scores:
+                            so4_scores.append(0)
+                        else:
+                            for score in scores:
+                                so4_scores.append(score.value)          
+                    if attempt['SO5'] == 1:  
+                        so5_count += 1              
+                        scores = get_swp_results(swp['swp_id'])
+                        if not scores:
+                            so5_scores.append(0)
+                        else:
+                            for score in scores:
+                                so5_scores.append(score.value)             
+                    if attempt['SO6'] == 1:
+                        so6_count += 1  
+                        scores = get_swp_results(swp['swp_id'])              
+                        if not scores:
+                            so6_scores.append(0)
+                        else:
+                            for score in scores:
+                                so6_scores.append(score.value)
+
+
     if len(so1_scores) == 0:
         so1_scores.append(0)
     if len(so2_scores) == 0:
@@ -2134,39 +2181,162 @@ def get_term_scores(course_number, department, year, term, report_type):
     so5_scores.sort()
     so6_scores.sort()
 
-    if report_type =='Mean':
-        so1_mean = statistics.mean(so1_scores)
-        values.append(so1_mean)
-        so2_mean = statistics.mean(so2_scores)
-        values.append(so2_mean)
-        so3_mean = statistics.mean(so3_scores)
-        values.append(so3_mean)
-        so4_mean = statistics.mean(so4_scores)
-        values.append(so4_mean)
-        so5_mean = statistics.mean(so5_scores)
-        values.append(so5_mean)
-        so6_mean = statistics.mean(so6_scores)
-        values.append(so6_mean)
-    elif report_type =="Median":
-        so1_median = statistics.median(so1_scores)
-        values.append(so1_median)
-        so2_median = statistics.median(so2_scores)
-        values.append(so2_median)
-        so3_median = statistics.median(so3_scores)
-        values.append(so3_median)
-        so4_median = statistics.median(so4_scores)
-        values.append(so4_median)
-        so5_median = statistics.median(so5_scores)
-        values.append(so5_median)
-        so6_median = statistics.median(so6_scores)
-        values.append(so6_median)
-    else:
+    if report_type =='Count':
         values.append(so1_count)
         values.append(so2_count)
         values.append(so3_count)
         values.append(so4_count)
         values.append(so5_count)
-        values.append(so6_count)
+        values.append(so6_count)    
+        return values  
+    else:
+        values = calc_vals(report_type, so1_scores, so2_scores, so3_scores, so4_scores, so5_scores, so6_scores)
+        return values
+
+
+def get_all_term_scores(term, year, report_type):
+    dbconnection = engine.connect()
+    statement = f"SELECT id FROM COURSE WHERE TERM = '{term}' and YEAR ='{year}'"
+    courses = dbconnection.execute(statement)
+    so1_scores = [] 
+    so2_scores = []
+    so3_scores = []
+    so4_scores = []
+    so5_scores = []
+    so6_scores = []  
+    values = []
+    so1_count = 0
+    so2_count = 0
+    so3_count = 0
+    so4_count = 0
+    so5_count = 0
+    so6_count = 0 
+
+    for course in courses:    
+        swps = get_course_swps(course[0]) 
+        for swp in swps:
+            attempt_results = get_swp_attempts(swp['swp_id'])       
+            for attempt in attempt_results:
+                if attempt['SO1'] == 1: 
+                    so1_count += 1
+                    scores = get_swp_results(swp['swp_id'])
+                    if not scores:
+                        so1_scores.append(0)
+                    else:
+                        for score in scores:
+                            so1_scores.append(score.value)                                                                           
+                if attempt['SO2'] == 1:
+                    so2_count += 1               
+                    scores = get_swp_results(swp['swp_id'])
+                    if not scores:
+                        so2_scores.append(0)
+                    else:
+                        for score in scores:
+                            so2_scores.append(score.value)              
+                if attempt['SO3'] == 1: 
+                    so3_count += 1               
+                    scores = get_swp_results(swp['swp_id'])
+                    if not scores:
+                        so3_scores.append(0)
+                    else:
+                        for score in scores:
+                            so3_scores.append(score.value)             
+                if attempt['SO4'] == 1:  
+                    so4_count += 1              
+                    scores = get_swp_results(swp['swp_id'])
+                    if not scores:
+                        so4_scores.append(0)
+                    else:
+                        for score in scores:
+                            so4_scores.append(score.value)          
+                if attempt['SO5'] == 1:  
+                    so5_count += 1              
+                    scores = get_swp_results(swp['swp_id'])
+                    if not scores:
+                        so5_scores.append(0)
+                    else:
+                        for score in scores:
+                            so5_scores.append(score.value)             
+                if attempt['SO6'] == 1:
+                    so6_count += 1  
+                    scores = get_swp_results(swp['swp_id'])              
+                    if not scores:
+                        so6_scores.append(0)
+                    else:
+                        for score in scores:
+                            so6_scores.append(score.value)      
+
+            
+    if len(so1_scores) == 0:
+        so1_scores.append(0)
+    if len(so2_scores) == 0:
+        so2_scores.append(0)
+    if len(so3_scores) == 0:
+        so3_scores.append(0)
+    if len(so4_scores) == 0:
+        so4_scores.append(0)
+    if len(so5_scores) == 0:
+        so5_scores.append(0)
+    if len(so6_scores) == 0:
+        so6_scores.append(0)
+    
+    so1_scores.sort()
+    so2_scores.sort()
+    so3_scores.sort()
+    so4_scores.sort()
+    so5_scores.sort()
+    so6_scores.sort()
+
+       # print("scores: ")
+        #print(so1_scores)
+        #print(so2_scores)
+        #print(so3_scores)
+        #print(so4_scores)
+        #print(so5_scores)
+        #print(so6_scores)
+
+    if report_type == 'Count':
+        values.append(so1_count)
+        values.append(so2_count)
+        values.append(so3_count)
+        values.append(so4_count)
+        values.append(so5_count)
+        values.append(so6_count) 
+        print(values)   
+        return values 
+    
+    else:
+        values = calc_vals(report_type, so1_scores, so2_scores, so3_scores, so4_scores, so5_scores, so6_scores)
+        return values
+
+def calc_vals(report_type, so1, so2, so3, so4, so5, so6):
+    values  = []
+    if report_type =='Mean':
+        so1_mean = statistics.mean(so1)
+        values.append(so1_mean)
+        so2_mean = statistics.mean(so2)
+        values.append(so2_mean)
+        so3_mean = statistics.mean(so3)
+        values.append(so3_mean)
+        so4_mean = statistics.mean(so4)
+        values.append(so4_mean)
+        so5_mean = statistics.mean(so5)
+        values.append(so5_mean)
+        so6_mean = statistics.mean(so6)
+        values.append(so6_mean)
+    elif report_type =="Median":
+        so1_median = statistics.median(so1)
+        values.append(so1_median)
+        so2_median = statistics.median(so2)
+        values.append(so2_median)
+        so3_median = statistics.median(so3)
+        values.append(so3_median)
+        so4_median = statistics.median(so4)
+        values.append(so4_median)
+        so5_median = statistics.median(so5)
+        values.append(so5_median)
+        so6_median = statistics.median(so6)
+        values.append(so6_median)
     
     return values
 

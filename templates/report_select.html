@@ -360,17 +360,7 @@
 
 
             <div class="modal-body">
-              <form action="" class="modal-form" method="post">
-                <fieldset>
-                  <legend>Student Outcome</legend>
-                  <input type="radio" name="outcome" value="1" required>SO1<br>
-                  <input type="radio" name="outcome" value="2">SO2<br>
-                  <input type="radio" name="outcome" value="3">SO3<br>
-                  <input type="radio" name="outcome" value="4">SO4<br>
-                  <input type="radio" name="outcome" value="5">SO5<br>
-                  <input type="radio" name="outcome" value="6">SO6<br>
-                 <br>                    
-              </fieldset>
+              <form action="{{url_for('outcome_report_time')}}" class="modal-form" method="post">           
 
               <fieldset>
                 <legend>Report Type</legend>
