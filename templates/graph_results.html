@@ -270,13 +270,14 @@
 
           var barData = {
               labels : [
-                  {% for semester in semesters %}
-                      "{{ semester }}",
+                  {% for item in labels %}
+                      "{{ item }}",
                   {% endfor %}
               ],
-          {% for item in labels %}
-              datasets : [{
-                  label: "{{ item }}",
+
+              datasets : [
+                  {% for so in so_labels %}
+                  {label: "{{ so }}",
                   fill: false,
                   borderColor: "#" + randomColor,
                   borderJointStyle: "miter",
