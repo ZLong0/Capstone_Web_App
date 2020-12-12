@@ -191,9 +191,10 @@
                       </div> 
                     <fieldset>
                       <legend>Report Type</legend>
-                      <input type="radio" name="report_type" value="Count" required>Count<br>
-                      <input type="radio" name="report_type" value="Median">Median<br>
-                      <input type="radio" name="report_type" value="Mean">Mean<br>
+                        <input type="radio" name="report_type" value="Count" required>Count<br>
+                        <input type="radio" name="report_type" value="Median">Median<br>
+                        <input type="radio" name="report_type" value="Mean">Mean<br>
+                        <input type="hidden" name="report_time" value="time">
                       <br>                    
                   </fieldset>                                          
                     <button class="btn btn-secondary" type="submit">Submit</button>
@@ -231,9 +232,10 @@
                   </div> 
                   <fieldset>
                     <legend>Report Type</legend>
-                    <input type="radio" name="report_type" value="Count" required>Count<br>
-                    <input type="radio" name="report_type" value="Median">Median<br>
-                    <input type="radio" name="report_type" value="Mean">Mean<br>
+                      <input type="radio" name="report_type" value="Count" required>Count<br>
+                      <input type="radio" name="report_type" value="Median">Median<br>
+                      <input type="radio" name="report_type" value="Mean">Mean<br>
+                      <input type="hidden" name="report_time" value="term">
                     <br>                    
                   </fieldset>                                        
                   <button class="btn btn-secondary" type="submit">Submit</button>
@@ -272,9 +274,10 @@
                </div>   
                <fieldset>
                     <legend>Report Type</legend>
-                    <input type="radio" name="report_type" value="Count" required>Count<br>
-                    <input type="radio" name="report_type" value="Median">Median<br>
-                    <input type="radio" name="report_type" value="Mean">Mean<br>
+                   <input type="radio" name="report_type" value="Count" required>Count<br>
+                   <input type="radio" name="report_type" value="Median">Median<br>
+                   <input type="radio" name="report_type" value="Mean">Mean<br>
+                   <input type="hidden" name="report_time" value="time">
                     <br>                    
                   </fieldset>                                        
                 <button class="btn btn-secondary" type="submit">Submit</button>
@@ -332,6 +335,7 @@
                     <input type="radio" name="report_type" value="Count" required>Count<br>
                     <input type="radio" name="report_type" value="Median">Median<br>
                     <input type="radio" name="report_type" value="Mean">Mean<br>
+                    <input type="hidden" name="report_time" value="term">
                     <br>                    
                   </fieldset>
                   <button class="btn btn-secondary" type="submit">Submit</button>
@@ -364,9 +368,10 @@
 
               <fieldset>
                 <legend>Report Type</legend>
-                <input type="radio" name="report_type" value="Count" required>Count<br>
-                <input type="radio" name="report_type" value="Median">Median<br>
-                <input type="radio" name="report_type" value="Mean">Mean<br>
+                  <input type="radio" name="report_type" value="Count" required>Count<br>
+                  <input type="radio" name="report_type" value="Median">Median<br>
+                  <input type="radio" name="report_type" value="Mean">Mean<br>
+                  <input type="hidden" name="report_time" value="time">
                 <br>                    
               </fieldset>
                   <button class="btn btn-secondary" type="submit">Submit</button>
@@ -394,12 +399,13 @@
                 <form action="{{url_for('outcome_report_single_term')}}" class="modal-form" method="post">
                     <fieldset>
                     <legend>Student Outcome</legend>
-                     <input type="radio" name="outcome" value="1" required>SO1<br>
-                     <input type="radio" name="outcome" value="2">SO2<br>
-                     <input type="radio" name="outcome" value="3">SO3<br>
-                     <input type="radio" name="outcome" value="4">SO4<br>
-                     <input type="radio" name="outcome" value="5">SO5<br>
-                     <input type="radio" name="outcome" value="6">SO6<br>
+                        <input type="radio" name="outcome" value="1" required>SO1<br>
+                        <input type="radio" name="outcome" value="2">SO2<br>
+                        <input type="radio" name="outcome" value="3">SO3<br>
+                        <input type="radio" name="outcome" value="4">SO4<br>
+                        <input type="radio" name="outcome" value="5">SO5<br>
+                        <input type="radio" name="outcome" value="6">SO6<br>
+                        <input type="hidden" name="report_time" value="term">
                     <br>                    
                   </fieldset>
 

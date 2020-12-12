@@ -1517,6 +1517,11 @@ def instructor_report_single():
     instructor_id = request.form["instructor"]
     term = request.form["term"]
     year = request.form["year"]
+    report_time = request.form['report_time']
+    if report_time == 'time':
+        graph_type = 'line'
+    elif report_time == 'term':
+        graph_type = 'bar'
     user_id = Users.get_id(current_user)
     user = Users.query.get(user_id)
 
@@ -1555,7 +1560,7 @@ def instructor_report_single():
     report_title = f"{report_type} for {instructor_id} during {term} {year}"
     #print(report_title)
     #return jsonify(so_labels)
-    return render_template('graph_results.html', labels = so_labels, values = values, courses=courses, semesters = courses, report_title = report_title)
+    return render_template('graph_results.html', labels = so_labels, values = values, courses=courses, semesters = courses, report_title = report_title, graph_type=graph_type)
 
 
 @app.route('/reports/instructor/time', methods=['GET', 'POST'])
@@ -1567,7 +1572,12 @@ def instructor_report_time():
         return redirect(url_for('home'))
 
     report_type = request.form['report_type']
-    instructor_id = request.form['instructor']    
+    instructor_id = request.form['instructor']
+    report_time = request.form['report_time']
+    if report_time == 'time':
+        graph_type = 'line'
+    elif report_time == 'term':
+        graph_type = 'bar'
     labels = []
     term_scores = []
 
@@ -1643,6 +1653,11 @@ def course_report_single():
 
     report_type = request.form["report_type"]
     course_id = request.form["course"]
+    report_time = request.form['report_time']
+    if report_time == 'time':
+        graph_type = 'line'
+    elif report_time == 'term':
+        graph_type = 'bar'
     outcomes = []
     outcomes = get_all_outcomes()
     so_labels = []
@@ -1651,9 +1666,9 @@ def course_report_single():
     
     swps = Assignments.query.filter_by(course_id=course_id).all()
     values = get_bar_graph_data(swps, report_type) 
-    
+
     report_title = f"{report_type} for {course_id}"
-    return render_template('graph_results.html', labels = so_labels, values = values, semesters = all_courses, all_courses = all_courses, report_title = report_title)
+    return render_template('graph_results.html', labels = so_labels, values = values, semesters = all_courses, all_courses = all_courses, report_title = report_title, graph_type=graph_type)
 
 
 @app.route('/reports/course/time', methods = ['GET', 'POST'])
@@ -1662,6 +1677,11 @@ def course_report_time():
     course_number = request.form["course_number"]
     department = request.form["department"]
     report_type = request.form["report_type"]
+    report_time = request.form['report_time']
+    if report_time == 'time':
+        graph_type = 'line'
+    elif report_time == 'term':
+        graph_type = 'bar'
 
     results = get_line_graph_data(course_number, department, report_type)  
   
@@ -1683,6 +1703,11 @@ def outcome_report_single_term():
     term = request.form["term"]
     year = request.form["year"]
     so = request.form["outcome"]
+    report_time = request.form['report_time']
+    if report_time == 'time':
+        graph_type = 'line'
+    elif report_time == 'term':
+        graph_type = 'bar'
     print(so)
 
     user_id = Users.get_id(current_user)
@@ -1715,7 +1740,8 @@ def outcome_report_single_term():
         report_title = f"SWP {report_type} Attempting Outcome {so} During {term} {year}"
     else:
         report_title = f"{report_type} For Outcome {so} During {term} {year}"
-    return render_template('graph_results.html', labels = course_labels, values = data, report_title = report_title)
+    return render_template('graph_results.html', labels = course_labels,
+                           values = data, report_title = report_title, graph_type=graph_type)
 
 
 @app.route('/reports/outcomes/time', methods=['GET', 'POST'])
@@ -1726,7 +1752,12 @@ def outcome_report_time():
     if user.account_type == 'instructor':
         return redirect(url_for('home'))
 
-    report_type = request.form['report_type']    
+    report_type = request.form['report_type']
+    report_time = request.form['report_time']
+    if report_time == 'time':
+        graph_type = 'line'
+    elif report_time == 'term':
+        graph_type = 'bar'
     labels = []
     term_scores = []
 
@@ -1832,7 +1863,7 @@ def bar_graph_student_grade(course_id, swp_id):
     if user.account_type == 'instructor':
         semesters_list = get_instructor_courses(user_id)
         print(semesters_list)
-        return render_template('graph_results.html.html', semesters=semesters_list, values=values, labels=labels)
+        return render_template('graph_results.html', semesters=semesters_list, values=values, labels=labels)
     else:
         semesters_list = get_all_courses()
         return render_template('graph_results.html', semesters=semesters_list, values=values, lables=labels)
