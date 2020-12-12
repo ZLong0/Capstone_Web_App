@@ -424,7 +424,7 @@ def get_all_students():
 @app.route('/students/edit', methods=['GET'])
 #@login_required
 def edit_students():
-        all_courses = get_all_courses()
+        semesters_list = get_all_courses()
         sorted_semesters = sort_semesters(semesters_list)
         instructors = get_instructors()
         students = get_all_students()
@@ -1039,19 +1039,18 @@ def add_swp():
 @app.route('/swp/<int:swp_id>/delete', methods=['GET', 'POST'])
 #@login_required
 def delete_swp(swp_id):
-    if request.method == 'POST':
-        swp = Assignments.query.get(swp_id)
-        print(swp)
-        print(swp.swp_id)
-        delete_attempts(swp.swp_id)
-        results = get_swp_results(swp.swp_id)
-        if len(results) != 0:
-            for result in results:
-                delete_one_result(result.id)
-        db.session.delete(swp)
-        db.session.commit()
+    swp = Assignments.query.get(swp_id)
+    print(swp)
+    print(swp.swp_id)
+    delete_attempts(swp.swp_id)
+    results = get_swp_results(swp.swp_id)
+    if len(results) != 0:
+        for result in results:
+            delete_one_result(result.id)
+    db.session.delete(swp)
+    db.session.commit()
 
-        print("Work Product Deleted")
+    print("Work Product Deleted")
 
     return redirect(url_for('get_one_course', course_id=swp.course_id))
 
@@ -1306,6 +1305,24 @@ def delete_student_from_course(course_id, student_id):
         db.session.commit()
 
         print("Enrollment Deleted")
+
+        assignments = Assignments.query.filter_by(course_id = course_id).all()
+
+        if len(assignments) == 0:
+            #no assignments in course -- no delete needed on results
+            pass
+        else:
+            #get the assignments for the course/student
+            for swp in assignments:
+                #see if student has a result on assignment if so -- drop score from results
+                results = Results.query.filter_by(swp_id = swp.id, student_id = student_id).all()
+                if len(results) == 0:
+                    pass
+                else:
+                    for results in results:
+                        db.session.delete(result)
+                        db.session.commit()
+
     return redirect(url_for('get_one_course', course_id = course_id))
     # return redirect(url_for('home'))
 
