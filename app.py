@@ -1561,9 +1561,7 @@ def instructor_report_single():
     for so in outcomes:
         so_labels.append(so.so_name)       
     
-    instructor = Instructor.query.get(instructor_id)
-    
-    report_title = f"{report_type} for {instructor.fname} {instructor.lname} during {term} {year}"
+    report_title = f"{report_type} for {instructor_id} during {term} {year}"
     return render_template('graph_results.html', labels = so_labels, values = values, courses=sorted_semesters, semesters = sorted_semesters, report_title = report_title, graph_type=graph_type)
 
 
@@ -1696,9 +1694,8 @@ def course_report_single():
     
     swps = Assignments.query.filter_by(course_id=course_id).all()
     values = get_bar_graph_data(swps, report_type) 
-    course = Course.query.get(course_id)
 
-    report_title = f"{report_type} for {course.department} {course.course_number}: {course.section} - {course.term} {course.year}"
+    report_title = f"{report_type} for {course_id}"
     return render_template('graph_results.html', labels = so_labels, values = values, semesters = sorted_semesters, all_courses = sorted_semesters, report_title = report_title, graph_type=graph_type)
 
 
@@ -1714,6 +1711,8 @@ def course_report_time():
     elif report_time == 'term':
         graph_type = 'bar'
 
+    semesters_list = get_all_courses()
+    sorted_semesters = sort_semesters(semesters_list)
     term_scores = get_line_graph_data(course_number, department, report_type)       
     labels = []
     all_term_scores = []
@@ -1722,6 +1721,11 @@ def course_report_time():
         labels.append(item['labels'])
         all_term_scores.append(item['data'])
 
+    outcomes = []
+    outcomes = get_all_outcomes()
+    so_labels = []
+    for so in outcomes:
+        so_labels.append(so.so_name)
     results = []
     data= {}
     data['labels'] = labels
@@ -1753,7 +1757,10 @@ def course_report_time():
 
     data['data'] = data_by_sos
     results.append(data)
-    return jsonify(results)
+    # return jsonify(results)
+    report_title = f"{report_type} for {course_number}"
+    return render_template('graph_results.html', labels=data['labels'], values=data['data'], semesters=sorted_semesters,
+                           all_courses=sorted_semesters, report_title=report_title, graph_type=graph_type, so_lables=so_labels)
 
 
 
@@ -1778,7 +1785,7 @@ def outcome_report_single_term():
         return redirect(url_for('home'))
     
     dbconnection = engine.connect()
-    statement = f"SELECT id, department, course_number, section from course where term = '{term}' and year = '{year}'"
+    statement = f"SELECT id, department, course_number from course where term = '{term}' and year = '{year}'"
     courses = dbconnection.execute(statement)
 
     course_labels = [] 
@@ -2101,7 +2108,7 @@ def get_so_bar_graph_data(courses, so, report_type):
             dbconnection = engine.connect()
             statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]}"
             swps = dbconnection.execute(statement)        
-            course_name = f"{course.department} {course.course_number}: {course.section}"
+            course_name = f"{course.department} {course.course_number}"
             labels.append(course_name)       
             for swp in swps:
                 statement = f"SELECT * FROM ATTEMPTS WHERE swp_id = {swp[0]} and SO{so} == 1"
@@ -2125,7 +2132,7 @@ def get_so_bar_graph_data(courses, so, report_type):
             dbconnection = engine.connect()
             statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]}"
             swps = dbconnection.execute(statement)        
-            course_name = f"{course.department} {course.course_number} : {course.section}"
+            course_name = f"{course.department} {course.course_number}"
             labels.append(course_name)  
             scores =[]
 
@@ -2161,7 +2168,7 @@ def get_so_bar_graph_data(courses, so, report_type):
             dbconnection = engine.connect()
             statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]}"
             swps = dbconnection.execute(statement)        
-            course_name = f"{course.department} {course.course_number}: {course.section}"
+            course_name = f"{course.department} {course.course_number}"
             labels.append(course_name)  
             scores =[]
 
