@@ -135,13 +135,16 @@ def home():
 
     if user.account_type == 'instructor':
         semesters_list = get_instructor_courses(user_id)
-        return render_template("inst_home.html", current_user=user, semesters=semesters_list)
+        sorted_semesters = sort_semesters(semesters_list)
+        return render_template("inst_home.html", current_user=user, semesters=sorted_semesters)
     elif user.account_type == 'root':
         semesters_list = get_all_courses()
-        return render_template("root_home.html", current_user=user, user_list=user_list, semesters=semesters_list, pending_users=pending_users)
+        sorted_semesters = sort_semesters(semesters_list)
+        return render_template("root_home.html", current_user=user, user_list=user_list, semesters=sorted_semesters, pending_users=pending_users)
     else:
         semesters_list = get_all_courses()
-        return render_template("home.html", current_user=user, semesters=semesters_list)
+        sorted_semesters = sort_semesters(semesters_list)
+        return render_template("home.html", current_user=user, semesters=sorted_semesters)
 
 
 @app.route("/register", methods=["POST", "GET"])
@@ -558,7 +561,6 @@ def get_all_courses():
                     # print(courses)
             semesters_list.append(semester_data)
         dbconnection.close()
-        print(semesters_list)
         return semesters_list
 
 
@@ -600,13 +602,14 @@ def get_one_course(course_id):
         print(student['student_id'])
     if user.account_type == 'instructor':
         semesters_list = get_instructor_courses(user_id)
-        print(semesters_list)
+        sorted_semesters = sort_semesters(semesters_list)
         return render_template('inst_courses.html', courses=course_results, students=student_results, swps=swp_results,
-                               semesters=semesters_list, all_students = all_students)
+                               semesters=sorted_semesters, all_students = all_students)
     else:
         semesters_list = get_all_courses()
+        sorted_semesters = sort_semesters(semesters_list)
         return render_template('courses.html', courses=course_results, students=student_results, swps=swp_results,
-                               semesters=semesters_list, all_students = all_students)
+                               semesters=sorted_semesters, all_students = all_students)
 
 
 # gets all courses for specific instructor id
@@ -790,10 +793,12 @@ def outcomes():
 
     if user.account_type == 'instructor':
         semesters_list = get_instructor_courses(uid)
-        return render_template('inst_outcomes.html', outcomes=outcomes_list, semesters=semesters_list)
+        sorted_semesters = sort_semesters(semesters_list)
+        return render_template('inst_outcomes.html', outcomes=outcomes_list, semesters=sorted_semesters)
     else:
         semesters_list = get_all_courses()
-        return render_template('outcomes.html', outcomes=outcomes_list, semesters=semesters_list)
+        sorted_semesters = sort_semesters(semesters_list)
+        return render_template('outcomes.html', outcomes=outcomes_list, semesters=sorted_semesters)
 
 def get_one_outcome(so_id):
     outcome = Outcomes.query.get(so_id)
@@ -1624,7 +1629,32 @@ def instructor_report_time():
     results = []
     data= {}
     data['labels'] = labels
-    data['data'] = term_scores
+ 
+    so1_scores = []
+    so2_scores = []
+    so3_scores = []
+    so4_scores = []
+    so5_scores = []
+    so6_scores = []
+    #USER FOR LOOP TO GO THROUGH TERM_SCORES AND CREATE THELIST AS NEEDED
+
+    for item in term_scores:
+        so1_scores.append(item[0])
+        so2_scores.append(item[1])
+        so3_scores.append(item[2])
+        so4_scores.append(item[3])
+        so5_scores.append(item[4])
+        so6_scores.append(item[5])
+
+    data_by_sos = []
+    data_by_sos.append(so1_scores)
+    data_by_sos.append(so2_scores)
+    data_by_sos.append(so3_scores)
+    data_by_sos.append(so4_scores)
+    data_by_sos.append(so5_scores)
+    data_by_sos.append(so6_scores)
+
+    data['data'] = data_by_sos
     results.append(data)
     return jsonify(results)
 
@@ -1683,17 +1713,47 @@ def course_report_time():
     elif report_time == 'term':
         graph_type = 'bar'
 
-    results = get_line_graph_data(course_number, department, report_type)  
-  
+    term_scores = get_line_graph_data(course_number, department, report_type)       
     labels = []
-    data = []
-    if results:
-        for item in results:
-            labels = item['labels']
-            data = item['data']
+    all_term_scores = []
 
-    output = f"LABELS:  {labels} DATA: {data}"
-    return output
+    for item in term_scores:
+        labels.append(item['labels'])
+        all_term_scores.append(item['data'])
+
+    results = []
+    data= {}
+    data['labels'] = labels
+ 
+    so1_scores = []
+    so2_scores = []
+    so3_scores = []
+    so4_scores = []
+    so5_scores = []
+    so6_scores = []
+    #USER FOR LOOP TO GO THROUGH TERM_SCORES AND CREATE THELIST AS NEEDED
+
+    for item in all_term_scores:
+        for i in item:
+            so1_scores.append(i[0])
+            so2_scores.append(i[1])
+            so3_scores.append(i[2])
+            so4_scores.append(i[3])
+            so5_scores.append(i[4])
+            so6_scores.append(i[5])
+
+    data_by_sos = []
+    data_by_sos.append(so1_scores)
+    data_by_sos.append(so2_scores)
+    data_by_sos.append(so3_scores)
+    data_by_sos.append(so4_scores)
+    data_by_sos.append(so5_scores)
+    data_by_sos.append(so6_scores)
+
+    data['data'] = data_by_sos
+    results.append(data)
+    return jsonify(results)
+
 
 
 @app.route('/reports/outcomes', methods=['GET', 'POST'])
@@ -1804,7 +1864,32 @@ def outcome_report_time():
     results = []
     data= {}
     data['labels'] = labels
-    data['data'] = term_scores
+ 
+    so1_scores = []
+    so2_scores = []
+    so3_scores = []
+    so4_scores = []
+    so5_scores = []
+    so6_scores = []
+    #USER FOR LOOP TO GO THROUGH TERM_SCORES AND CREATE THELIST AS NEEDED
+
+    for item in term_scores:
+        so1_scores.append(item[0])
+        so2_scores.append(item[1])
+        so3_scores.append(item[2])
+        so4_scores.append(item[3])
+        so5_scores.append(item[4])
+        so6_scores.append(item[5])
+
+    data_by_sos = []
+    data_by_sos.append(so1_scores)
+    data_by_sos.append(so2_scores)
+    data_by_sos.append(so3_scores)
+    data_by_sos.append(so4_scores)
+    data_by_sos.append(so5_scores)
+    data_by_sos.append(so6_scores)
+
+    data['data'] = data_by_sos
     results.append(data)
     return jsonify(results)
 
@@ -1862,11 +1947,12 @@ def bar_graph_student_grade(course_id, swp_id):
     labels = student_full_name_list
     if user.account_type == 'instructor':
         semesters_list = get_instructor_courses(user_id)
-        print(semesters_list)
-        return render_template('graph_results.html', semesters=semesters_list, values=values, labels=labels)
+        sorted_semesters = sort_semesters(semesters_list)
+        return render_template('graph_results.html', semesters=sorted_semesters, values=values, labels=labels)
     else:
         semesters_list = get_all_courses()
-        return render_template('graph_results.html', semesters=semesters_list, values=values, lables=labels)
+        sorted_semesters = sort_semesters(semesters_list)
+        return render_template('graph_results.html', semesters=sorted_semesters, values=values, lables=labels)
 
 
 @app.route('/report_selected', methods=['GET','POST'])
@@ -1882,8 +1968,9 @@ def report_selector():
     attempt = []
     for swp in swps:
         attempts = get_swp_attempts(swp['swp_id'])
-    
-    courses = get_all_courses()
+
+    semesters_list = get_all_courses() 
+    sorted_semesters = sort_semesters(semesters_list)
     enrolled = get_all_enrolled()
     instructors = get_instructors()
 
@@ -1892,7 +1979,7 @@ def report_selector():
     course_types = dbconnection.execute(statement)
 
     print(course_types)
-    return render_template('report_select.html', swps = swps, attempts = attempt, courses = courses, semesters = courses, enrollment = enrolled, instructors = instructors, course_types = course_types)
+    return render_template('report_select.html', swps = swps, attempts = attempt, courses = sorted_semesters, semesters = sorted_semesters, enrollment = enrolled, instructors = instructors, course_types = course_types)
 
 
 
@@ -2539,6 +2626,26 @@ def calc_vals(report_type, so1, so2, so3, so4, so5, so6):
         values.append(so6_median)
     
     return values
+
+def sort_semesters(semester_list): 
+
+    sorted_semesters = sorted(semester_list, key=lambda i:i['year'])
+    results = []
+    print(sorted_semesters)
+
+    for item in sorted_semesters:
+          if item['term'] == 'SPRING':
+            results.append(item)
+
+    for item in sorted_semesters:
+        if item['term'] == 'SUMMER':
+            results.append(item)
+ 
+    for item in sorted_semesters:
+        if item['term'] == 'FALL':
+            results.append(item)
+
+    return results
 
 
 if __name__ == '__main__':
