@@ -1713,17 +1713,47 @@ def course_report_time():
     elif report_time == 'term':
         graph_type = 'bar'
 
-    results = get_line_graph_data(course_number, department, report_type)  
-  
+    term_scores = get_line_graph_data(course_number, department, report_type)       
     labels = []
-    data = []
-    if results:
-        for item in results:
-            labels = item['labels']
-            data = item['data']
+    all_term_scores = []
 
-    output = f"LABELS:  {labels} DATA: {data}"
-    return output
+    for item in term_scores:
+        labels.append(item['labels'])
+        all_term_scores.append(item['data'])
+
+    results = []
+    data= {}
+    data['labels'] = labels
+ 
+    so1_scores = []
+    so2_scores = []
+    so3_scores = []
+    so4_scores = []
+    so5_scores = []
+    so6_scores = []
+    #USER FOR LOOP TO GO THROUGH TERM_SCORES AND CREATE THELIST AS NEEDED
+
+    for item in all_term_scores:
+        for i in item:
+            so1_scores.append(i[0])
+            so2_scores.append(i[1])
+            so3_scores.append(i[2])
+            so4_scores.append(i[3])
+            so5_scores.append(i[4])
+            so6_scores.append(i[5])
+
+    data_by_sos = []
+    data_by_sos.append(so1_scores)
+    data_by_sos.append(so2_scores)
+    data_by_sos.append(so3_scores)
+    data_by_sos.append(so4_scores)
+    data_by_sos.append(so5_scores)
+    data_by_sos.append(so6_scores)
+
+    data['data'] = data_by_sos
+    results.append(data)
+    return jsonify(results)
+
 
 
 @app.route('/reports/outcomes', methods=['GET', 'POST'])
