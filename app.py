@@ -425,11 +425,10 @@ def get_all_students():
 #@login_required
 def edit_students():
         all_courses = get_all_courses()
+        sorted_semesters = sort_semesters(semesters_list)
         instructors = get_instructors()
         students = get_all_students()
-        print(all_courses)
-        print(instructors)
-        return render_template('edit_students.html', courses = all_courses, semesters=all_courses, instructors=instructors, students = students)
+        return render_template('edit_students.html', courses = sorted_semesters, semesters=sorted_semesters, instructors=instructors, students = students)
 
 
 # GET ONE STUDENT
@@ -524,44 +523,43 @@ class Course(db.Model):
 @app.route('/courses/', methods=['GET'])
 # @login_required
 def get_all_courses():
-    if request.method == "GET":
-        courses_group = []
-        terms = []
-        user = current_user
-        uid = current_user.get_id()
-        print(uid)
-        year = []
-        semesters_list = []
+    courses_group = []
+    terms = []
+    user = current_user
+    uid = current_user.get_id()
+    print(uid)
+    year = []
+    semesters_list = []
 
-        if user.account_type == 'instructor':
-            return redirect(url_for('home'))
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
 
-        dbconnection = engine.connect()
-        terms = dbconnection.execute("select distinct term, year from course")
-        for term in terms:
-            semester_data = {}
-            courses_group = Course.query.filter_by(term=term[0], year=term[1]).all()
-            print(courses_group)
-            if courses_group:
-                semester_data['term'] = term[0]
-                semester_data['year'] = term[1]
-                courses = []
-                for course in courses_group:
-                    course_data = {}
-                    course_data['course_id'] = course.get_id()
-                    course_data['department'] = course.department
-                    course_data['course_number'] = course.course_number
-                    course_data['section'] = course.section
-                    course_data['year'] = course.year
-                    course_data['course_name'] = course.course_name
-                    course_data['instructor_id'] = course.instructor
-                    courses.append(course_data)
-                    sorted_courses = sorted(courses, key=lambda i:i['course_number'])
-                    semester_data['course_list'] = sorted_courses
-                    # print(courses)
-            semesters_list.append(semester_data)
-        dbconnection.close()
-        return semesters_list
+    dbconnection = engine.connect()
+    terms = dbconnection.execute("select distinct term, year from course")
+    for term in terms:
+        semester_data = {}
+        courses_group = Course.query.filter_by(term=term[0], year=term[1]).all()
+        print(courses_group)
+        if courses_group:
+            semester_data['term'] = term[0]
+            semester_data['year'] = term[1]
+            courses = []
+            for course in courses_group:
+                course_data = {}
+                course_data['course_id'] = course.get_id()
+                course_data['department'] = course.department
+                course_data['course_number'] = course.course_number
+                course_data['section'] = course.section
+                course_data['year'] = course.year
+                course_data['course_name'] = course.course_name
+                course_data['instructor_id'] = course.instructor
+                courses.append(course_data)
+                sorted_courses = sorted(courses, key=lambda i:i['course_number'])
+                semester_data['course_list'] = sorted_courses
+                # print(courses)
+        semesters_list.append(semester_data)
+    dbconnection.close()
+    return semesters_list
 
 
 @app.route('/courses/edit', methods=['GET'])
@@ -1551,6 +1549,7 @@ def instructor_report_single():
 
     #these are to generate drop downs 
     courses = get_all_courses()
+    sorted_semesters = sort_semesters(courses)
     print(courses)
     enrolled = get_all_enrolled()
     instructors = get_instructors()
@@ -1563,9 +1562,7 @@ def instructor_report_single():
         so_labels.append(so.so_name)       
     
     report_title = f"{report_type} for {instructor_id} during {term} {year}"
-    #print(report_title)
-    #return jsonify(so_labels)
-    return render_template('graph_results.html', labels = so_labels, values = values, courses=courses, semesters = courses, report_title = report_title, graph_type=graph_type)
+    return render_template('graph_results.html', labels = so_labels, values = values, courses=sorted_semesters, semesters = sorted_semesters, report_title = report_title, graph_type=graph_type)
 
 
 @app.route('/reports/instructor/time', methods=['GET', 'POST'])
@@ -1671,9 +1668,10 @@ def course_report_single():
     swps = get_all_swp()
     attempt = []
     for swp in swps:
-        attempts = get_swp_attempts(swp['swp_id'])
-    
-    all_courses=get_all_courses()
+        attempts = get_swp_attempts(swp['swp_id'])    
+
+    semesters_list = get_all_courses()
+    sorted_semesters = sort_semesters(semesters_list)
     enrolled = get_all_enrolled()
     instructors = get_instructors()
 
@@ -1698,7 +1696,7 @@ def course_report_single():
     values = get_bar_graph_data(swps, report_type) 
 
     report_title = f"{report_type} for {course_id}"
-    return render_template('graph_results.html', labels = so_labels, values = values, semesters = all_courses, all_courses = all_courses, report_title = report_title, graph_type=graph_type)
+    return render_template('graph_results.html', labels = so_labels, values = values, semesters = sorted_semesters, all_courses = sorted_semesters, report_title = report_title, graph_type=graph_type)
 
 
 @app.route('/reports/course/time', methods = ['GET', 'POST'])
