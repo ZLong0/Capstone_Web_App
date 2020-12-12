@@ -65,6 +65,173 @@
             	<canvas id="chart"></canvas>
 			</div>
         </div>
+            <!-- Modals -->
+	  
+	  <!-- Add SWP Modal -->
+	  <div class="modal fade" id="add-swp-modal">
+		<div class="modal-dialog">
+		  <div class="modal-content">
+
+			<!-- Modal Header -->
+			<div class="modal-header">
+				<h4 class="modal-title">Add Work Product</h4>
+				<button type="button" class="close" data-dismiss="modal">×</button>
+			</div>
+			
+			<!-- Modal body -->
+			<div class="modal-body">
+				<form action="/swp" class="modal-form" method="post">
+					
+					<div class="form-group">
+						<label for="course_id">Select Course</label>
+						<select id="course_id" name="course_id">
+							{% for semester in semesters %}							
+								{% for course in semester.course_list %}
+									<option value="{{course.course_id}}">{{semester.term}} {{semester.year}} {{course.department}} {{course.course_number}}:  {{course.section}}</option>
+								{% endfor %}
+							{% endfor %}
+						</select>
+					</div>
+					
+					<div class="form-group">
+						<label for="swp_name">Assignment Name</label>
+						<input type="text" class="form-control" id="swp_name" name="swp_name" required="true">
+					</div>
+				 
+					<div class="form-group">
+						 <label for="so-checkboxes">Student Outcomes</label>
+						 <div class="so-checkboxes">
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO1" id="SO1" value="SO1">
+								 <label class="form-check-label" for="SO1">SO1</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO2" id="SO2" value="SO2">
+								 <label class="form-check-label" for="SO2">SO2</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO3" id="SO3" value="SO3">
+								 <label class="form-check-label" for="SO3">SO3</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO4" id="SO4" value="SO4">
+								 <label class="form-check-label" for="SO4">SO4</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO5" id="SO5" value="SO5">
+								 <label class="form-check-label" for="SO5">SO5</label>
+							 </div>
+
+							 <div class="form-check form-check-inline">
+								 <input class="form-check-input" type="checkbox" name="SO6" id="SO6" value="SO6">
+								 <label class="form-check-label" for="SO6">SO6</label>
+							 </div>
+						 </div>
+					</div>
+					<button class="btn btn-secondary" type="submit">Submit</button>
+				</form>
+			</div>
+
+			<!-- Modal footer -->
+			<div class="modal-footer">
+				  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+			</div>
+		  </div>
+	  </div>
+	  </div>
+	  
+	  <!-- Edit SWP Modal -->
+	  <div class="modal fade" id="edit-swp-modal">
+    		<div class="modal-dialog">
+      			<div class="modal-content">
+      
+        			<!-- Modal Header -->
+        			<div class="modal-header">
+        	 			<h4 class="modal-title">Add Work Product</h4>
+        	  			<button type="button" class="close" data-dismiss="modal">×</button>
+        			</div>
+        
+      		  		<!-- Modal body -->
+      		  		<div class="modal-body">
+      		  			<form action="/swp" class="modal-form" method="put">
+							  CREATE FORM HERE							 
+							  <button type="submit">Submit</button>
+        				</form>
+        			</div>
+        
+        			<!-- Modal footer -->
+        			<div class="modal-footer">
+          				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        			</div>
+        
+    			</div>
+   			</div>
+  		</div>
+	  
+	  <!-- Edit Student Modal -->
+	  <div class="modal fade" id="edit-student-modal">
+		  <div class="modal-dialog">
+			  <div class="modal-content">
+				  
+				  <!-- Modal Header -->
+				  <div class="modal-header">
+					  <h4 class="modal-title">Edit Student</h4>
+					  <button type="button" class="close" data-dismiss="modal">×</button>
+				  </div>
+        
+				  <!-- Modal body -->
+				  <div class="modal-body">
+					  <form action="" class="modal-form" method="put">
+						  
+						  <button class="btn btn-secondary" type="submit">Submit</button>
+					  </form>
+				  </div>
+        
+				  <!-- Modal footer -->
+				  <div class="modal-footer">
+					  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				  </div>
+    			</div>
+   			</div>
+	  </div>
+	  
+	  <!-- Course List Modal (modal is generated for each term)-->
+	  <!-- TODO: make links take user to respective course page (may need to add endpoint to handle link) -->
+	  {% if semesters %}
+	  		{% for semester in semesters %}
+	  			<div class="modal fade" id="course-list-modal{{semester.term}}{{semester.year}}">
+					<div class="modal-dialog">
+						<div class="modal-content">
+
+							<!-- Modal Header -->
+							<div class="modal-header">
+								<h4 class="modal-title">{{semester.term}} {{semester.year}} Courses</h4>
+								<button type="button" class="close" data-dismiss="modal">×</button>
+							</div>
+
+							<!-- Modal body -->
+							<div class="modal-body">
+								<ul class="list-group">
+									{% for course in semester.course_list %}
+										<a class="list-group-item list-group-item-action text-center" href="{{ url_for('get_one_course', course_id = course.course_id)}}">{{course.department}} {{course.course_number}}: {{course.section}}</a>
+									{% endfor %}
+								</ul>
+							</div>
+
+							<!-- Modal footer -->
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							</div>
+						</div>
+					</div>
+	  			</div>
+	  		{% endfor %}	
+	  {% endif %}
+	  <!-- End of Modals -->
 	    {% if graph_type == 'bar' -%}
           <script>
               var barData ={
