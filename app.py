@@ -1891,7 +1891,7 @@ def outcome_report_time():
 
     data['data'] = data_by_sos
     results.append(data)
-    return jsonify(results))
+    return jsonify(results)
 
 @app.route('/reports/so/<int:so_id>', methods = ['GET'])
 def get_so_attempts(so_id):
