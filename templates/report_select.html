@@ -175,13 +175,19 @@
 
             <form action="{{url_for('course_report_time')}}" class="modal-form" method="post">                 
                     	<div class="form-group">
-					            	  <label for="course">Term</label>
-                          <select id="course" name="course" >
-                              <option value="" disabled selected>Select</option>                             
-                                {% for item in course_types %} 
-                                   <option value="{{item.course_number}}">{{item.department}} {{item.course_number}}</option>
+                        {% if course_types %}
+					            	  <label for="department">Department</label>
+                          <select id="department" name="department" >
+                              <option value="" disabled selected>Select</option>                               
+                                   <option value="CPSC">CPSC</option>
+                          </select>                          
+                          <select id="course_number" name="course_number" >
+                              <option value="" disabled selected>Course Number</option>
+                              {% for item in course_types %}                         
+                                   <option value="{{item.course_number}}">{{item.course_number}}</option>
                                 {% endfor %}                              
                           </select> 
+                          {% endif %}
                       </div> 
                     <fieldset>
                       <legend>Report Type</legend>
