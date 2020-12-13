@@ -219,11 +219,11 @@ def register_user():
                     new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
                                      password=new_password, account_type='instructor',
                                      sec_question=question_1, answer=answer_1, pending=1)
-                    # new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
-                    msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
+                    new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
+                    msg = Message('ATAS Registration Sent', recipients=[add_email], bccP=[root_cc.email])
                     msg.body = 'ATAS Registration Sent'
                     msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
-                               add_email + '. We will notify you when your account is ready to use</p>'
+                              add_email + '. We will notify you when your account is ready to use</p>'
                     mail.send(msg)
                     message = 'Registration sent'
                     db.session.add(new_user)
@@ -416,9 +416,11 @@ def get_all_students():
         student_data = {}
         student_data['student_id'] = student.student_id
         student_data['first_name'] = student.fname
-        student_data['last name'] = student.lname
+        student_data['last_name'] = student.lname
         results.append(student_data)
-    return  students
+
+    sorted_students = sorted(results, key= lambda i:i ['last_name'])
+    return  sorted_students
 
 
 @app.route('/students/edit', methods=['GET'])
@@ -553,6 +555,10 @@ def get_all_courses():
                 course_data['year'] = course.year
                 course_data['course_name'] = course.course_name
                 course_data['instructor_id'] = course.instructor
+
+                instructor_info = Instructor.query.get(course.instructor)
+                course_data['instructor_first'] = instructor_info.fname
+                course_data['instructor_last'] = instructor_info.lname
                 courses.append(course_data)
                 sorted_courses = sorted(courses, key=lambda i:i['course_number'])
                 semester_data['course_list'] = sorted_courses
