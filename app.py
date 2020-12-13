@@ -424,7 +424,7 @@ def get_all_students():
 @app.route('/students/edit', methods=['GET'])
 #@login_required
 def edit_students():
-        all_courses = get_all_courses()
+        semesters_list = get_all_courses()
         sorted_semesters = sort_semesters(semesters_list)
         instructors = get_instructors()
         students = get_all_students()
