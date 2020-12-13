@@ -175,10 +175,10 @@ def register_user():
             new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
                              password=new_password, account_type='root',
                              sec_question=question_1, answer=answer_1, pending=0)
-            msg = Message('ATAS Root Account Registration', recipients=[add_email])
-            msg.body = 'ATAS Root Account Registration'
-            msg.html = '<p>Thank you for registering a root account for ATAS ' + \
-                       add_email + '. ATAS is now ready to be used by other users.</p>'
+            msg = Message('DCIA Root Account Registration', recipients=[add_email])
+            msg.body = 'DCIA Root Account Registration'
+            msg.html = '<p>Thank you for registering a root account for DCIA ' + \
+                       add_email + '. DCIA is now ready to be used by other users.</p>'
             mail.send(msg)
             db.session.add(new_user)
             db.session.commit()
@@ -193,10 +193,10 @@ def register_user():
                 return render_template('register.html', error=error)
             elif email:
                 error = "This email is already registered.  Please try again."
-                msg = Message('ATAS Registration Attempt', recipients=[add_email])
-                msg.body = 'ATAS Registration Attempt'
-                msg.html = '<p>There was an attempt to register a new account in ATAS using the email ' + \
-                           add_email + ', if this was not you, make sure to secure your ATAS account</p>'
+                msg = Message('DCIA Registration Attempt', recipients=[add_email])
+                msg.body = 'DCIA Registration Attempt'
+                msg.html = '<p>There was an attempt to register a new account in DCIA using the email ' + \
+                           add_email + ', if this was not you, make sure to secure your DCIA account</p>'
                 mail.send(msg)
                 return render_template('register.html', error=error)
             else:
@@ -205,9 +205,9 @@ def register_user():
                     new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
                                      password=new_password, account_type='admin',
                                      sec_question=question_1, answer=answer_1, pending=1)
-                    msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
-                    msg.body = 'ATAS Registration Sent'
-                    msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
+                    msg = Message('DCIA Registration Sent', recipients=[add_email], bcc=[root_cc.email])
+                    msg.body = 'DCIA Registration Sent'
+                    msg.html = '<p>Thank you for registering a new account in DCIA using ' + \
                                add_email + '. We will notify you when your account is ready to use</p>'
                     mail.send(msg)
                     db.session.add(new_user)
@@ -220,9 +220,9 @@ def register_user():
                                      password=new_password, account_type='instructor',
                                      sec_question=question_1, answer=answer_1, pending=1)
                     new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
-                    msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
-                    msg.body = 'ATAS Registration Sent'
-                    msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
+                    msg = Message('DCIA Registration Sent', recipients=[add_email], bcc=[root_cc.email])
+                    msg.body = 'DCIA Registration Sent'
+                    msg.html = '<p>Thank you for registering a new account in DCIA using ' + \
                               add_email + '. We will notify you when your account is ready to use</p>'
                     mail.send(msg)
                     message = 'Registration sent'
@@ -257,10 +257,10 @@ def pending_list_update():
                 new_instructor = Instructor(inst_id=selected_user.id,
                                             fname=selected_user.fname, lname=selected_user.lname)
                 db.session.add(new_instructor)
-            msg = Message('ATAS Registration Approved', recipients=[selected_user.email], bcc=[root_cc.email])
-            msg.body = 'ATAS Registration Approved'
+            msg = Message('DCIA Registration Approved', recipients=[selected_user.email], bcc=[root_cc.email])
+            msg.body = 'DCIA Registration Approved'
             msg.html = '<p>Your account with the username/email of ' + selected_user.email + \
-                       ' has been approved and is ready to use. Thank you for using ATAS.</p>'
+                       ' has been approved and is ready to use. Thank you for using DCIA.</p>'
             db.session.commit()
             mail.send(msg)
             message = "User " + selected_user.email + " approved successfully!"
@@ -270,8 +270,8 @@ def pending_list_update():
             selected_user.pending = 1
             if selected_user.account_type == 'instructor' and instructor_check:
                 instructor_check.delete()
-            msg = Message('ATAS Account Suspended', recipients=[selected_user.email], bcc=[root_cc.email])
-            msg.body = 'ATAS Account Suspended'
+            msg = Message('DCIA Account Suspended', recipients=[selected_user.email], bcc=[root_cc.email])
+            msg.body = 'DCIA Account Suspended'
             msg.html = '<p>Your account with the username/email of ' + selected_user.email + \
                        ' has been suspended and can no longer be used. Please contact an administrator' \
                        ' to begin the process of account reactivation.</p>'
