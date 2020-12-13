@@ -59,10 +59,11 @@
     	</div>
 	  </nav>
 	  <div>
-      {% if courses %}
+     
         <div class="text-center mb-1">
             <h2>Edit Courses</h2><button class="btn btn-secondary" data-toggle="modal" data-target="#add-course-modal">Add New Course</button>
-        </div>
+		</div>
+		{% if courses %}
 		<div class="table-responsive">
 			<table class="table table-bordered mx-auto w-auto text-center">
 			  {% for course in courses %}
@@ -87,7 +88,7 @@
 						<td>{{course.course_number}}</td>
 						<td>{{course.section}}</td>
 						<td>{{course.course_name}}</td>
-						<td>{{course.instructor_id}}</td>
+						<td>{{course.instructor_last}}, {{course.instructor_first}}</td>
 						<td><button class="btn btn-secondary" data-toggle="modal" data-target="#edit-course-modal{{course.course_id}}">Edit</button><button class="btn btn-secondary" data-toggle="modal" data-target="#delete-course-modal{{course.course_id}}">Delete</button></td>
 					</tr>
 					{% endfor %}
@@ -160,7 +161,7 @@
                                         {% if instructors %}
                                             <option value="" selected></option>
                                             {% for instructor in instructors %}
-                                                <option value="{{instructor.instructor_id}}">{{instructor.last_name}}, {{instructor.first_name}} ({{instructor.instructor_id}})</option>
+                                                <option value="{{instructor.instructor_id}}">{{instructor.last_name}}, {{instructor.first_name}}</option>
                                             {% endfor %}
                                         {% endif %}
                                     </select>
@@ -253,9 +254,9 @@
 															{% if instructors %}
 																{% for instructor in instructors %}
 																	{% if instructor.instructor_id == course.instructor_id %} <!-- if current course instructor, apply selected attr to option -->
-																	<option value="{{instructor.instructor_id}}" selected>{{instructor.last_name}}, {{instructor.first_name}} ({{instructor.instructor_id}})</option>
+																	<option value="{{instructor.instructor_id}}" selected>{{instructor.last_name}}, {{instructor.first_name}} </option>
 																	{% else %}
-																	<option value="{{instructor.instructor_id}}">{{instructor.last_name}}, {{instructor.first_name}} ({{instructor.instructor_id}})</option>
+																	<option value="{{instructor.instructor_id}}">{{instructor.last_name}}, {{instructor.first_name}}</option>
 																	{% endif %}
 																{% endfor %}
 															{% endif %}
