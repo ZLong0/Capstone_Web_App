@@ -175,10 +175,10 @@ def register_user():
             new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
                              password=new_password, account_type='root',
                              sec_question=question_1, answer=answer_1, pending=0)
-            msg = Message('ATAS Root Account Registration', recipients=[add_email])
-            msg.body = 'ATAS Root Account Registration'
-            msg.html = '<p>Thank you for registering a root account for ATAS ' + \
-                       add_email + '. ATAS is now ready to be used by other users.</p>'
+            msg = Message('DCIA Root Account Registration', recipients=[add_email])
+            msg.body = 'DCIA Root Account Registration'
+            msg.html = '<p>Thank you for registering a root account for DCIA ' + \
+                       add_email + '. DCIA is now ready to be used by other users.</p>'
             mail.send(msg)
             db.session.add(new_user)
             db.session.commit()
@@ -193,10 +193,10 @@ def register_user():
                 return render_template('register.html', error=error)
             elif email:
                 error = "This email is already registered.  Please try again."
-                msg = Message('ATAS Registration Attempt', recipients=[add_email])
-                msg.body = 'ATAS Registration Attempt'
-                msg.html = '<p>There was an attempt to register a new account in ATAS using the email ' + \
-                           add_email + ', if this was not you, make sure to secure your ATAS account</p>'
+                msg = Message('DCIA Registration Attempt', recipients=[add_email])
+                msg.body = 'DCIA Registration Attempt'
+                msg.html = '<p>There was an attempt to register a new account in DCIA using the email ' + \
+                           add_email + ', if this was not you, make sure to secure your DCIA account</p>'
                 mail.send(msg)
                 return render_template('register.html', error=error)
             else:
@@ -205,9 +205,9 @@ def register_user():
                     new_user = Users(fname=first_name, lname=last_name, id=employee_id, email=add_email,
                                      password=new_password, account_type='admin',
                                      sec_question=question_1, answer=answer_1, pending=1)
-                    msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
-                    msg.body = 'ATAS Registration Sent'
-                    msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
+                    msg = Message('DCIA Registration Sent', recipients=[add_email], bcc=[root_cc.email])
+                    msg.body = 'DCIA Registration Sent'
+                    msg.html = '<p>Thank you for registering a new account in DCIA using ' + \
                                add_email + '. We will notify you when your account is ready to use</p>'
                     mail.send(msg)
                     db.session.add(new_user)
@@ -220,9 +220,9 @@ def register_user():
                                      password=new_password, account_type='instructor',
                                      sec_question=question_1, answer=answer_1, pending=1)
                     new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
-                    msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
-                    msg.body = 'ATAS Registration Sent'
-                    msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
+                    msg = Message('DCIA Registration Sent', recipients=[add_email], bcc=[root_cc.email])
+                    msg.body = 'DCIA Registration Sent'
+                    msg.html = '<p>Thank you for registering a new account in DCIA using ' + \
                               add_email + '. We will notify you when your account is ready to use</p>'
                     mail.send(msg)
                     message = 'Registration sent'
@@ -257,10 +257,10 @@ def pending_list_update():
                 new_instructor = Instructor(inst_id=selected_user.id,
                                             fname=selected_user.fname, lname=selected_user.lname)
                 db.session.add(new_instructor)
-            msg = Message('ATAS Registration Approved', recipients=[selected_user.email], bcc=[root_cc.email])
-            msg.body = 'ATAS Registration Approved'
+            msg = Message('DCIA Registration Approved', recipients=[selected_user.email], bcc=[root_cc.email])
+            msg.body = 'DCIA Registration Approved'
             msg.html = '<p>Your account with the username/email of ' + selected_user.email + \
-                       ' has been approved and is ready to use. Thank you for using ATAS.</p>'
+                       ' has been approved and is ready to use. Thank you for using DCIA.</p>'
             db.session.commit()
             mail.send(msg)
             message = "User " + selected_user.email + " approved successfully!"
@@ -270,8 +270,8 @@ def pending_list_update():
             selected_user.pending = 1
             if selected_user.account_type == 'instructor' and instructor_check:
                 instructor_check.delete()
-            msg = Message('ATAS Account Suspended', recipients=[selected_user.email], bcc=[root_cc.email])
-            msg.body = 'ATAS Account Suspended'
+            msg = Message('DCIA Account Suspended', recipients=[selected_user.email], bcc=[root_cc.email])
+            msg.body = 'DCIA Account Suspended'
             msg.html = '<p>Your account with the username/email of ' + selected_user.email + \
                        ' has been suspended and can no longer be used. Please contact an administrator' \
                        ' to begin the process of account reactivation.</p>'
@@ -308,7 +308,8 @@ def get_instructors():
     instructors = Instructor.query.all()
     results = []
 
-    user = current_user
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
     if user.account_type == 'instructor':
         return redirect(url_for('home'))
     else:
@@ -379,6 +380,10 @@ def update_instructor(instructor_id):
 @app.route('/instructors/<instructor_id>/delete', methods=['POST', 'GET'])
 @login_required
 def delete_instructor(instructor_id):
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
     if request.method == 'POST':
         # check for existing instructor id first
         instructor = Instructor.query.get(instructor_id)
@@ -424,13 +429,18 @@ def get_all_students():
 
 
 @app.route('/students/edit', methods=['GET'])
-#@login_required
+@login_required
 def edit_students():
-        semesters_list = get_all_courses()
-        sorted_semesters = sort_semesters(semesters_list)
-        instructors = get_instructors()
-        students = get_all_students()
-        return render_template('edit_students.html', courses = sorted_semesters, semesters=sorted_semesters, instructors=instructors, students = students)
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
+    
+    semesters_list = get_all_courses()
+    sorted_semesters = sort_semesters(semesters_list)
+    instructors = get_instructors()
+    students = get_all_students()
+    return render_template('edit_students.html', courses = sorted_semesters, semesters=sorted_semesters, instructors=instructors, students = students)
 
 
 # GET ONE STUDENT
@@ -454,6 +464,11 @@ def get_one_student(student_id):
 @app.route('/students', methods=['GET', 'POST'])
 @login_required
 def update_students():
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
+
     if request.method == 'POST':
         student = Student.query.get(request.form['student_id'])
         if student:
@@ -484,6 +499,11 @@ def update_students():
 @app.route('/students/<int:student_id>/delete', methods=['GET', 'POST'])
 @login_required
 def delete_students(student_id):
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
+
     if request.method == 'POST':
         try:
             student = Student.query.get(student_id)
@@ -523,16 +543,15 @@ class Course(db.Model):
 
 
 @app.route('/courses/', methods=['GET'])
-# @login_required
+@login_required
 def get_all_courses():
     courses_group = []
     terms = []
-    user = current_user
-    uid = current_user.get_id()
-    print(uid)
     year = []
     semesters_list = []
 
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
     if user.account_type == 'instructor':
         return redirect(url_for('home'))
 
@@ -569,21 +588,26 @@ def get_all_courses():
 
 
 @app.route('/courses/edit', methods=['GET'])
-# @login_required
+@login_required
 def edit_courses():
-    if request.method == "GET":
-        all_courses = get_all_courses()
-        instructors = get_instructors()
-        print(all_courses)
-        print(instructors)
-        return render_template('edit_courses.html', courses = all_courses, semesters=all_courses, instructors=instructors)
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
+        
+    all_courses = get_all_courses()
+    instructors = get_instructors()
+    print(all_courses)
+    print(instructors)
+    return render_template('edit_courses.html', courses = all_courses, semesters=all_courses, instructors=instructors)
 
 
 @app.route('/courses/<int:course_id>', methods=['GET'])
 @login_required
 def get_one_course(course_id):
-    user_id = Users.get_id(current_user)
-    user = Users.query.get(user_id)
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
+
     course = Course.query.get(course_id)
     course_results = []
     course_info = {}
@@ -605,9 +629,12 @@ def get_one_course(course_id):
     for student in student_results:
         print(student['student_id'])
     if user.account_type == 'instructor':
-        semesters_list = get_instructor_courses(user_id)
-        sorted_semesters = sort_semesters(semesters_list)
-        return render_template('inst_courses.html', courses=course_results, students=student_results, swps=swp_results,
+        if user.id != course.instructor:
+            return redirect(url_for('home'))
+        else:
+            semesters_list = get_instructor_courses(uid)
+            sorted_semesters = sort_semesters(semesters_list)
+            return render_template('inst_courses.html', courses=course_results, students=student_results, swps=swp_results,
                                semesters=sorted_semesters, all_students = all_students)
     else:
         semesters_list = get_all_courses()
@@ -675,8 +702,12 @@ def get_instructor_courses(instructor_id):
 
 
 @app.route('/courses/<int:course_id>', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def update_courses(course_id):
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
     if request.method == 'POST':
         # get course to update by ID save in var
         course = Course.query.get(course_id)
@@ -693,17 +724,17 @@ def update_courses(course_id):
             print(course.instructor)
         else:
             return ("update course failed")
-            # return render_template('/home')
-
-        print('Course Updated!')
-        #return redirect(url_for('get_all_courses'))
-        # return redirect(url_for('home'))
         return redirect(url_for('edit_courses'))
 
 
 @app.route('/courses', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def add_courses():
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
+
     if request.method == 'POST':
         # instantiate new course info based on form input
         term = request.form['term']
@@ -744,8 +775,13 @@ def add_courses():
 
 
 @app.route('/courses/<int:course_id>/delete', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def delete_course(course_id):
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
+
     if request.method == 'POST':
         course = Course.query.get(course_id)
         if course:
@@ -880,8 +916,9 @@ def get_one_swp(swp_id):
 
 # THIS GETS WORK PRODUCT FOR SPECIFIC COURSE
 @app.route('/swp/course/<int:course_id>', methods=["GET"])
-# @login_required
+@login_required
 def get_course_swps(course_id):
+    uid = current_user.get_id()
     swps = Assignments.query.filter_by(course_id=course_id).all()
     results = []
 
@@ -1043,7 +1080,7 @@ def add_swp():
 
 # DELETE SWP
 @app.route('/swp/<int:swp_id>/delete', methods=['GET', 'POST'])
-#@login_required
+@login_required
 def delete_swp(swp_id):
     swp = Assignments.query.get(swp_id)
     print(swp)
@@ -1084,7 +1121,7 @@ class Attempts(db.Model):
 
 # GET ALL ATTEMPTS -- UNION OF SWP AND SO
 @app.route('/attempts', methods=["GET"])
-#@login_required
+@login_required
 def get_all_attempts():
     attempts = Attempts.query.all()
 
@@ -1113,7 +1150,7 @@ def get_all_attempts():
 
 # GET SWP ATTEMPTS 
 @app.route('/attempts/swp/<int:swp_id>', methods=["GET"])
-# @login_required
+@login_required
 def get_swp_attempts(swp_id):
     attempts = Attempts.query.filter_by(swp_id=swp_id).all()
     results = []
@@ -1139,7 +1176,7 @@ def get_swp_attempts(swp_id):
 
 # UPDATE ONE ATTEMPT
 @app.route('/attempts/<int:swp_id>', methods=['GET', 'POST'])
-#login-required
+@login_required
 def update_attempts(swp_id, so1, so2, so3, so4, so5, so6):
     attempts = Attempts.query.filter_by(swp_id = swp_id).all()
     if not attempts:
@@ -1160,7 +1197,7 @@ def update_attempts(swp_id, so1, so2, so3, so4, so5, so6):
 
 # ADD NEW ATTEMPT
 @app.route('/attempts', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def add_attempts(swp_name, course_id, so1, so2, so3, so4, so5, so6):
         swp = Assignments.query.filter_by(swp_name = swp_name, course_id=course_id).all()
         for swp in swp:
@@ -1174,7 +1211,7 @@ def add_attempts(swp_name, course_id, so1, so2, so3, so4, so5, so6):
 
 # DELETE ONE ATTEMPT
 @app.route('/attempts/<int:swp_id>/delete', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def delete_attempts(swp_id):
     if request.method == 'POST':
             attempt = Attempts.query.filter_by(swp_id = swp_id).all()
@@ -1199,7 +1236,7 @@ class Enrolled(db.Model):
 
 # GET ENROLLMENTS FOR A SPECIFIC COURSE
 @app.route('/enrolled', methods=['GET'])
-# @login_required
+@login_required
 def get_all_enrolled():
     enrolled = Enrolled.query.all()
     results_list = []
@@ -1223,7 +1260,7 @@ def get_all_enrolled():
 
 # GET ENROLLMENTS FOR A SPECIFIC COURSE
 @app.route('/enrolled/<int:course_id>', methods=['GET'])
-# @login_required
+@login_required
 def get_course_enrolled(course_id):
     print("GET_COURSE_ENROLLED")
     enrolled = Enrolled.query.filter_by(course_id=course_id)
@@ -1251,7 +1288,7 @@ def get_course_enrolled(course_id):
 
 # ENROLL STUDENT IN ONE COURSE
 @app.route('/enrolled', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def add_enrolled():
     if request.method == 'POST':
         print("ADD_NEW_ENROLLMENT")
@@ -1283,7 +1320,7 @@ def add_enrolled():
 
 # DELETE STUDENT FROM ALL COURSES
 @app.route('/enrolled/student/<int:student_id>', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def delete_student_from_enrolled(student_id):
     if request.method == 'POST':
         print("delete student enrollments")
@@ -1301,7 +1338,7 @@ def delete_student_from_enrolled(student_id):
 
 # DELETE STUDENT FROM ONE COURSE
 @app.route('/enrolled/<int:course_id>/<int:student_id>', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def delete_student_from_course(course_id, student_id):
     if request.method == 'POST':
         print("DELETE STUDENT FROM ONE COURSE")
@@ -1326,7 +1363,7 @@ def delete_student_from_course(course_id, student_id):
                     pass
                 else:
                     for results in results:
-                        db.session.delete(result)
+                        db.session.delete(results)
                         db.session.commit()
 
     return redirect(url_for('get_one_course', course_id = course_id))
@@ -1347,7 +1384,7 @@ class Results(db.Model):
 
 
 @app.route('/results', methods=['GET'])
-# @login_required
+@login_required
 def get_all_results():
     results = Results.query.all()
     print(results)
@@ -1368,7 +1405,7 @@ def get_all_results():
     return jsonify(output)
 
 
-#@login_required
+@login_required
 def get_student_results(student_id, swp_id):
     results = []
     results = Results.query.filter_by(swp_id = swp_id, student_id = student_id).all()
@@ -1376,7 +1413,7 @@ def get_student_results(student_id, swp_id):
 
 
 @app.route('/results/swp/<int:swp_id>', methods = ['GET'])
-#@login_required
+@login_required
 def get_swp_results(swp_id):
     results = []
     results = Results.query.filter_by(swp_id = swp_id).all()
@@ -1384,7 +1421,7 @@ def get_swp_results(swp_id):
 
 
 @app.route('/results/course/<int:course_id>', methods=['GET'])
-# @login_required
+@login_required
 def get_course_results(course_id):
     assignments = Assignments.query.filter_by(course_id=course_id).all()
     #print(assignments)
@@ -1437,7 +1474,7 @@ def get_course_results(course_id):
 
 #keeping incase we want to use it from the student modal
 @app.route('/results/student/<int:student_id>/<int:swp_id>', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def update_student_result(student_id, swp_id):
     if request.method == "POST":
         results = Results.query.filter_by(student_id=student_id, swp_id=swp_id).all()
@@ -1447,7 +1484,6 @@ def update_student_result(student_id, swp_id):
                 db.session.commit()
         else:
             return ("no assignments found")
-        # return url_for('get_course_results')
         return redirect(url_for('get_all_results'))
 
     return redirect(url_for('get_all_results'))
@@ -1481,7 +1517,7 @@ def update_course_results(student_id, swp_id, value):
 
 
 @app.route('/results/<int:result_id>/delete', methods=['POST', 'GET'])
-# @login_required
+@login_required
 def delete_one_result(result_id):
     if request.method == "POST":
         print("DELETE RESULT CALLED")
@@ -1540,6 +1576,10 @@ def update_scores(course_id):
 @app.route('/reports/inst', methods = ['GET', 'POST'])
 @login_required
 def instructor_report_single():
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
     instructor_id = request.form["instructor"]
     term = request.form["term"]
     year = request.form["year"]
@@ -1744,6 +1784,10 @@ def course_report_single():
 
 @app.route('/reports/allsections', methods = ['GET', 'POST'])
 def course_report_time():
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
     course_number = request.form["course_number"]
     department = request.form["department"]
     report_type = request.form["report_type"]
@@ -1818,6 +1862,10 @@ def course_report_time():
 @app.route('/reports/outcome', methods=['GET', 'POST'])
 @login_required
 def outcome_report_single_term():
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
     report_type = request.form["report_type"]
     term = request.form["term"]
     year = request.form["year"]
@@ -2003,8 +2051,10 @@ def get_so_attempts(so_id):
 @app.route('/courses/<int:course_id>/<int:swp_id>', methods=['GET'])
 @login_required
 def bar_graph_student_grade(course_id, swp_id):
-    user_id = Users.get_id(current_user)
-    user = Users.query.get(user_id)
+    uid = current_user.get_id()
+    user = Users.query.get(uid)
+    if user.account_type == 'instructor':
+        return redirect(url_for('home'))
     course = Course.query.get(course_id)
     # students_enrolled = get_course_enrolled(course.id)
     swp_list = get_course_results(course.id)
@@ -2020,14 +2070,10 @@ def bar_graph_student_grade(course_id, swp_id):
             student_scores_list.append(score['score'])
     values = student_scores_list
     labels = student_full_name_list
-    if user.account_type == 'instructor':
-        semesters_list = get_instructor_courses(user_id)
-        sorted_semesters = sort_semesters(semesters_list)
-        return render_template('graph_results.html', semesters=sorted_semesters, values=values, labels=labels)
-    else:
-        semesters_list = get_all_courses()
-        sorted_semesters = sort_semesters(semesters_list)
-        return render_template('graph_results.html', semesters=sorted_semesters, values=values, lables=labels)
+    
+    semesters_list = get_all_courses()
+    sorted_semesters = sort_semesters(semesters_list)
+    return render_template('graph_results.html', semesters=sorted_semesters, values=values, lables=labels)
 
 
 @app.route('/report_selected', methods=['GET','POST'])
@@ -2648,14 +2694,6 @@ def get_inst_all_term_scores(inst_id, term, year, report_type):
     so4_scores.sort()
     so5_scores.sort()
     so6_scores.sort()
-
-       # print("scores: ")
-        #print(so1_scores)
-        #print(so2_scores)
-        #print(so3_scores)
-        #print(so4_scores)
-        #print(so5_scores)
-        #print(so6_scores)
 
     if report_type == 'Count':
         values.append(so1_count)
