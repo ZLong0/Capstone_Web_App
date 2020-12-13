@@ -33,14 +33,36 @@
 				   <div class="nav-item dropdown">
 					   <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Courses</a>
 					   <div class="dropdown-menu">
-						   {% if semesters %}
-						   		{% for semester in semesters %}
-									<a class="dropdown-item" data-toggle="modal" href="#course-list-modal{{semester.term}}{{semester.year}}">{{semester.term}} {{semester.year}}</a>
-							{% endfor %}
-						   {% else  %}
-								<a class="dropdown-item" href="">No Courses Assigned</a>
-
-						   {% endif %}
+                           {% if semesters %}
+                                <h2 class="dropdown-header">SPRING</h2>
+                                <div class="dropdown-divider"></div>
+                                {% for semester in semesters %}
+                                    {% if semester.term == "SPRING" %}
+                                        <a class="dropdown-item" data-toggle="modal" href="#course-list-modal{{semester.term}}{{semester.year}}">{{semester.year}}</a>
+                                    {% endif %}
+                                {% endfor %}
+                           
+                                <div class="dropdown-divider"></div>
+                                <h2 class="dropdown-header">SUMMER</h2>
+                                <div class="dropdown-divider"></div>
+                                {% for semester in semesters %}
+                                    {% if semester.term == "SUMMER" %}
+                                        <a class="dropdown-item" data-toggle="modal" href="#course-list-modal{{semester.term}}{{semester.year}}">{{semester.year}}</a>
+                                    {% endif %}
+                                {% endfor %}
+                           
+                                <div class="dropdown-divider"></div>
+                                <h2 class="dropdown-header">FALL</h2>
+                                <div class="dropdown-divider"></div>
+                                {% for semester in semesters %}
+                                    {% if semester.term == "FALL" %}
+                                        <a class="dropdown-item" data-toggle="modal" href="#course-list-modal{{semester.term}}{{semester.year}}">{{semester.year}}</a>
+                                    {% endif %}
+                                {% endfor %}
+                           
+                           {% else %}
+                                <a class="dropdown-item" href="">No Courses Assigned</a>
+                           {% endif %}
 
 					   </div>
 				   </div>
@@ -65,7 +87,7 @@
 	  
 	 	  <!-- Add SWP Modal -->
 	  <div class="modal fade" id="add-swp-modal">
-		<div class="modal-dialog">
+		<div class="modal-dialog modal-dialog-centered">
 		  <div class="modal-content">
 
 			<!-- Modal Header -->
@@ -142,7 +164,7 @@
 	  
 	  <!-- Edit SWP Modal -->
 	  <div class="modal fade" id="edit-swp-modal">
-    		<div class="modal-dialog">
+    		<div class="modal-dialog modal-dialog-centered">
       			<div class="modal-content">
       
         			<!-- Modal Header -->
@@ -170,7 +192,7 @@
 	  
 	  <!-- Edit Student Modal -->
 	  <div class="modal fade" id="edit-student-modal">
-		  <div class="modal-dialog">
+		  <div class="modal-dialog modal-dialog-centered">
 			  <div class="modal-content">
 				  
 				  <!-- Modal Header -->
@@ -200,7 +222,7 @@
 	  {% if semesters %}
 	  		{% for semester in semesters %}
 	  			<div class="modal fade" id="course-list-modal{{semester.term}}{{semester.year}}">
-					<div class="modal-dialog">
+					<div class="modal-dialog modal-dialog-centered">
 						<div class="modal-content">
 
 							<!-- Modal Header -->
