@@ -437,7 +437,7 @@
 								<label for="student_id">Select Student</label>
 								<select id="student_id" class="form-control" name="student_id">
 								{% for student in all_students %}
-										<option id="selected_student" value="{{student.student_id}}">{{student.fname}} {{student.lname}} ({{student.student_id}})</option>
+										<option id="selected_student" value="{{student.student_id}}">{{student.first_name}} {{student.last_name}} ({{student.student_id}})</option>
 								{% endfor %}
 								</select>
 							</div>			
