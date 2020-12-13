@@ -220,7 +220,7 @@ def register_user():
                                      password=new_password, account_type='instructor',
                                      sec_question=question_1, answer=answer_1, pending=1)
                     new_instructor = Instructor(inst_id=employee_id, fname=first_name, lname=last_name)
-                    msg = Message('ATAS Registration Sent', recipients=[add_email], bccP=[root_cc.email])
+                    msg = Message('ATAS Registration Sent', recipients=[add_email], bcc=[root_cc.email])
                     msg.body = 'ATAS Registration Sent'
                     msg.html = '<p>Thank you for registering a new account in ATAS using ' + \
                               add_email + '. We will notify you when your account is ready to use</p>'
