@@ -51,8 +51,7 @@
 							 <a class="dropdown-item" href="/courses/edit">Edit Courses</a>
 							 <a class="dropdown-item"  href="/students/edit">Edit Students</a>							
 							<a class="dropdown-item" data-toggle="modal" href="#add-swp-modal">Add Work Products</a>
-							<a class="dropdown-item" href="/edit_student_outcomes">Edit Student Outcomes</a>
-							<a class="dropdown-item" href="/generate_report">Generate Report</a>
+							<a class="dropdown-item" href="/report_selected">Generate Report</a>
 					   </div>
 				   </div>
 					<a class="nav-item nav-link" href="/logout">Log Out</a>
@@ -78,8 +77,8 @@
 				<tbody>
 					{% for student in students %}
 						<tr>
-						    <td>{{student.fname}}</td>
-						    <td>{{student.lname}}</td>
+						    <td>{{student.first_name}}</td>
+						    <td>{{student.last_name}}</td>
                             <td>{{student.student_id}}</td>
                             <td><button class="btn btn-secondary" data-toggle="modal" data-target="#edit-student-modal{{student.student_id}}">Edit</button><button class="btn btn-secondary" data-toggle="modal" data-target="#delete-student-modal{{student.student_id}}">Delete</button></td>
                         </tr>
