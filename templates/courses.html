@@ -17,10 +17,9 @@
   <body>	  
 	  <nav class="navbar navbar-expand-lg navbar-dark static-top" id="nav">
  		<div class="container">
-      		<div class="navbar-brand">
-				Department Continuous Improvement Application
+			<div class="navbar-brand">
+				DCIA
 			</div>
-			
       		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
         		<span class="navbar-toggler-icon"></span>
       		</button>
@@ -81,15 +80,17 @@
       		</div> 
     	</div><!--END NAV CONTAINER-->
       </nav>
+	  
 	  <div class="main_content">
 		  <div class="text-center">
+			  <h5 class="text-center mt-2 mb-0">{{courses[0].term}} {{courses[0].year}}</h5>
 			  <h2 class="text-center">{{courses[0].course_department}} {{courses[0].course_number}} {{courses[0].course_name}}</h2>
 			  <button type="button" data-toggle="modal" href="#edit-enrolled-modal" class ="btn btn-secondary mb-1">Add Student</button>
 			  <button type="button" class="btn btn-secondary mb-1" onclick="editScores();">Edit Scores</button>
 			  <button type="button" data-toggle="modal" data-target="#course-add-swp-modal" class="btn btn-secondary mb-1">Add SWP</button>
 		  </div>
-		<div class="table-responsive text-center table-wrapper">
-			<form action="{{url_for('update_scores',course_id = courses[0].course_id)}}" method="post">
+		<form action="{{url_for('update_scores',course_id = courses[0].course_id)}}" method="post">
+			<div class="table-responsive text-center table-wrapper" id="course-table-wrapper">
 				<table class="table table-bordered mx-auto w-auto text-center">
 					<thead>
 						<tr>
@@ -120,10 +121,12 @@
 						{% endfor %}
 					</tbody>
 				</table>
+			</div>
+			<div class="text-center">
 				<button hidden class="btn btn-secondary score_btn" type="submit">Save Changes</button>
 				<button hidden class="btn btn-secondary score_btn" type="button" onclick="window.location.reload();">Cancel</button>
-			</form>
-		</div>
+			</div>
+		</form>
 	  </div>
 	
 	<!-- Modals -->
