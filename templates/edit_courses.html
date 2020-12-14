@@ -18,7 +18,7 @@
 	  <nav class="navbar navbar-expand-lg navbar-dark static-top" id="nav">
  		<div class="container">
       		<div class="navbar-brand">
-				Department Continuous Improvement Application
+				DCIA
 			</div>
 			
       		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
@@ -150,23 +150,23 @@
                 
                                 <div class="form-group col">
                                     <label for="year">Year</label>
-                                    <input type="text" class="form-control" id="year" name="year" placeholder="YYYY" required="true">
+                                    <input type="text" pattern="[0-9]{4}" class="form-control" id="year" name="year" placeholder="YYYY" required="true">
                                 </div>
                             </div>             
                             <div class="form-row">
                                 <div class="form-group col">
                                     <label for="deparment">Department</label>
-                                    <input type="text" class="form-control" id="department" name="department" placeholder="ex. CPSC" required="true">
+                                    <input type="text" pattern="[A-Za-z]{4}" class="form-control" id="department" name="department" placeholder="ex. CPSC" required="true">
                                 </div>
                 
                                 <div class="form-group col">
                                     <label for="course_number">Course Number</label>
-                                    <input type="text" class="form-control" id="course_number" name="course_number" placeholder="ex. 1310" required="true">
+                                    <input type="text" pattern="[0-9]{4}" class="form-control" id="course_number" name="course_number" placeholder="ex. 1310" required="true">
                                 </div>
                 
                                 <div class="form-group col">
                                     <label for="section">Section</label>
-                                    <input type="test" class="form-control" id="section" name="section" placeholder="ex. 1" required="true">
+                                    <input type="text" pattern="[0-9]{1,}" class="form-control" id="section" name="section" placeholder="ex. 1" required="true">
                                 </div>
                             </div>
                 
@@ -180,7 +180,7 @@
                                     <label for="instructor_id">Instructor</label>
                                     <select class="form-control" id="instructor_id" name="instructor_id" required="true">
                                         {% if instructors %}
-                                            <option value="" selected></option>
+                                            <option value="" selected>Select an instructor</option>
                                             {% for instructor in instructors %}
                                                 <option value="{{instructor.instructor_id}}">{{instructor.last_name}}, {{instructor.first_name}}</option>
                                             {% endfor %}
@@ -243,23 +243,23 @@
                            
 													<div class="form-group col">
 														<label for="year">Year</label>
-														<input type="text" class="form-control" id="year" name="year" placeholder="YYYY" value="{{course.year}}" required="true">
+														<input type="text" pattern="[0-9]{4}" class="form-control" id="year" name="year" placeholder="YYYY" value="{{course.year}}" required="true">
 													</div>
 												</div>             
 												<div class="form-row">
 													<div class="form-group col">
 														<label for="deparment">Department</label>
-														<input type="text" class="form-control" id="department" name="department" placeholder="ex. CPSC" value="{{course.department}}" required="true">
+														<input type="text" pattern="[A-Za-z]{4}" class="form-control" id="department" name="department" placeholder="ex. CPSC" value="{{course.department}}" required="true">
 													</div>
 
 													<div class="form-group col">
 														<label for="course_number">Course Number</label>
-														<input type="text" class="form-control" id="course_number" name="course_number" placeholder="ex. 1310" value="{{course.course_number}}" required="true">
+														<input type="text" pattern="[0-9]{4}" class="form-control" id="course_number" name="course_number" placeholder="ex. 1310" value="{{course.course_number}}" required="true">
 													</div>
 
 													<div class="form-group col">
 														<label for="section">Section</label>
-														<input type="test" class="form-control" id="section" name="section" placeholder="ex. 1" value="{{course.section}}" required="true">
+														<input type="text" pattern="[0-9]{1,}" class="form-control" id="section" name="section" placeholder="ex. 1" value="{{course.section}}" required="true">
 													</div>
 												</div>
 
