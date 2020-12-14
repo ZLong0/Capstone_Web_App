@@ -1886,15 +1886,22 @@ def outcome_report_single_term():
 
     course_labels = [] 
     data = []
+    results = []
+
     results = get_so_bar_graph_data(courses, so, report_type)
 
     for result in results:
         labels = result['labels']
+
+        if len(labels) == 0:
+            return redirect(url_for('report_selector'))
+        print(labels)
         for item in labels:
             course_labels.append(item)
-        count = result['data']
-        for item in count:
-            data.append(item)
+            scores = result['data']
+            print(scores)
+            for item in scores:
+                data.append(item)
     
     print(course_labels)
     print(data)
@@ -2208,11 +2215,11 @@ def get_so_bar_graph_data(courses, so, report_type):
                     print(item)
                     count += 1
             data.append(count)   
+            dbconnection.close()
 
         item_data['labels'] = labels       
         item_data['data'] = data
         result.append(item_data)
-        dbconnection.close()
         return result    
 
     elif report_type =="Median":
@@ -2242,12 +2249,12 @@ def get_so_bar_graph_data(courses, so, report_type):
                 scores.sort()                
                 val = statistics.median(scores)
                 median.append(val)
-           
+            
+            dbconnection.close()
         item_data['labels'] = labels
         item_data['data'] = median
         return_list.append(item_data)
         print(return_list)
-        dbconnection.close()
         return return_list
 
     else:
@@ -2276,7 +2283,7 @@ def get_so_bar_graph_data(courses, so, report_type):
                 scores.sort()                
                 val = statistics.mean(scores)
                 mean.append(val)
-            print(mean)
+            dbconnection.close()
             
         item_data['labels'] = labels
         item_data['data'] = mean
