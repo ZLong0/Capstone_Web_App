@@ -1344,8 +1344,7 @@ def delete_student_from_course(course_id, student_id):
         print("DELETE STUDENT FROM ONE COURSE")
         enrollment = Enrolled.query.filter_by(student_id=student_id, course_id=course_id).first()
         print(enrollment)
-        db.session.delete(enrollment)
-        db.session.commit()
+        
 
         print("Enrollment Deleted")
 
@@ -1365,9 +1364,10 @@ def delete_student_from_course(course_id, student_id):
                     for results in results:
                         db.session.delete(results)
                         db.session.commit()
-
+        db.session.delete(enrollment)
+        db.session.commit()
     return redirect(url_for('get_one_course', course_id = course_id))
-    # return redirect(url_for('home'))
+        # return redirect(url_for('home'))
 
 
 # RESULTS CLASS
