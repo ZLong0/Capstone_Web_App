@@ -275,7 +275,7 @@
               }
               var results = document.getElementById("chart").getContext("2d");
               steps = 4
-              max = 4
+              max = {{ height }}
               new Chart(results).Bar(barData, {
                   scaleOverride: true,
                   scaleSteps: steps,
