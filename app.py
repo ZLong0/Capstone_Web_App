@@ -1875,11 +1875,6 @@ def outcome_report_single_term():
     year = request.form["year"]
     so = request.form["outcome"]
     report_time = request.form['report_time']
-    if report_time == 'time':
-        graph_type = 'line'
-    elif report_time == 'term':
-        graph_type = 'bar'
-    print(so)
 
     user_id = Users.get_id(current_user)
     user = Users.query.get(user_id)
@@ -1907,13 +1902,17 @@ def outcome_report_single_term():
     print(data)
     height = max(data)
 
+    semesters_list = get_all_courses()
+    sorted_semesters = sort_semesters(semesters_list)
+    enrolled = get_all_enrolled()
+    instructors = get_instructors()
+
     report_title = ""
     if report_type =="Count":
         report_title = f"SWP {report_type} Attempting Outcome {so} During {term} {year}"
     else:
         report_title = f"{report_type} For Outcome {so} During {term} {year}"
-    return render_template('graph_results.html', labels = course_labels,
-                           values = data, report_title = report_title, graph_type=graph_type, height=height)
+    return render_template('graph_results.html', labels = course_labels, values = data, report_title = report_title, height=height, semesters = sorted_semesters)
 
 
 @app.route('/reports/outcomes', methods=['GET', 'POST'])
@@ -2184,91 +2183,93 @@ def get_bar_graph_data(swps, report_type):
         return values
 
 
-def get_so_bar_graph_data(courses, so, report_type):   
-    result = []  
+def get_so_bar_graph_data(courses, so, report_type):       
     if report_type =="Count":        
+        result = [] 
         item_data = {}
         labels = []
         data = []
         for course in courses:
+            print(course)
             count = 0
             dbconnection = engine.connect()
-            statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]}"
+            statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]};"
             swps = dbconnection.execute(statement)        
             course_name = f"{course.department} {course.course_number}"
-            labels.append(course_name)       
+            labels.append(course_name) 
+            
+            print('SO: ')
+            print(so)      
             for swp in swps:
-                statement = f"SELECT * FROM ATTEMPTS WHERE swp_id = {swp[0]} and SO{so} == 1"
-                results = dbconnection.execute(statement)            
-                if results:
-                    count += 1  
+                statement = f"SELECT * FROM ATTEMPTS WHERE swp_id = {swp[0]} and SO{so} = 1;"
+                print(statement)
+                results = dbconnection.execute(statement) 
+                for item in results:
+                    print(item)
+                    count += 1
             data.append(count)   
 
         item_data['labels'] = labels       
         item_data['data'] = data
         result.append(item_data)
-        print(result)
         dbconnection.close()
-        return result               
+        return result    
+
     elif report_type =="Median":
-        result = []
+        return_list = []
         item_data = {} 
         labels = []
         median = []
         for course in courses:
             dbconnection = engine.connect()
-            statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]}"
+            statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]};"
             swps = dbconnection.execute(statement)        
             course_name = f"{course.department} {course.course_number}"
             labels.append(course_name)  
             scores =[]
-
             for swp in swps:              
-                statement = f"SELECT * FROM ATTEMPTS WHERE swp_id = {swp[0]} and SO{so} == 1"
+                statement = f"SELECT * FROM ATTEMPTS WHERE swp_id = {swp[0]} and SO{so} = 1;"
                 results = dbconnection.execute(statement)                     
-                if not results:
-                   scores.append(0)
-                else:  
-                    values = Results.query.filter_by(swp_id = swp[0]).all()
+                for result in results:
+                    values = Results.query.filter_by(swp_id = result[1]).all()
                     for item in values:
-                        scores.append(item.value)                    
-            print(scores)
+                        scores.append(item.value)       
+        
             if len(scores)==0:
                 median.append(0)
             else:
+                print(scores)
                 scores.sort()                
                 val = statistics.median(scores)
                 median.append(val)
-            print(median)
-
+           
         item_data['labels'] = labels
         item_data['data'] = median
-        result.append(item_data)
-        print(result)
+        return_list.append(item_data)
+        print(return_list)
         dbconnection.close()
-        return result
+        return return_list
+
     else:
+        return_list = []
         item_data = {} 
         labels = []
         mean = []
         for course in courses:
             dbconnection = engine.connect()
-            statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]}"
+            statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]};"
             swps = dbconnection.execute(statement)        
             course_name = f"{course.department} {course.course_number}"
             labels.append(course_name)  
             scores =[]
-
             for swp in swps:              
-                statement = f"SELECT * FROM ATTEMPTS WHERE swp_id = {swp[0]} and SO{so} == 1"
+                statement = f"SELECT * FROM ATTEMPTS WHERE swp_id = {swp[0]} and SO{so} = 1;"
                 results = dbconnection.execute(statement)                     
-                if not results:
-                   scores.append(0)
-                else:  
-                    values = Results.query.filter_by(swp_id = swp[0]).all()
+                for result in results:
+                    values = Results.query.filter_by(swp_id = result[1]).all()
                     for item in values:
-                        scores.append(item.value)                    
-            print(scores)
+                        scores.append(item.value) 
+
             if len(scores)==0:
                 mean.append(0)
             else:
@@ -2279,8 +2280,8 @@ def get_so_bar_graph_data(courses, so, report_type):
             
         item_data['labels'] = labels
         item_data['data'] = mean
-        result.append(item_data)
-        return result
+        return_list.append(item_data)
+        return return_list
 
 def get_line_graph_data(course_number, department, report_type):
     #THIS GETS SORTED LABELS FOR LINE GRAPHS BASED ON COURSE OFFERINGS     
