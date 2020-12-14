@@ -1344,8 +1344,6 @@ def delete_student_from_course(course_id, student_id):
         print("DELETE STUDENT FROM ONE COURSE")
         enrollment = Enrolled.query.filter_by(student_id=student_id, course_id=course_id).first()
         print(enrollment)
-        
-
         print("Enrollment Deleted")
 
         assignments = Assignments.query.filter_by(course_id = course_id).all()
@@ -1357,17 +1355,14 @@ def delete_student_from_course(course_id, student_id):
             #get the assignments for the course/student
             for swp in assignments:
                 #see if student has a result on assignment if so -- drop score from results
-                results = Results.query.filter_by(swp_id = swp.id, student_id = student_id).all()
+                results = Results.query.filter_by(swp_id = swp.swp_id, student_id = student_id).all()
                 if len(results) == 0:
                     pass
                 else:
                     for results in results:
                         db.session.delete(results)
                         db.session.commit()
-        db.session.delete(enrollment)
-        db.session.commit()
     return redirect(url_for('get_one_course', course_id = course_id))
-        # return redirect(url_for('home'))
 
 
 # RESULTS CLASS
