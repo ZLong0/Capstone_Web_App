@@ -1625,9 +1625,10 @@ def instructor_report_single():
         so_labels.append(so.so_name)
     
     instructor = Instructor.query.get(instructor_id)
+    height = max(values)
       
     report_title = f"{report_type} for {instructor.fname} {instructor.lname} during {term} {year}"
-    return render_template('graph_results.html', labels = so_labels, values = values, courses=sorted_semesters, semesters = sorted_semesters, report_title = report_title, graph_type=graph_type)
+    return render_template('graph_results.html', labels = so_labels, values = values, courses=sorted_semesters, semesters = sorted_semesters, report_title = report_title, graph_type=graph_type, height=height)
 
 
 @app.route('/reports/instructor', methods=['GET', 'POST'])
@@ -1776,12 +1777,13 @@ def course_report_single():
         so_labels.append(so.so_name)
     
     swps = Assignments.query.filter_by(course_id=course_id).all()
-    values = get_bar_graph_data(swps, report_type) 
+    values = get_bar_graph_data(swps, report_type)
+    height = max(values)
 
     course = Course.query.get(course_id)
 
     report_title = f"{report_type} for {course.department} {course.course_number}: {course.section}"
-    return render_template('graph_results.html', labels = so_labels, values = values, semesters = sorted_semesters, all_courses = sorted_semesters, report_title = report_title, graph_type=graph_type)
+    return render_template('graph_results.html', labels = so_labels, values = values, semesters = sorted_semesters, all_courses = sorted_semesters, report_title = report_title, graph_type=graph_type, height=height)
 
 
 @app.route('/reports/allsections', methods = ['GET', 'POST'])
@@ -1902,7 +1904,8 @@ def outcome_report_single_term():
             data.append(item)
     
     print(course_labels)
-    print(data)  
+    print(data)
+    height = max(data)
 
     report_title = ""
     if report_type =="Count":
@@ -1910,7 +1913,7 @@ def outcome_report_single_term():
     else:
         report_title = f"{report_type} For Outcome {so} During {term} {year}"
     return render_template('graph_results.html', labels = course_labels,
-                           values = data, report_title = report_title, graph_type=graph_type)
+                           values = data, report_title = report_title, graph_type=graph_type, height=height)
 
 
 @app.route('/reports/outcomes', methods=['GET', 'POST'])
