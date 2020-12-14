@@ -1778,7 +1778,9 @@ def course_report_single():
     swps = Assignments.query.filter_by(course_id=course_id).all()
     values = get_bar_graph_data(swps, report_type) 
 
-    report_title = f"{report_type} for {course_id}"
+    course = Course.query.get(course_id)
+
+    report_title = f"{report_type} for {course.department} {course.course_number}: {course.section}"
     return render_template('graph_results.html', labels = so_labels, values = values, semesters = sorted_semesters, all_courses = sorted_semesters, report_title = report_title, graph_type=graph_type)
 
 
@@ -1853,7 +1855,7 @@ def course_report_time():
 
     course = Course.query.filter_by(course_number = course_number).first()
     
-    report_title = f"{report_type} for {course.department} {course.course_number} ({course.course_name}) Over Time"
+    report_title = f"{report_type} for {course.department} {course.course_number} ({course.course_name})"
     return render_template('line_graph_results.html', labels=x_axis, semesters=sorted_semesters,all_courses=sorted_semesters, report_title=report_title, graph_type=graph_type, so_lables=so_labels,
                         so1_data = so1_scores, so2_data = so2_scores, so3_data = so3_scores, so4_data=so4_scores, so5_data = so5_scores, so6_data = so6_scores)
 
@@ -2044,37 +2046,6 @@ def get_so_attempts(so_id):
     dbconnection.close()
     return swps
 
-# still working here for graphing
-# graph needs values and labels passed to it using render_template(<template>, values=values, labels=labels)
-# labels and values need to be in a list with string labels and int values
-# connecting is still wonky because I moved this from /courses/<int:course_id> to here to try and
-@app.route('/courses/<int:course_id>/<int:swp_id>', methods=['GET'])
-@login_required
-def bar_graph_student_grade(course_id, swp_id):
-    uid = current_user.get_id()
-    user = Users.query.get(uid)
-    if user.account_type == 'instructor':
-        return redirect(url_for('home'))
-    course = Course.query.get(course_id)
-    # students_enrolled = get_course_enrolled(course.id)
-    swp_list = get_course_results(course.id)
-    # labels for single swp in course using student names as labels
-    student_full_name_list = []
-    # values using the score on a single swp
-    student_scores_list = []
-    for students in swp_list:
-        student_individual_name = students['student_first'] + " " + students['student_last']
-        student_full_name_list.append(student_individual_name)
-        student_scores = students['student_scores']
-        for score in student_scores:
-            student_scores_list.append(score['score'])
-    values = student_scores_list
-    labels = student_full_name_list
-    
-    semesters_list = get_all_courses()
-    sorted_semesters = sort_semesters(semesters_list)
-    return render_template('graph_results.html', semesters=sorted_semesters, values=values, lables=labels)
-
 
 @app.route('/report_selected', methods=['GET','POST'])
 @login_required
@@ -2096,7 +2067,7 @@ def report_selector():
     instructors = get_instructors()
 
     dbconnection = engine.connect()
-    statement = "SELECT distinct department, course_number FROM course"
+    statement = "SELECT distinct department, course_number FROM course ORDER BY course_number"
     course_types = dbconnection.execute(statement)
 
     print(course_types)
