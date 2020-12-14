@@ -1895,13 +1895,12 @@ def outcome_report_single_term():
 
         if len(labels) == 0:
             return redirect(url_for('report_selector'))
-        print(labels)
-        for item in labels:
-            course_labels.append(item)
-            scores = result['data']
-            print(scores)
-            for item in scores:
-                data.append(item)
+       
+        for item in labels:	        
+            course_labels.append(item)	            
+        count = result['data']	            
+        for item in count:	            
+            data.append(item)
     
     print(course_labels)
     print(data)
