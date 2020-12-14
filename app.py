@@ -1627,8 +1627,10 @@ def instructor_report_single():
     instructor = Instructor.query.get(instructor_id)
     height = max(values)
       
-    report_title = f"{report_type} for {instructor.fname} {instructor.lname} during {term} {year}"
-    return render_template('graph_results.html', labels = so_labels, values = values, courses=sorted_semesters, semesters = sorted_semesters, report_title = report_title, graph_type=graph_type, height=height)
+    report_title = f"{report_type} for {instructor.fname} {instructor.lname}"
+    sub_title = f"{term} {year}"
+    return render_template('graph_results.html', labels = so_labels, values = values, 
+                sub_title = sub_title, courses=sorted_semesters, semesters = sorted_semesters, report_title = report_title, graph_type=graph_type, height=height)
 
 
 @app.route('/reports/instructor', methods=['GET', 'POST'])
@@ -1783,7 +1785,9 @@ def course_report_single():
     course = Course.query.get(course_id)
 
     report_title = f"{report_type} for {course.department} {course.course_number}: {course.section}"
-    return render_template('graph_results.html', labels = so_labels, values = values, semesters = sorted_semesters, all_courses = sorted_semesters, report_title = report_title, graph_type=graph_type, height=height)
+    sub_title = f"{course.term} {course.year}"
+    return render_template('graph_results.html', labels = so_labels, values = values, semesters = sorted_semesters, 
+                            sub_title = sub_title, all_courses = sorted_semesters, report_title = report_title, graph_type=graph_type, height=height)
 
 
 @app.route('/reports/allsections', methods = ['GET', 'POST'])
@@ -1794,14 +1798,7 @@ def course_report_time():
         return redirect(url_for('home'))
     course_number = request.form["course_number"]
     department = request.form["department"]
-    report_type = request.form["report_type"]
-    report_time = request.form['report_time']
-    graph_type = ""
-    if report_time == 'time':
-        graph_type = 'line'
-    elif report_time == 'term':
-        graph_type = 'bar'
-   
+    report_type = request.form["report_type"] 
 
     semesters_list = get_all_courses()
     sorted_semesters = sort_semesters(semesters_list)
@@ -1857,8 +1854,9 @@ def course_report_time():
 
     course = Course.query.filter_by(course_number = course_number).first()
     
-    report_title = f"{report_type} for {course.department} {course.course_number} ({course.course_name})"
-    return render_template('line_graph_results.html', labels=x_axis, semesters=sorted_semesters,all_courses=sorted_semesters, report_title=report_title, graph_type=graph_type, so_lables=so_labels,
+    report_title = f"{report_type} for {course.department} {course.course_number}"
+    sub_title = f"{course.course_name}"
+    return render_template('line_graph_results.html', labels=x_axis, semesters=sorted_semesters,all_courses=sorted_semesters, report_title=report_title, sub_title = sub_title, so_lables=so_labels,
                         so1_data = so1_scores, so2_data = so2_scores, so3_data = so3_scores, so4_data=so4_scores, so5_data = so5_scores, so6_data = so6_scores)
 
 
@@ -1883,7 +1881,7 @@ def outcome_report_single_term():
         return redirect(url_for('home'))
     
     dbconnection = engine.connect()
-    statement = f"SELECT id, department, course_number from course where term = '{term}' and year = '{year}'"
+    statement = f"SELECT id, department, section, course_number from course where term = '{term}' and year = '{year}' order by course_number"
     courses = dbconnection.execute(statement)
 
     course_labels = [] 
@@ -1909,10 +1907,12 @@ def outcome_report_single_term():
 
     report_title = ""
     if report_type =="Count":
-        report_title = f"SWP {report_type} Attempting Outcome {so} During {term} {year}"
+        report_title = f"SWP {report_type} Attempting Outcome {so}"
+        sub_title = f"{term} {year}"
     else:
-        report_title = f"{report_type} For Outcome {so} During {term} {year}"
-    return render_template('graph_results.html', labels = course_labels, values = data, report_title = report_title, height=height, semesters = sorted_semesters)
+        report_title = f"{report_type} For Outcome {so}"
+        sub_title = f"{term} {year}"
+    return render_template('graph_results.html', labels = course_labels, values = data, sub_title = sub_title, report_title = report_title, height=height, semesters = sorted_semesters)
 
 
 @app.route('/reports/outcomes', methods=['GET', 'POST'])
@@ -2195,7 +2195,7 @@ def get_so_bar_graph_data(courses, so, report_type):
             dbconnection = engine.connect()
             statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]};"
             swps = dbconnection.execute(statement)        
-            course_name = f"{course.department} {course.course_number}"
+            course_name = f"{course.department} {course.course_number}: {course.section}"
             labels.append(course_name) 
             
             print('SO: ')
@@ -2224,7 +2224,7 @@ def get_so_bar_graph_data(courses, so, report_type):
             dbconnection = engine.connect()
             statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]};"
             swps = dbconnection.execute(statement)        
-            course_name = f"{course.department} {course.course_number}"
+            course_name = f"{course.department} {course.course_number}: {course.section}"
             labels.append(course_name)  
             scores =[]
             for swp in swps:              
@@ -2259,7 +2259,7 @@ def get_so_bar_graph_data(courses, so, report_type):
             dbconnection = engine.connect()
             statement = f"SELECT swp_id FROM ASSIGNMENTS where COURSE_ID = {course[0]};"
             swps = dbconnection.execute(statement)        
-            course_name = f"{course.department} {course.course_number}"
+            course_name = f"{course.department} {course.course_number}: {course.section}"
             labels.append(course_name)  
             scores =[]
             for swp in swps:              
