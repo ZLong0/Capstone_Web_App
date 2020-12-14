@@ -1362,6 +1362,8 @@ def delete_student_from_course(course_id, student_id):
                     for results in results:
                         db.session.delete(results)
                         db.session.commit()
+        db.session.delete(enrollment)
+        db.session.commit()
     return redirect(url_for('get_one_course', course_id = course_id))
 
 
